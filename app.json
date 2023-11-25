@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "igoepp_artisan",
+    "slug": "igoepp_artisan",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon1.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash1.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon1.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.cdhaniel.igoepp_artisan"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0e18ffeb-cbc7-439c-8348-da5e8ba93af1"
+      }
+    }
+  }
+}
