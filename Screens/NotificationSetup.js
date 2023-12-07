@@ -5,6 +5,7 @@ import { AuthContext } from '../utils/AuthContext'
 import GoBack from '../Components/Ui/GoBack'
 import { EnableAlert, ViewAlertSetup } from '../utils/AuthRoute'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
+import * as Notification from 'expo-notifications'
 
 const NotificationSetup = ({navigation}) => {
   const [isEmailEnabled, setIsEmailEnabled] = useState(true)
@@ -50,6 +51,18 @@ const NotificationSetup = ({navigation}) => {
   }
 
 
+  const disabledNotification = () => {
+    Notification.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: false,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        iosDisplayInForeground: false
+      })
+    })
+  }
+
+
   if(isloading){
     return <LoadingOverlay message={"..."}/>
   }
@@ -83,6 +96,7 @@ const togglePopupSwitch = async () => {
       setNotificationAlert("PA", "P")
     }else{
       // console.log("not enabled")
+      disabledNotification()
     }
 }
 

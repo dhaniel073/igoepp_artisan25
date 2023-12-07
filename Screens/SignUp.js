@@ -4,13 +4,22 @@ import axios from 'axios'
 import { Dropdown } from 'react-native-element-dropdown'
 import { Image } from 'expo-image'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
+import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
 import * as Location from 'expo-location';
 import { SignUpHandyman } from '../utils/AuthRoute'
 import {AuthContext} from '../utils/AuthContext'
+import Modal from 'react-native-modal'
+import {MaterialIcons} from '@expo/vector-icons'
 
+
+const data = [
+  {
+    id:"Y",
+    name: "Accept"
+  },
+]
 
 
 const sex = [
@@ -105,6 +114,13 @@ const SignUp = ({navigation}) => {
     const emailIsInvalid = enteredEmail.includes('@')
   
     const [isLoading, setIsLoading] = useState(false)
+    const [isAcceptTermsModalBisible, setisAcceptTermsModalBisible] = useState(false)
+    const [avail, setavail] = useState()
+    
+    
+    const toggleAcceptTermsModal = () => {
+      setisAcceptTermsModalBisible(!isAcceptTermsModalBisible)
+    }
 
     useEffect(() => {
     // setIsLoading(true)
@@ -211,9 +227,9 @@ useEffect(() => {
 
     
     const signupHandler = async () => {
-      setIsLoading(true)
+      // setIsLoading(true)
       const emailIsValid = enteredEmail.includes('@');
-      const passwordIsValid = enteredPassword.length < 7;
+      const passwordIsValid = enteredPassword === null || enteredPassword === undefined || enteredPassword.length < 7;
       const passcheck =  enteredPassword === enteredConfirmPassword || enteredConfirmPassword !== null || undefined
       const phonecheck = enteredPhone === null || "" || enteredPhone.length === 0
       const addresscheck = address === null || undefined || "" || address.length === 0
@@ -235,7 +251,7 @@ useEffect(() => {
             const InvalidFirstName = !enteredFirstname
             const InvalidLastName = !enteredLastName
             const InvalidPhone = phonecheck
-            const InvalidPassword = !passwordIsValid
+            const InvalidPassword = passwordIsValid
             const InvalidConfirmPassword = passcheck
             const InvalidEmail = !emailIsValid
             const InvalidAddress = addresscheck
@@ -269,47 +285,50 @@ useEffect(() => {
             Alert.alert('Invalid details', 'Please check the information provided.')
              
         }else{
-          const addresstoUse = address + " " + cityName  + " " + stateName + " " + countryName
-          const geocodeLocation = await Location.geocodeAsync(addresstoUse);
-          const latitude = !address ? '' : geocodeLocation[0].latitude
-          const longitude = !address ? '' : geocodeLocation[0].longitude
-          // console.log(addresstoUse)
-          
-              try {
-                setIsLoading(true)
-                const response = await SignUpHandyman(enteredLastName, enteredFirstname, enteredEmail, enteredPhone, category, subcategory, enteredConfirmPassword, enteredGender, countryName, stateName, cityName, address, latitude, longitude, idtype, idnum)
-                console.log(response)
-                authCtx.authenticated(response.access_token)
-                authCtx.helperId(response.helper_id)
-                authCtx.helperEmail(response.email)
-                authCtx.helperFirstName(response.first_name)
-                authCtx.helperLastName(response.last_name)
-                authCtx.helperCatId(response.category)
-                authCtx.helperSubCatId(response.subcategory) 
-                authCtx.helperPhone(response.phone)
-                authCtx.helperPicture(response.photo)
-                setIsLoading(false)
-              } catch (error) {
-                setIsLoading(true)
-                console.log(error.response)
-                const myObj = error.response.data.email[0];
-                // console.log(myObj.helper_rating)
-                // Alert.alert('SignUp Failed', JSON.stringify(error.response.data.email))
-                Alert.alert('SignUp Failed', myObj)
-                setIsLoading(false)
-                return;
-            }
+          toggleAcceptTermsModal()
         }
-      setIsLoading(false)
-      
-        
+      // setIsLoading(false)
+    }
+
+    const signupSend = async () => {
+      const addresstoUse = address + " " + cityName  + " " + stateName + " " + countryName
+      const geocodeLocation = await Location.geocodeAsync(addresstoUse);
+      const latitude = !address ? '' : geocodeLocation[0].latitude
+      const longitude = !address ? '' : geocodeLocation[0].longitude
+      // console.log(addresstoUse)
+      try {
+        setIsLoading(true)
+        const response = await SignUpHandyman(enteredLastName, enteredFirstname, enteredEmail, enteredPhone, category, subcategory, enteredConfirmPassword, enteredGender, countryName, stateName, cityName, address, latitude, longitude, idtype, idnum)
+        console.log(response)
+        authCtx.authenticated(response.access_token)
+        authCtx.helperId(response.helper_id)
+        authCtx.helperEmail(response.email)
+        authCtx.helperFirstName(response.first_name)
+        authCtx.helperLastName(response.last_name)
+        authCtx.helperCatId(response.category)
+        authCtx.helperSubCatId(response.subcategory) 
+        authCtx.helperPhone(response.phone)
+        authCtx.helperPicture(response.photo)
+        authCtx.helperShowAmount('show')
+        authCtx.helperlastLoginTimestamp(new Date().toString())
+        setIsLoading(false)
+      } catch (error) {
+        setIsLoading(true)
+        console.log(error.response)
+        const myObj = error.response.data.email[0];
+        // console.log(myObj.helper_rating)
+        // Alert.alert('SignUp Failed', JSON.stringify(error.response.data.email))
+        Alert.alert('SignUp Failed', myObj)
+        setIsLoading(false)
+        return;
+      }
     }
 
     if(isLoading){
         return <LoadingOverlay message={"Creating User"}/>
     }
   return (
-    <ScrollView style={{marginTop: marginStyle.marginTp, marginHorizontal:15}} showsVerticalScrollIndicator={false}>
+    <ScrollView style={{marginTop: marginStyle.marginTp, marginHorizontal:18}} showsVerticalScrollIndicator={false}>
 
     <View style={{alignSelf:'center'}}>
     <Image style={{ width:100, height:100,}} source={require("../assets/igoepp_transparent2.png")}   placeholder={'blurhash'}
@@ -546,7 +565,7 @@ useEffect(() => {
       onUpdateValue={updateInputValueHandler.bind(this, 'idnum')}
       placeholder={idtype === "nin" ? "Nin number"  : idtype === "DL" ? "Drivers license Number" : "Id card number"}
       isInvalid={Isidnum}
-      keyboardType={"numeric"}      
+      // keyboardType={"numeric"}      
       onFocus={() => setIsIdnum(false)}
     />
     }
@@ -594,6 +613,102 @@ useEffect(() => {
       </View>
     </View>
     </View>
+
+    
+    <Modal isVisible={isAcceptTermsModalBisible}>
+
+    <SafeAreaView style={styles.centeredView}>
+
+    <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => toggleAcceptTermsModal()}>
+      <MaterialIcons name="cancel" size={30} color="white" />
+    </TouchableOpacity>
+
+    <View style={styles.modalView}>
+    <Text style={styles.modalText}>Accept Terms and Condition</Text>
+ 
+    <View style={{marginBottom:'2%'}}/>
+    <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={{alignItems:'center'}}>
+      <Text style={{textAlign:'center'}}>CUSTOMER SERVICE LEVEL AGREEMENT</Text> 
+    </View>
+
+    <Text> A.	SERVICE LEVEL AGREEMENT(SLA)</Text>
+
+    <Text style={styles.textsty}> 
+    1.	Services to be Performed
+    I have agreed to work in the capacity of <Text> {authCtx.firstName } { authCtx.lastName}</Text> as an Artisan 
+    </Text>
+
+    <Text style={styles.textsty}>
+    2.	Payment
+    IGOEPP pays the artisan 36hrs after the customer has confirmed that the service has been executed satisfactory. IGOEPP would deduct 5% commission from the total amount collected from the customer.
+    </Text>
+
+    <Text style={styles.textsty}>
+    3.	Expenses
+    Artisan is to ensure that all expenditure is considered in the bidding process with the customer. The customer can only buy replacement parts from IGOEPP designated suppliers.
+    </Text>
+
+    <Text style={styles.textsty}>
+    4.	Materials for Work
+      All parts and materials that would be used to work for a customer must be purchased from IGOEPP designated suppliers by the customer in the IGOEPP Market Place on the APP. Artisan must not replace faulty parts or materials with personal materials or materials purchased from unauthorized supplier. IGOEPP Suppliers would deliver the part not the customer for the artisan to work with.
+    </Text>
+
+    <Text style={styles.textsty}>
+    5.	Terminating the Agreement
+    With reasonable cause, either IGOEPP or Artisan may terminate the Agreement, effective immediately upon giving written notice.
+    Reasonable cause includes:
+    •	A material violation of this Agreement, or
+    •	Any act exposing the other party of liability to others for the personal injury or property damage.
+    OR
+    Either party may terminate this Agreement at any time by giving 30 days written notice to the other party of the intention to terminate. However, Artisan cannot terminate this agreement when there is a pending dispute with one of IGOEPP’s customers involving him.
+    </Text>
+
+    <Text style={styles.textsty}>
+    6.	Modifying the  Agreement
+    This Agreement may be modified on mutual consent of both parties. (Ratification can be done via oral, written, email or other digital agreement).
+    </Text>
+
+    <Text style={styles.textsty}>
+    7.	Confidentiality
+    Artisans acknowledge that it will be necessary for IGOEPP to disclose certain confidential and proprietary information about the client to them in order for artisan to perform duties under this Agreement. Artisan acknowledges that disclosure to the third party or misuse of this proprietary or confidential information would irreparably harm the Client. Accordingly, Artisan will not disclose or use, either during or after the term of this Agreement, any proprietary or confidential information of the Client without the Client’s prior written permission except to the extent necessary to perform the agreed service on the Client’s behalf.
+    Upon termination of Artisan’s service to company or at Client’s request, Artisan shall deliver to client all materials in Artisan’s possession relating to Client’s business.
+
+    Artisan acknowledges that any branch or threatened breach of this Agreement will result in irreparable harm to Client for which damages would be an adequate remedy. Therefore, Client shall be entitled to equitable relief, including an injunction, in the event of such breach or threatened breach of this Agreement. Such equitable relief shall be in addition to Client’s right’s and remedies otherwise available at law.
+    </Text>
+
+    <Text style={styles.textsty}>
+    8.	No Partnership
+      This Agreement does not create a partnership relationship. Artisan does not have authority to enter contracts on IGOEPP’s behalf.
+    </Text>
+
+    <View style={{marginTop:'1%'}}>
+      {data.map((item, key) => 
+        <View key={key} style={{flexDirection:'row', justifyContent:'center', }}>
+          <TouchableOpacity style={[styles.outer, ]} onPress={() => setavail(item.id)}>
+            {avail === item.id && <View style={styles.inner}/>} 
+          </TouchableOpacity>
+          <Text> Accept</Text>
+      </View>
+      )}
+    </View>
+        <View style={{marginBottom:10}}/>
+    {
+      avail  && 
+      <View style={{marginHorizontal:20}}>
+        <SubmitButton message={"Continue"} onPress={() => signupSend()}/>
+      </View>
+    }
+      <View style={{marginBottom:10}}/>
+
+    </ScrollView>
+
+      </View>
+
+
+      </SafeAreaView>
+    </Modal>
+  
     </ScrollView>
   )
 }
@@ -601,63 +716,105 @@ useEffect(() => {
 export default SignUp
 
 const styles = StyleSheet.create({
-    container:{
-        flex:1,
-        marginTop:'12%',
-        marginBottom:'1%'
+  outer:{
+    width:25,
+    height: 25,
+    borderWidth: 1,
+    borderRadius: 15,
+    justifyContent:'center',
+    alignItems: 'center'
+  },
+  inner:{
+    width:15,
+    height:15,
+    backgroundColor: Color.new_color,
+    borderRadius:10
+  },
+  container:{
+    flex:1,
+    marginTop:'12%',
+    marginBottom:'1%'
+  },
+  inputInvalid: {
+    backgroundColor: Color.error100,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  dropdown: {
+    height: 50,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginTop: 10
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  }, 
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  buttons: {
+    marginTop: 25,
+    marginBottom:20,
+    marginLeft:20,
+    marginRight:20
+  },
+  nameContainer:{
+    flex: 1,
+    flexDirection: "row",
+    // justifyContent: 'space-between',
+  },
+  firstname:{
+    width: "50%"
+  },
+  lastname:{
+    marginHorizontal: 10,
+    width: "50%"
+  },
+  Title:{
+    marginTop: 10, 
+    marginBottom: 10,
+    // marginHorizontal: 50,
+    fontSize: 25,
+    // fontWeight: 'bold',
+    fontFamily: 'poppinsMedium',
+    color: Color.orange_100
+  },
+  centeredView: {
+    flex: 1,
+    // backgroundColor: Color.light_black,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // marginTop: 22,
+  },
+  modalView: {
+    margin: 15,
+    backgroundColor: 'white',
+    width: DIMENSION.WIDTH  * 0.9,
+    borderRadius: 20,
+    padding: 25,
+    // alignItems: 'center',
+    maxHeight: DIMENSION.HEIGHT * 0.7,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
     },
-    inputInvalid: {
-        backgroundColor: Color.error100,
-      },
-      selectedTextStyle: {
-        fontSize: 16,
-      },
-      dropdown: {
-        height: 50,
-        borderColor: 'gray',
-        borderWidth: 0.5,
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        marginTop: 10
-      },
-      inputSearchStyle: {
-        height: 40,
-        fontSize: 16,
-      },
-      iconStyle: {
-        width: 20,
-        height: 20,
-      }, 
-      placeholderStyle: {
-        fontSize: 16,
-      },
-      buttons: {
-        marginTop: 25,
-        marginBottom:20,
-        marginLeft:20,
-        marginRight:20
-      },
-      nameContainer:{
-        flex: 1,
-        flexDirection: "row",
-        // justifyContent: 'space-between',
-      },
-      firstname:{
-        width: "50%"
-      },
-      lastname:{
-        marginHorizontal: 10,
-        width: "50%"
-    
-      },
-      Title:{
-        marginTop: 10, 
-        marginBottom: 10,
-        // marginHorizontal: 50,
-        fontSize: 25,
-        // fontWeight: 'bold',
-        fontFamily: 'poppinsMedium',
-        color: Color.orange_100
-      },
-
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    // marginBottom: 15,
+    textAlign: 'center',
+    fontSize:16, 
+    fontFamily:'poppinsRegular'
+  },
 })

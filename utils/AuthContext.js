@@ -13,10 +13,12 @@ export const  AuthContext = createContext({
   catId: "",
   subCatId: "",
   isAuthenticated: false,
-  amtvisible:'',
   balance: "",
   phone: "",
-  picture:"",
+  picture:"",showAmount: "",
+  lastLoginTimestamp: "",
+
+
   
   authenticated: (token) => {},
   helperId: (Id) => {},
@@ -25,13 +27,17 @@ export const  AuthContext = createContext({
   helperLastName: (lastname) => {}, 
   helperCatId: (catId) => {},
   helperSubCatId: (subCatId) => {},
-  helperAmtVisible: (amtvisible) => {},
   helperBalance: (balance) => {},
   helperPhone: (phone) => {},
   helperPicture: (picture) => {},
+  helperShowAmount: (showAmount) => {},
+  helperlastLoginTimestamp : (lastLoginTimestamp) => {},
+
   logout: () => {}
 
 })
+
+   
 
 function AuthContextProvider({children}){
     const [IsLogout, setIsLogout] = useState(false)
@@ -42,10 +48,11 @@ function AuthContextProvider({children}){
     const [authLastName, setauthLastName] = useState()
     const [authCatId, setauthCatId] = useState()
     const [authSubCatId, setauthSubCatId] = useState()
-    const [authAmountVisible, setauthAmountVisible] = useState()
     const [authBalance, setauthBalance] = useState()
     const [authphone, setauthphone] = useState()
+    const [authShowAmount, setauthShowAmount] = useState()
     const [authpicture, setauthpicture] = useState()
+    const [authlogintime, setauthlogintime] = useState()
 
 
     if(IsLogout){
@@ -69,6 +76,24 @@ function AuthContextProvider({children}){
         setauthphone(phonecheck)
         AsyncStorage.setItem('helperPhone', phonecheck)
     }
+
+    
+
+    function helperShowAmount (status) {
+        if(status === 'show'){
+            setauthShowAmount('show')
+            AsyncStorage.setItem('helperShowAmount', "show")
+        }else{
+            setauthShowAmount(status)
+            AsyncStorage.setItem('helperShowAmount', 'hide')
+        }
+    }   
+     
+    function helperlastLoginTimestamp(time){
+        setauthlogintime(time)
+        AsyncStorage.setItem('helperlastLoginTimestamp', time)
+    }
+
 
     function helperEmail (email){
         setauthEmail(email)
@@ -97,19 +122,6 @@ function AuthContextProvider({children}){
         AsyncStorage.setItem('helperSubCatId', idtostring)
     }
 
-    function helperAmtVisible(status){
-        if(status === 'true'){
-            setauthAmountVisible(status)
-            AsyncStorage.setItem('helperAmtVisible', 'true')
-        }else if(status === 'false'){
-            setauthAmountVisible(status)
-            AsyncStorage.setItem('helperAmtVisible', 'false')
-        }else{
-            status === ''
-            setauthAmountVisible('')
-            AsyncStorage.setItem('helperAmtVisible', '')
-        }
-    }
 
     function helperBalance(amount){
         console.log(amount)
@@ -144,10 +156,11 @@ function AuthContextProvider({children}){
         setauthEmail(null)
         setauthCatId(null)
         setauthSubCatId(null)
-        setauthAmountVisible(null)
         setauthBalance(null)
         setauthphone(null)
         setauthpicture(null)
+        setauthShowAmount(null)
+        setauthlogintime(null)
         AsyncStorage.removeItem('helpertoken')
         AsyncStorage.removeItem('helperId')
         AsyncStorage.removeItem('helperEmail')
@@ -155,11 +168,12 @@ function AuthContextProvider({children}){
         AsyncStorage.removeItem('helperLastname')
         AsyncStorage.removeItem('helperCatId')
         AsyncStorage.removeItem('helperSubCatId')
-        AsyncStorage.removeItem('helperAmtVisible')
         AsyncStorage.removeItem('helperBalance')
         AsyncStorage.removeItem('helperPhone')
         AsyncStorage.removeItem('helperPicture')
-
+        AsyncStorage.removeItem('helperShowAmount')
+        AsyncStorage.removeItem('helperlastLoginTimestamp')
+    
         setIsLogout(false)
     }
 
@@ -174,10 +188,11 @@ function AuthContextProvider({children}){
         catId: authCatId,
         subCatId: authSubCatId,
         isAuthenticated: !!authToken,
-        amtvisible: authAmountVisible,
         balance: authBalance,
         phone: authphone,
         picture: authpicture,
+        showAmount: authShowAmount,
+        lastLoginTimestamp: authlogintime,
         authenticated:authenticated,
         helperId:helperId,
         helperEmail: helperEmail,
@@ -185,10 +200,11 @@ function AuthContextProvider({children}){
         helperLastName: helperLastName,
         helperCatId: helperCatId,
         helperSubCatId: helperSubCatId,
-        helperAmtVisible: helperAmtVisible,
         helperBalance: helperBalance,
         helperPhone: helperPhone,
         helperPicture: helperPicture,
+        helperShowAmount: helperShowAmount,
+        helperlastLoginTimestamp: helperlastLoginTimestamp,
         logout: logout
         
     }

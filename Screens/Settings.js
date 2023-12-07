@@ -3,7 +3,7 @@ import React, { useContext } from 'react'
 import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
 import { AuthContext } from '../utils/AuthContext'
-import {Ionicons} from '@expo/vector-icons'
+import {Ionicons, Feather, MaterialCommunityIcons} from '@expo/vector-icons'
 
 const Settings = ({navigation}) => {
   const authCtx = useContext(AuthContext)
@@ -28,6 +28,27 @@ const Settings = ({navigation}) => {
                   <Ionicons name='notifications-outline' size={30}/>
                   <Text style={styles.textStyle}>Notification Setup</Text>
               </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{ alignItems: 'flex-start', borderBottomWidth:1,}} onPress={() => navigation.navigate("TransactionPin")}>
+            <View style={{ flexDirection: 'row',   paddingBottom: 15, marginTop: 15 }}>
+            <Feather name="lock" size={24} color="black" />
+              <Text style={styles.textStyle}>Set Transaction Pin</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{ alignItems: 'flex-start', borderBottomWidth:1,}} onPress={() => navigation.navigate("Biometric")}>
+            <View style={{ flexDirection: 'row',   paddingBottom: 15, marginTop: 15 }}>
+            <Ionicons name="finger-print" size={24} color="black" />
+              <Text style={styles.textStyle}>Biometric Setup</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{ alignItems: 'flex-start', borderBottomWidth:1,}} onPress={() => navigation.navigate("PasswordReset")}>
+            <View style={{ flexDirection: 'row',   paddingBottom: 15, marginTop: 15 }}>
+            <MaterialCommunityIcons name="account-lock-outline" size={24} color="black" />
+              <Text style={styles.textStyle}>Change Login Password</Text>
+            </View>
           </TouchableOpacity>
         
           <TouchableOpacity style={{ alignItems: '', justifyContent:'space-between', borderBottomWidth:1, width: '100%'}} onPress={() => Alert.alert("Logout", "Are you sure you want to logout", [

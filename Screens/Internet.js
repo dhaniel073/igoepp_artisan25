@@ -1,5 +1,5 @@
-import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import axios from 'axios'
@@ -9,7 +9,7 @@ import { AuthContext } from '../utils/AuthContext'
 import { Image, ImageBackground } from 'expo-image'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
-import { InternetPayment, ValidateInternet } from '../utils/AuthRoute'
+import { HelperUrl, InternetPayment, ValidateInternet, ValidatePin } from '../utils/AuthRoute'
 import Modal from 'react-native-modal'
 import {MaterialIcons, MaterialCommunityIcons, Ionicons, Entypo} from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
@@ -32,11 +32,32 @@ const Internet = ({route, navigation}) => {
   const maindate = new Date() 
   const date = maindate.toDateString()
   const time = maindate.toLocaleTimeString()
-
+  const [pinT, setpinT] = useState()
+  const [pinvalid, setpinvalid] = useState(false)
+  const [pincheckifempty, setpincheckifempty] = useState([])
+  const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
+  const [pinerrormessage, setPinerrorMessage] = useState('')
+  const [ischecking, setischecking] = useState(false)
 
 
   const authId = route?.params?.id
   let reqId;
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      try {
+        setisLoading(true)
+        const response = await HelperUrl(authCtx.Id, authCtx.token)
+        setpincheckifempty(response.transaction_pin_setup)
+        setisLoading(false)
+      } catch (error) {
+        setisLoading(true)
+        setisLoading(false)
+        return;
+      }
+    })
+    return unsubscribe;
+  }, [])
 
 
   useEffect(() => {
@@ -106,10 +127,12 @@ const Internet = ({route, navigation}) => {
   }
 
   const validateNumber = async () => {
+
       try {
         setisLoading(true)
         const response = await ValidateInternet(authCtx.Id, id, smartcard, authCtx.token)
         // console.log(response.data)
+        setRef(response.data.requestID)
         if(response.data.status === 'Success'){
           Alert.alert("Confirm Purchase", `Confirm Internet Purchase  for ${smartcard}`, [
             {
@@ -118,7 +141,7 @@ const Internet = ({route, navigation}) => {
             },
             {
                 text:'Confirm',
-                onPress: () => makePayment(response.data.requestID)
+                onPress: () => togglePinModal()
             }
         ])
         }
@@ -137,6 +160,50 @@ const Internet = ({route, navigation}) => {
       }
   }
 
+  let refT = useRef(0);
+  
+    function handleClick() {
+      refT.current = refT.current + 1;
+      // alert('You clicked ' + ref.current + ' times!');
+    }
+  
+    const togglePinModal = () => {
+      setisSetpinModalVisible(!isSetpinModalVisible)
+    }
+    
+    const pinValidateCheck = async () => {
+      if(refT.current > 3){
+        Alert.alert("", "To many attempt, try again later", [
+          {
+            text: "Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
+      }else{
+        try {
+          setischecking(true)
+          const response = await ValidatePin(authCtx.Id, pinT, authCtx.token)
+          // console.log(response)
+          setpinT()
+          makePayment(ref)
+        } catch (error) {
+          setischecking(true)
+          setpinT()
+          setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
+          console.log(error.response)
+          Alert.alert("Error", error.response.data.message+ " " + "Try again", [
+            {
+              text: "Ok",
+              onPress: () => {}
+            },
+          ])
+          setischecking(false)
+  
+        }
+      }
+    }
+
+
   const updatevalue = (inputType, enteredValue) => {
     switch(inputType){
       case 'smartcard':
@@ -145,10 +212,11 @@ const Internet = ({route, navigation}) => {
     }
   }
 
-  const makePayment = async (requestID) => {
+  const makePayment = async () => {
+    togglePinModal()
     try {
       setisLoading(true)
-      const response = await InternetPayment(requestID, price, bouquestData, authCtx.token)
+      const response = await InternetPayment(ref, price, bouquestData, authCtx.token)
       // console.log(response)
       if(response.data.message === "failed"){
         Alert.alert(response.data.message, response.data.description + ", fund wallet and try again", [
@@ -197,6 +265,20 @@ const Internet = ({route, navigation}) => {
       <Text style={styles.internettxt}>Internet</Text>
             {/* <Text style={styles.label}>Select Distribution Company</Text> */}
           
+          
+      {
+        pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
+          {
+            text: "Ok",
+            onPress: () =>  navigation.navigate('TransactionPin')
+          },
+          {
+            text: "Cancel",
+            onPress: () => navigation.goBack()
+          }
+        ]) 
+        :
+        <>
             <ImageBackground style={{flexDirection:'row', alignItems:'center', justifyContent:'space-evenly',}}>
               <Image contentFit='contain' source={require("../assets/smile.png")} style={[styles.image]}/>
               <Image contentFit='contain' source={require("../assets/spectranet.png")} style={[styles.image]}/>
@@ -278,62 +360,118 @@ const Internet = ({route, navigation}) => {
             }
 
           </View>
+        </>
+      }
 
-          <Modal isVisible={isModalVisble}>
-            <SafeAreaView style={styles.centeredView}>
+      <Modal isVisible={isModalVisble}>
+        <SafeAreaView style={styles.centeredView}>
 
-            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), navigation.goBack()]}>
-              <MaterialIcons name="cancel" size={30} color="white" />
-            </TouchableOpacity>
+        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), navigation.goBack()]}>
+          <MaterialIcons name="cancel" size={30} color="white" />
+        </TouchableOpacity>
 
-            <View style={styles.modalView}>
-              <Text style={styles.modalText}>Reciept</Text>
-            <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top: DIMENSION.HEIGHT * 0.1, justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
-                {
-                  Platform.OS === "android" ? 
-                    <View style={{borderBottomWidth:0.5, marginTop:5, borderStyle:"dashed"}}/>
-                  :
-                   <View style={{borderBottomWidth:0.5, marginTop:5}}/>
-                }
+        <View style={styles.modalView}>
+          <Text style={styles.modalText}>Reciept</Text>
+        <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top: DIMENSION.HEIGHT * 0.1, justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
+            {
+              Platform.OS === "android" ? 
+                <View style={{borderBottomWidth:0.5, marginTop:5, borderStyle:"dashed"}}/>
+              :
+                <View style={{borderBottomWidth:0.5, marginTop:5}}/>
+            }
 
-                {/* <Text style={{fontFamily:'poppinsRegular'}}>-------------------------------------------</Text> */}
+            {/* <Text style={{fontFamily:'poppinsRegular'}}>-------------------------------------------</Text> */}
+            
+              <View style={{marginBottom:25, marginTop:25}}>
+                  
+                <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                  <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>SmartCard Id :</Text>
+                  <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{smartcard}</Text>
+                </View>
+
+                  <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                  <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Amount Funded :</Text>
+                  <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{price}</Text>
+                </View>
+
+                <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                  <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Ref :</Text>
+                  <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{ref}</Text>
+                </View> 
+
+                <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                  <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Date :</Text>
+                  <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{date} {time}</Text>
+                </View>
+
+                <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
                 
-                  <View style={{marginBottom:25, marginTop:25}}>
-                      
-                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>SmartCard Id :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{smartcard}</Text>
-                      </View>
+                  <TouchableOpacity style={{}} onPress={() => {}}>
+                    <Text><Entypo name="forward" size={24} color="black" /></Text>
+                  </TouchableOpacity>
 
-                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Amount Funded :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{price}</Text>
-                      </View>
+                  <TouchableOpacity style={{}} onPress={() => [toggleModal(), navigation.goBack()]}>
+                    <Text style={{}}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>              
+        </View>
+        </SafeAreaView>
+      </Modal>
 
-                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Ref :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{ref}</Text>
-                      </View> 
+      <Modal isVisible={isSetpinModalVisible} animationInTiming={500}>
+        <SafeAreaView style={styles.centeredView}>
+        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [togglePinModal(), setpinT()]}>
+          <MaterialIcons name="cancel" size={30} color="white" />
+        </TouchableOpacity>
+          <View style={[styles.modalView, {width: DIMENSION.WIDTH * 0.7}]}>
+          {
+              ischecking ? 
+              <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
+                <LoadingOverlay/>  
+              </View>
 
-                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Date :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{date} {time}</Text>
-                      </View>
+              :
+              <>
+              
+            <View>
+            <Text style={[styles.modalText, {fontSize:14}]}>Enter Transaction Pin</Text>
 
-                       <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
-                        
-                          <TouchableOpacity style={styles.cancelbtn} onPress={() => {}}>
-                                <Text><Entypo name="forward" size={24} color="black" /></Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity style={styles.viewbtn} onPress={() => [toggleModal(), navigation.goBack()]}>
-                              <Text style={styles.viewtext}>Close</Text>
-                          </TouchableOpacity>
-                        </View>
-                    </View>              
-            </View>
+            <SafeAreaView style={{justifyContent:'center', alignItems:'center', marginHorizontal:40}}>
+              <TextInput
+                keyboardType={"numeric"}
+                maxLength={4}
+                style={{fontSize:25, textAlign:'center',width:150, margin:5, borderBottomWidth:1, padding:5}}
+                onChangeText={setpinT}
+                value={pinT}
+                isInvalid={pinvalid}
+                onFocus={() => [setpinvalid(false), setPinerrorMessage('')]}
+                secureTextEntry
+              />
+              {
+                pinvalid &&
+                <Text style={{fontSize:11, textAlign:'center', color:Color.tomato}}>Pin must be 4 characters</Text>
+              }
+              {
+                pinerrormessage.length !== 0 && <Text  style={{fontSize:11, textAlign:'center', color:Color.tomato}}>{pinerrormessage}</Text>
+              }
             </SafeAreaView>
-          </Modal>
+            <View style={{marginBottom:'5%'}}/>
+            </View>
+            {/* <View style={styles.buttonView}> */}
+
+            <View style={{flexDirection:'row', justifyContent:'center'}}>
+              <TouchableOpacity style={styles.cancelbtn} onPress={() => pinT === null || pinT === undefined || pinT === "" || pinT.length < 4  ? setpinvalid(true) : [handleClick(), pinValidateCheck()]}>
+                <Text style={styles.canceltxt}>Continue</Text>
+              </TouchableOpacity>
+            </View>             
+              {/* </View> */}
+            </>
+          }
+          </View>
+          </SafeAreaView>
+      </Modal>
+
     </ScrollView>
   )
 }
@@ -406,5 +544,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize:18, 
     fontFamily:'poppinsRegular'
+  },
+  cancelbtn:{
+    backgroundColor:Color.new_color,
+    borderColor: Color.new_color,
+    borderWidth: 1,
+    justifyContent:'center',
+    borderRadius: 3,
+    width: DIMENSION.WIDTH * 0.36,
+    padding: 5
+  },
+  canceltxt:{
+    textAlign:'center',
+    alignSelf:'center',
+    fontFamily: 'poppinsMedium',
+    fontSize: 12,
+    color: Color.white
   },
 })

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, FlatList, RefreshControl, TouchableOpacity,Alert, Dimensions } from 'react-native'
+import { StyleSheet, Text, View, SafeAreaView, FlatList, RefreshControl, TouchableOpacity,Alert, Dimensions, Platform } from 'react-native'
 import React, { useContext, useState, useEffect } from 'react'
 import { Border, Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
@@ -286,6 +286,13 @@ const ViewRequest = ({navigation}) => {
                   keyExtractor={(item) => item.id}
                   renderItem={({item}) => (
                     <View>
+                       {
+                          Platform.OS === 'android' ?
+                            <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.1,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
+                          :
+                          <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.05,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
+                        }
+
                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:11}}>Price : </Text>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:11}}>{item.agreed_price === null ? '0.00' : item.agreed_price}</Text>

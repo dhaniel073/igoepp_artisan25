@@ -1,5 +1,5 @@
-import { Alert, StyleSheet, Text, View } from 'react-native'
-import React, { useEffect, useContext, useState, useCallback } from 'react'
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useContext, useState, useCallback, useLayoutEffect } from 'react'
 import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import { AuthContext } from '../utils/AuthContext'
 import { CustomersUrl, GetCustomer } from '../utils/AuthRoute'
@@ -36,16 +36,16 @@ const Chat = ({navigation, route}) => {
 }, [])
 
 
-useEffect(() => {
-  const unsubscribe = navigation.addListener('focus', async() => {
+useLayoutEffect(() => {
+  const unsubscribe = async() => {
       // do something
-      const url = `https://phixotech.com/igoepp/public/api/auth/hrequest/helpchatview/${bidid}`
+      const url = `https://phixotech.com/igoepp/public/api/auth/hrequest/helpchatview/${bidid}/helpers`
       try {
       const response = await axios.get(url, {
-          headers:{
-              Accept:'application/json',
-              Authorization: `Bearer ${authCtx.token}`
-          }
+        headers:{
+          Accept:'application/json',
+          Authorization: `Bearer ${authCtx.token}`
+        }
       })
         var count = Object.keys(response.data).length;
         let stateArray = []
@@ -57,7 +57,8 @@ useEffect(() => {
                 user:{
                     _id: response.data[i].from_user_id,
                     name: 'React Native',
-                    avater: `https://phixotech.com/igoepp/public/customers/${customer.picture}`,
+                    avatar: null
+                    // avatar: customer.picture === null ? `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKLYtkaHut2_Xctb0hUZGZk7pbCbIzcoMSNA&usqp=CAU`: `https://phixotech.com/igoepp/public/customers/${customer.picture}`,
                 },
             }, 
             )
@@ -66,6 +67,7 @@ useEffect(() => {
         const descArr = stateArray.sort().reverse();
         setMessages(descArr)
       } catch (error) {
+        console.log(error.response)
         Alert.alert("Error", "An error occured while fetching messages", [
           {
             text:'Ok',
@@ -74,9 +76,12 @@ useEffect(() => {
         ])
         return;
       }
-    });
+    };
+    unsubscribe();
+    const intervalId = setInterval(unsubscribe, 10000);
 
-    return unsubscribe
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
 }, []);
 
 
@@ -88,7 +93,7 @@ const SendMessage = (text) => {
       from_user_id: authCtx.Id,
       to_user_id: route?.params.customerId,
       message: text,
-      user_type: 'helper' 
+      user_type: 'customer' 
   }, {
       headers:{
           Accept: 'application/json',
@@ -105,12 +110,7 @@ const SendMessage = (text) => {
 
 const onSend = useCallback((messages = []) => {
   setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
-  const {
-      _id,
-      createdAt,
-      text,
-      user
-  } = messages[0]
+  const {_id,createdAt,text,user} = messages[0]
   SendMessage(text)
 }, [])
 
@@ -157,7 +157,8 @@ const scrollToBottomComponent = (props) => {
 
   return (
     <>
-    <View style={{marginTop:marginStyle.marginTp + 10, marginHorizontal:10,   flexDirection:'row',}}>
+    <Pressable style={{marginTop:marginStyle.marginTp + 10, marginHorizontal:10,   flexDirection:'row',}} onPress={() => navigation.goBack()}>
+      
       <GoBack onPress={() => navigation.goBack()}></GoBack>
       {
         customer.picture === null ? 
@@ -167,11 +168,11 @@ const scrollToBottomComponent = (props) => {
       }
       <Text style={{fontSize: 14, fontFamily: 'poppinsSemiBold'}}>{customer.first_name} {customer.last_name}</Text>
       {/* <Text style={styles.chattxt}>Chat</Text> */}
-    </View>
+    </Pressable>
 
     <GiftedChat
       messages={messages}
-      showAvatarForEveryMessage={true}
+      showAvatarForEveryMessage={false}
       onSend={messages => onSend(messages)}
       user={{ 
           _id: CustomerId,

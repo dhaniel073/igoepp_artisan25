@@ -9,6 +9,8 @@ import { AuthContext } from '../utils/AuthContext';
 import * as LocalAuthentication from 'expo-local-authentication'
 import { HelperUrl, RequestByHelperid, RequestSumTotal, SliderImage, SubCategory, TrendingService } from '../utils/AuthRoute';
 import LoadingOverlay from '../Components/Ui/LoadingOverlay';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications'
 
 
 const WIDTH = Dimensions.get('window').width
@@ -37,7 +39,7 @@ const WelcomeScreen = ({navigation}) => {
   const [isBiometricSupported, setIsBiometricSupported] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [subcatname, setSubCatName] = useState([])
-  const appState = useRef(AppState.currentState)
+  const [appState, setAppState] = useState(AppState.currentState)
   const [appStateVisible, setAppStateVisible] = useState(appState.current)
   const [count, setCount] = useState(0);
   const [trend, setTrend] = useState([])
@@ -47,8 +49,16 @@ const WelcomeScreen = ({navigation}) => {
   const [sliimage, setsliimage] = useState([])
   const [request, setRequest] = useState([])
 
+  useEffect(() => {
+    const unsuscribe = async () => {
+      const token = (await Notifications.getExpoPushTokenAsync({ projectId: '0e18ffeb-cbc7-439c-8348-da5e8ba93af1' })).data;
+      console.log(token)
+    }
+    unsuscribe()
+  }, [])
 
   
+
 
 
   useEffect(() => {
@@ -58,62 +68,76 @@ const WelcomeScreen = ({navigation}) => {
   })
   }, [])
 
-  const Visible = () => {
-    // console.log('false')
-    const status = 'false'
-    authCtx.helperAmtVisible(status)    
+  const ShowAmount = () => {
+    authCtx.helperShowAmount('show')
   }
   
-  const NotVisible = () => {
-    // console.log('true')
-    const status = 'true'
-    authCtx.helperAmtVisible(status)
+  const HideAmount = () => {
+    authCtx.helperShowAmount('hide')
   }
 
   function onAuthenticate (spec){
-      const auth = LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate with Touch ID',
-        fallbackLabel: 'Enter Password'
-      });
-      auth.then(result => {
-        setIsAuthenticated(result.success);
-        if(result.success === true){
-          if(spec === 'true'){
-            NotVisible()
-          }else{
-            Visible()
-          }
-        }
-      })   
-    }
-
-  function onAuthenticate1 (spec){
-    if(isBiometricSupported){
-
-      const auth = LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate with Touch ID',
+    const auth = LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate with Touch ID',
       fallbackLabel: 'Enter Password'
     });
-      auth.then(result => {
-        setIsAuthenticated(result.success);
-        if(result.success === true){
-        // if(spec === 'true'){
-          //   NotVisible()
-          // }else{
-            //   Visible()
-            // }
-            alert("True")
-          }
-        })
-      }else{
-        // Alert.alert("Incompatible", 'Device not compatible with this feature')
-        authCtx.logout()
+    auth.then(result => {
+      setIsAuthenticated(result.success);
+      if(result.success === true){
+        if(spec === 'hide'){
+          HideAmount()
+        }else{
+          ShowAmount()
+        }
       }
-    }
+    })   
+  }
+
+
+  useEffect(() => {
+    // Function to handle app state changes
+    const handleAppStateChange = (nextAppState) => {
+      // If the app goes into the background or inactive state, log out the user
+      if (appState.match(/active/) && nextAppState === 'background') {
+        // Call your logout function here
+        console.log('User logged out');
+        // checkLastLoginTimestamp()
+        const storedTimestamp = authCtx.lastLoginTimestamp
+        const lastLoginTimestamp = new Date(storedTimestamp);
+        const currentTimestamp = new Date();
+        console.log(storedTimestamp + " " + new Date())
+        if(authCtx.lastLoginTimestamp === null || undefined || ""){
+          return 
+        }else{
+          const timeDifferenceInMinutes = Math.floor(
+            (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
+          );
+
+          const authenticationThresholdInMinutes = 5;
+
+          if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
+            authCtx.logout()
+          }
+
+        }
+      }
+
+      setAppState(nextAppState);
+    };
+
+    // Subscribe to app state changes
+    AppState.addEventListener('change', handleAppStateChange);
+
+    // Cleanup: Remove the event listener when the component unmounts
+      return;
+  }, [appState]);
+   
+  
     useEffect(() => {
       TrendsArray()
       HelperGet()
       Slider()
+      // checkLastLoginTimestamp()
     }, [])
 
 
@@ -136,27 +160,7 @@ const WelcomeScreen = ({navigation}) => {
       })
     }, [subcatname])
 
-    useEffect(() => {
-      const subscription = AppState.addEventListener('change', nextAppState => {
-        if (
-          appState.current.match(/inactive|background/) &&
-          nextAppState === 'active'
-        ) {
-          // return [ onAuthenticate1()];
-        }else{
-          console.log('App has gone to  background!');
-        }
-  
-        appState.current = nextAppState;
-        setAppStateVisible(appState.current);
-        // console.log('AppState', appState.current);
-      });
-  
-      return () => {
-        subscription.remove();
-      };
-    }, []);
-  
+    
       const reqLength = async() => {
         // do something
         try {
@@ -188,13 +192,15 @@ const WelcomeScreen = ({navigation}) => {
     const SubCatGet = async () => {
       try {
         const response = await SubCategory(authCtx.subCatId, authCtx.token)
-        console.log(response)
+        // console.log(response)
         setSubCatName(response)
       } catch (error) {
         return;
         
       }
     }
+
+
 
     async function  Sumtotal(){
       try {
@@ -210,7 +216,7 @@ const WelcomeScreen = ({navigation}) => {
       const response = await TrendingService(authCtx.token) 
       setTrend(response.data)
       } catch (error) {
-        console.log(error.response)
+        // console.log(error.response)
       }
     }
 
@@ -222,11 +228,44 @@ const WelcomeScreen = ({navigation}) => {
         setIsLoading(false)
       } catch (error) {
         setIsLoading(true)
-        console.log(error.response)
+        // console.log(error.response)
         setIsLoading(false)
         return;
       }
     }
+
+      // console.log(authCtx.lastLoginTimestamp + " timestamp")
+  
+      // const checkLastLoginTimestamp =  async () => {
+      //   try {
+      //     setIsLoading(true)
+      //     const storedTimestamp = await AsyncStorage.getItem('helperlastLoginTimestamp')
+      //     const lastLoginTimestamp = new Date(storedTimestamp);
+      //     const currentTimestamp = new Date();
+      
+      //     console.log(storedTimestamp + " storedtime")
+      //     console.log(lastLoginTimestamp + " lastlogintime")
+      //     console.log(currentTimestamp + " current time")
+  
+      //     const timeDifferenceInMinutes = Math.floor(
+      //       (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
+      //     );
+  
+      //     console.log(timeDifferenceInMinutes + " difference")
+      
+      //     // Adjust the threshold based on your requirements (e.g., 30 minutes)
+      //     const authenticationThresholdInMinutes = 5;
+      
+      //     if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
+      //       // Prompt the user to reauthenticate
+      //       // You can navigate to a login screen or show a modal for reauthentication
+      //       console.log('Reauthentication required');
+      //     }
+      //     setIsLoading(false)
+      //   } catch (error) {
+      //     console.log(error)
+      //   }
+      // };
 
 
   return (
@@ -305,28 +344,22 @@ const WelcomeScreen = ({navigation}) => {
                   <View>
                   <Text style={styles.text}>
                     <MaterialCommunityIcons name="currency-ngn" size={20} color={Color.white} />
-                    {authCtx.amtvisible === ''|| authCtx.amtvisible  === null || authCtx.amtvisible  === undefined  ? sumtot.toLocaleString() :  'XXXXX.XX'} 
-                    {/* {authCtx.amtvisible} */}
-                    {/* {sumtot} */}
+                    {authCtx.showAmount === 'show'  ? sumtot.toLocaleString() : 'XXXXX.XX'} 
                   </Text>
                   </View>
 
-                  {authCtx.amtvisible === '' ?
-                   <TouchableOpacity style={{alignSelf:'center', marginLeft:10, marginTop:5}} onPress={() => onAuthenticate('true')}>
+                  {authCtx.showAmount === 'show' ?
+                   <TouchableOpacity style={{alignSelf:'center', marginLeft:10}} onPress={() => onAuthenticate('hide')}>
 
-                      <Entypo name="eye-with-line" size={20} color="white" />
+                      <Entypo name="eye-with-line" size={24} color="white" />
                     </TouchableOpacity>
-                  : authCtx.amtvisible === 'true' ?
-                    <TouchableOpacity style={{alignSelf:'center', marginLeft:10, marginTop:5}} onPress={() => onAuthenticate('false')}>
+                  :
+                    <TouchableOpacity style={{alignSelf:'center', marginLeft:10}} onPress={() => onAuthenticate('show')}>
 
-                      <Entypo name="eye" size={20} color="white" />
+                      <Entypo name="eye" size={24} color="white" />
                     </TouchableOpacity>
-                  : 
-                  <TouchableOpacity style={{alignSelf:'center', marginLeft:10, marginTop:5}} onPress={() => onAuthenticate('true')}>
-
-                    <Entypo name="eye-with-line" size={20} color="white" />
-                  </TouchableOpacity>
                   }
+
                 </View>
                 <Text  style={{fontFamily: 'interBold', fontSize:10, color: Color.white}}>OutStanding Payment</Text>
               </View>
@@ -348,7 +381,7 @@ const WelcomeScreen = ({navigation}) => {
                 <>
                 {
                   isLoading ? <LoadingOverlay/> :
-                  <ImageBackground key={key.id} contentFit='contain' source={{uri: `https://phixotech.com/igoepp/public/slider/${item.slide}`}} style={styles.slide2}></ImageBackground>
+                  <ImageBackground key={key} contentFit='contain' source={{uri: `https://phixotech.com/igoepp/public/slider/${item.slide}`}} style={styles.slide2}></ImageBackground>
                 }
                 </>
               ))}  

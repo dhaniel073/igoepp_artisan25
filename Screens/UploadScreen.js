@@ -1,6 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, View , SafeAreaView, Platform, Alert} from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View , SafeAreaView, Platform, Alert, FlatList} from 'react-native'
 import React, { useContext, useEffect, useState, useRef } from 'react'
-import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
+import { Border, Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
 import { AuthContext } from '../utils/AuthContext'
 import * as ImagePicker from "expo-image-picker"
@@ -9,6 +9,7 @@ import { Image, ImageBackground } from 'expo-image'
 import SubmitButton from '../Components/Ui/SubmitButton'
 import {MaterialIcons, FontAwesome, Ionicons} from '@expo/vector-icons'
 import Modal from 'react-native-modal'
+import { GetHelperCompleteProofRequestId, RequestImageProof, UpLoad } from '../utils/AuthRoute'
 
 
 const UploadScreen = ({navigation, route}) => {
@@ -33,13 +34,14 @@ const UploadScreen = ({navigation, route}) => {
   }, [])
 
   const getproofid = async () => {
-      try {
-          const response = await GetHelperCompleteProofRequestId(request_id, authCtx.token)
-          setDetails(response.data)
-          setId(response.data.id)
-      } catch (error) {
-          return
-      }
+    try {
+        const response = await GetHelperCompleteProofRequestId(request_id, authCtx.token)
+        console.log(response.data)
+        setDetails(response.data)
+        setId(response.data[0].id)
+    } catch (error) {
+        return
+    }
   }
 
   const toggleuploadModal = () => [
@@ -47,7 +49,7 @@ const UploadScreen = ({navigation, route}) => {
   ]
 
   const captureimage = async () => {
-    ImagePicker.getCameraPermissionsAsync()
+    // ImagePicker.getCameraPermissionsAsync()
 
     let result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -57,21 +59,20 @@ const UploadScreen = ({navigation, route}) => {
         base64: true
     })
 
-
-
     if(result.canceled){
       toggleuploadModal()
       return;
     }
     
     if(!result.canceled){
-      setImages(result)
+      setImages(result.assets[0])
       setImageBase(result.assets[0].base64)
       toggleuploadModal()
     }
 }
 
 const pickImage = async () => {
+    let imagelist = []
     ImagePicker.getMediaLibraryPermissionsAsync()
 
 
@@ -80,20 +81,19 @@ const pickImage = async () => {
       allowsMultipleSelection:true,
       aspect:[4,3],
       quality: 0.75,
-      base64: true
+      base64: true,
     })
-
-    if(result.canceled){
-      toggleuploadModal()
+    
+      if(result.canceled){
+        toggleuploadModal()
         return;
-    }
-
+      }
+    
     var count = Object.keys(result.assets).length;
     let catarray = []
     for (var i = 0; i < count; i++){
       catarray.push({
-          label: result.assets[i].uri,
-          id: result.assets[i].assetId,
+        label: result.assets[i].uri,
       })
       setImageBase(result.assets[i].base64)
       toggleuploadModal()
@@ -101,57 +101,108 @@ const pickImage = async () => {
     setImages(catarray)
    
 }
+  const UploadProof = async () => {
+    const uploadUrl = `data:image/jpeg;base64,${imagebase}`
+    try {
+      setIsLoading(true)
+      const response = await RequestImageProof(id, uploadUrl, authCtx.token)
+      console.log(response) 
+      setIsLoading(false)
+      Alert.alert('Success', "Image proof uploaded sucessfully", [
+        {
+          text: "Ok",
+          onPress: () => navigation.goBack()
+        }
+      ])
+    } catch (error) {
+      setIsLoading(true)
+      console.log(error.response)
+      Alert.alert('Error', "An error occured while uploading image proof", [
+        {
+          text: "Ok",
+          onPress: () => {}
+        }
+      ])
+      setIsLoading(false)
+    }
+  }
 
 if(IsLoading){
     return <LoadingOverlay message={"..."}/>
 }
   return (
-    <View style={{marginTop:marginStyle.marginTp, marginHorizontal:10}}>
+    <View style={{marginTop:marginStyle.marginTp, marginHorizontal:10, }}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.uploadtxt}>UploadScreen</Text>
 
-      <ImageBackground style={{}}>
-
-                {images.length > 3 ?
-                    <Text>
-                        {Alert.alert("Image Overload", "Maximum number of image exceeded, only 3 images can be sent", [
-                            {
-                                text: 'Ok',
-                                onPress: () => setImages([])
-                            }
-                        ]) }
-                    </Text>
-                :        
-            
-                        <>
-                        {images.length <= 3 ?
-                            <Image  style={styles.startImgStyle} source={{uri: images.uri}} contentFit='fill'/>
-
-                        : <>
-                            {Alert.alert("Image Overload", "Maximum number of image exceeded, only 3 images can be sent", [
-                                {
-                                    text: 'Ok',
-                                    onPress: () => setImages([])
-                                }
-                            ]) }
-                        </>
-                        }
-                        </>
-            }
-                {images.length <= 3 && images.length !== 0 ? null :
-                    
-                 <>
-                <View style={{borderStyle:'dashed', width: DIMENSION.WIDTH * 0.9, alignSelf:'center',alignItems:'center', borderWidth:1,  height:DIMENSION.HEIGHT * 0.2,  justifyContent:'center'}}>
-                    <Text style={{}}>Upload Image</Text>
-                </View>
-
-                <View style={{marginLeft:30, marginRight:30, marginTop:20}}>
-                    <SubmitButton style={{marginTop:10, }} message={"Select Image"} onPress={() => toggleuploadModal()}/>
-                </View>
-                </>
-
+        {/* {images.map((item, key) => (
+          <>
+            {
+              images.length > 3 ?
+              Alert.alert("Image Overload", "Maximum number of image exceeded, only 3 images can be sent", [
+                {
+                    text: 'Ok',
+                    onPress: () => setImages([])
                 }
-        </ImageBackground>
+              ]) 
+              :
+                <Image source={{uri: item.label}} style={styles.images}/>
+            }
+          </>
+        ))} */}
+        {
+          images.length === 0 ?
+          <>
+          {Platform.OS === 'android' ?
+            <>
+           <View style={{borderRadius: 10, borderColor: Color.grey2, borderStyle:'dashed', width: DIMENSION.WIDTH * 0.9, alignSelf:'center',alignItems:'center', borderWidth:1,  height:DIMENSION.HEIGHT * 0.2,  justifyContent:'center'}}>
+             <Text style={{}}>Upload Image</Text>
+           </View>
+           <View style={{marginLeft:30, marginRight:30, marginTop:20}}>
+              <SubmitButton style={{marginTop:10, }} message={"Select Image"} onPress={() => toggleuploadModal()}/>
+            </View>
+           </>
+           :
+           <>
+           <View style={{borderRadius: 10, borderColor: Color.grey2, width: DIMENSION.WIDTH * 0.9, alignSelf:'center',alignItems:'center', borderWidth:1,  height:DIMENSION.HEIGHT * 0.2,  justifyContent:'center'}}>
+             <Text style={{}}>Upload Image</Text>
+           </View>               
+            <View style={{marginLeft:30, marginRight:30, marginTop:20}}>
+                <SubmitButton style={{marginTop:10, }} message={"Select Image"} onPress={() => toggleuploadModal()}/>
+            </View>
+            </>
+         }
+          </>
+          : 
+           
+            <>
+            {
+              images.length <= 3 ?
+              <>
+              <FlatList
+              data={images}
+              style={{marginBottom: 10}}
+              showsVerticalScrollIndicator={false}
+              keyExtractor={(item) => item.id}
+              renderItem={({item}) => (
+                <View>
+                  <Image source={{uri: item.label}} style={styles.images} contentFit='fill'/>
+                </View>
+              )}
+            />
+              <SubmitButton style={{marginTop:15, marginHorizontal:20}} message={"Upload Image"} onPress={() => UploadProof()}/>
+            </>
+
+            : 
+              Alert.alert("Image Overload", "Maximum number of image exceeded, only 3 images can be sent", [
+                {
+                  text: 'Ok',
+                  onPress: () => setImages([])
+                }
+              ]) 
+            }
+          </>
+         }
 
 
         <Modal isVisible={isuploadModalVisble}>
@@ -162,7 +213,7 @@ if(IsLoading){
         </TouchableOpacity>
         <View style={[styles.modalView,  {width: DIMENSION.WIDTH * 0.7}]} showsVerticalScrollIndicator={false}>
           <Text style={[styles.modalText, {fontSize:16}]}>
-            Upload Id Card
+            Upload Image Proof
           </Text>
 
             <View style={{ marginBottom:10}}/>  
@@ -195,6 +246,18 @@ if(IsLoading){
 export default UploadScreen
 
 const styles = StyleSheet.create({
+  images:{
+    backgroundColor: Color.mintcream,
+    borderColor: "rgba(151, 173, 182, 0.2)",
+    borderWidth: 1,
+    borderStyle: "solid",
+    margin:5,
+    borderRadius: Border.br_3xs,
+    padding:5,
+    width:DIMENSION.WIDTH * 0.9,
+    height: DIMENSION.HEIGHT * 0.2,
+    alignSelf:'center'
+  },
   shadow:{
     // marginBottom: 10,
     borderRadius: 20, 

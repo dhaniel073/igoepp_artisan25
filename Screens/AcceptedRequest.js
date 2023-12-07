@@ -1,13 +1,14 @@
-import { FlatList, RefreshControl, StyleSheet, Text, SafeAreaView, TouchableOpacity, View, TextInput, Alert, Dimensions } from 'react-native'
+import { FlatList, RefreshControl, StyleSheet, Text, SafeAreaView, TouchableOpacity, View, TextInput, Alert, Dimensions, Platform } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
 import Modal from 'react-native-modal'
 import {Ionicons, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
-import { ImageBackground } from 'expo-image'
+import { Image, ImageBackground } from 'expo-image'
 import { AuthContext } from '../utils/AuthContext'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { EndService, HelperCompleteProof, Request, RequestByHelperid, ShowRequestWithId, StartService } from '../utils/AuthRoute'
+import axios from 'axios'
 
 
 
@@ -28,6 +29,7 @@ const AcceptedRequest = ({navigation}) => {
   const [customerid, setCustomerId] = useState()
   const [details, setDetails] = useState([])
   const [endid, setendid] = useState()
+  const [items, setItems] = useState()
 
 
 
@@ -37,30 +39,34 @@ const AcceptedRequest = ({navigation}) => {
       try {
         setIsLoading(true)
         const response = await RequestByHelperid(authCtx.Id , authCtx.token)
+        console.log(response)
         setRequest(response)
         var count = Object.keys(response).length;
         let cityArray = []
         for (var i = 0; i < count; i++){
         cityArray.push({
-            label: response[i].customer_id,
+            label: response[i].id,
         })
       }
-      setCustomerId(cityArray)
-        setIsLoading(false)
-      } catch (error) {
-        // console.log(error)
-        Alert.alert("Sorry", "An error occured try again later", [
-          {
+        setCustomerId(cityArray)
+        // fetchDataForItem(cityArray);
+       
+      setIsLoading(false)
+    } catch (error) {
+      // console.log(error)
+      Alert.alert("Sorry", "An error occured try again later", [
+        {
             text:"Ok",
             onPress: () => navigation.goBack()
           }
         ])
-      return;
+        return;
       }
     });
     return unsubscribe;
   }, [navigation]);
 
+  // console.log(customerid)
 
   const pull = async () => {
     try {
@@ -183,6 +189,8 @@ const AcceptedRequest = ({navigation}) => {
   }
 
 
+
+
   const endservice = async () => {
     const confirmDate = datefor <= 9 ? `0${datefor}`  : datefor
     const confirmMonth =  monthFor <= 9 ? `0${monthFor}`  : monthFor
@@ -236,14 +244,47 @@ const AcceptedRequest = ({navigation}) => {
     }
   }
 
+
+
   const AssignedHelper = authCtx.Id.toLocaleString()
+
+  // const fetchDataForItem = async (item) => {
+  //   let cityArray = []
+
+  //   for(const it of item){
+  //     try {
+  //       const response = await axios.get(`https://phixotech.com/igoepp/public/api/auth/hrequest/helperhelpchatcountunread/${it.label}`, {
+  //         headers:{
+  //           Accept: 'application/json',
+  //           Authorization: `Bearer ${authCtx.token}`
+  //         }
+  //       });
+  //       cityArray.push(response.data)
+  //     } catch (error) {
+  //       console.log(error.response);
+  //        // Propagate the error
+  //     }
+  //   }
+
+  //   setItems(cityArray)
+
+  // };
+
+  // const fetchAllDataSequentially = async () => {
+   
+  // };
+
+  // fetchAllDataSequentially()
+
+  // console.log(items)
 
   if(isLoading){
     return <LoadingOverlay message={"..."}/>
   }
 
+
   return (
-    <View style={{marginTop:marginStyle.marginTp, marginHorizontal:10}}>
+    <View style={{marginTop:marginStyle.marginTp, marginHorizontal:10, flex:1}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.acceptedtxt}>AcceptedRequest</Text>
 
@@ -252,7 +293,7 @@ const AcceptedRequest = ({navigation}) => {
       <FlatList
         data={request}
         showsVerticalScrollIndicator={false}
-        style={{marginBottom:'20%'}}
+        // style={{marginBottom:'2%'}}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl
@@ -278,24 +319,24 @@ const AcceptedRequest = ({navigation}) => {
 
            <Ionicons name="location" size={10} color={Color.tomato} />
 
-           {item.help_lga} {item.help_state} { item.help_country} </Text>
+           {item.help_lga} {item.help_state} </Text>
               <Text style={styles.itemprice}>
                 NGN {item.agreed_price}
               </Text>
            </View>
            {item.end_request_time === null ? 
              
-              <TouchableOpacity style={{ position:'absolute', top:-5, marginLeft: DIMENSION.HEIGHT * 0.25}} onPress={() => navigation.navigate('Chat', {
+              <TouchableOpacity style={{ position:'absolute', top:-5, marginLeft: DIMENSION.HEIGHT * 0.27}} onPress={() => navigation.navigate('Chat', {
                 customerId: item.customer_id,
                 bid_id: item.id
               })}>
 
                 <Ionicons name="chatbubbles" size={24} color={Color.orange_100} />
                 {
-                  item.chat_unread === 0 ? "" :
+                  item.chat_unread_helper === 0 ? "" :
 
                   <ImageBackground  source={require("../assets/ellipse-127.png")} contentFit="contain" style={{height:15, width:15, justifyContent:'center', position: 'absolute', marginLeft:15, marginTop:-4}}>
-                    <Text style={{ fontSize: 8,  color: Color.white, fontFamily:'poppinsBold', textAlign:'center'}}>{item.chat_unread}</Text>
+                    <Text style={{ fontSize: 8,  color: Color.white, fontFamily:'poppinsBold', textAlign:'center'}}>{item.chat_unread_helper}</Text>
                     {/* <Text style={[styles.text2, styles.text2Typo]}>{chatnum}</Text> */}
                   </ImageBackground>
                 }
@@ -345,27 +386,26 @@ const AcceptedRequest = ({navigation}) => {
                : item.customer_statisfy === null ? 
                <>
                <Text style={[styles.completeservicetext, {position:'absolute', top:-60, left:'60%',  fontSize:10} ]}>Satisfaction Pending</Text>
-               {/* <TouchableOpacity style={{ position:'absolute', top:-38, marginLeft: HEIGHT * 0.24}} onPress={() => navigation.navigate('Chat', {
+               <TouchableOpacity style={{ position:'absolute', top:-38, marginLeft: HEIGHT * 0.26}} onPress={() => navigation.navigate('Chat', {
                   customerId: item.customer_id,
                   bid_id: item.id
                 })}>
                   <Ionicons name="chatbubbles" size={24} color={Color.orange_100} />
                   {
-                    item.chat_unread === 0 ? "" : 
+                    item.chat_unread_helper === 0 ? "" : 
                     <ImageBackground  source={require("../assets/ellipse-127.png")} contentFit="contain" style={{height:15, width:15, justifyContent:'center', position: 'absolute', marginLeft:15, marginTop:-4}}>
-                    <Text style={{ fontSize: 8,  color: Color.white, fontFamily:'poppinsBold', textAlign:'center'}}>{item.chat_unread}</Text>
-                    <Text style={[styles.text2, styles.text2Typo]}>{chatnum}</Text> 
+                    <Text style={{ fontSize: 8,  color: Color.white, fontFamily:'poppinsBold', textAlign:'center'}}>{item.chat_unread_helper}</Text>
+                    {/* <Text style={[styles.text2, styles.text2Typo]}>{}</Text>  */}
                    </ImageBackground>
                   }
-                </TouchableOpacity>  */}
+                </TouchableOpacity> 
 
                <TouchableOpacity style={styles.cancelbtn} onPress={() =>
-                // navigation.navigate("UploadScreen", {
-                //     customerId: item.customer_id,
-                //     request_id: item.id,
-                //     date: item.start_request_time
-                //   })
-                  {}}>
+                navigation.navigate("UploadScreen", {
+                    customerId: item.customer_id,
+                    request_id: item.id,
+                    date: item.start_request_time
+                  })}>
                       <Text style={styles.canceltext}>Upload Proof</Text>
                 </TouchableOpacity>
                </>
@@ -408,7 +448,7 @@ const AcceptedRequest = ({navigation}) => {
         )}
         />
         }
-        <View style={{marginBottom:"20%"}}/>
+        {/* <View style={{marginBottom:"20%"}}/> */}
       </>
 
       {/* } */}
@@ -423,12 +463,21 @@ const AcceptedRequest = ({navigation}) => {
             <View style={styles.modalView}>
               <Text style={styles.modalText}>Details</Text>
 
+             
+
                 {isdetailsLoading ? <LoadingOverlay/> : 
                 <FlatList
                   data={details}
                   keyExtractor={(item) => item.id}
                   renderItem={({item}) => (
                     <View>
+                       {
+                        Platform.OS === 'android' ?
+                          <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.1,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
+                        :
+                        <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.05,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
+                      }
+
                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:11}}>Price : </Text>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:11}}>{item.agreed_price === null ? '0.00' : item.agreed_price}</Text>

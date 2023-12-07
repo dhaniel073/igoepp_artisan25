@@ -84,7 +84,6 @@ image2:{
     width: 15,
     height: 15,
     marginHorizontal: 15,
-    // marginTop: 3,
     marginTop: "10%"
   }
 })

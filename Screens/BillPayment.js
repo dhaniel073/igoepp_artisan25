@@ -35,7 +35,7 @@ const BillPayment = ({navigation}) => {
 
 
   useEffect(() => {
-   const unsubscribe =  navigation.addListener('state', async() => {
+   const unsubscribe =  navigation.addListener('focus', async() => {
        try {
         setisLoading(true)
         const response = await Walletbal(authCtx.Id, authCtx.token)
@@ -99,26 +99,21 @@ const BillPayment = ({navigation}) => {
     auth.then(result => {
       setIsAuthenticated(result.success);
       if(result.success === true){
-          if(spec === 'true'){
-            NotVisible()
+          if(spec === 'hide'){
+            HideAmount()
           }else{
-            Visible()
+            ShowAmount()
           }
       }
     })
   }
 
-  const Visible = () => {
-    const status = 'false'
-    authCtx.helperAmtVisible(status) 
-    // console.log(status)   
+  const ShowAmount = () => {
+    authCtx.helperShowAmount('show')
   }
-
-  const NotVisible = () => {
-    const status = 'true'
-    authCtx.helperAmtVisible(status)
-    // console.log(status)   
-
+  
+  const HideAmount = () => {
+    authCtx.helperShowAmount('hide')
   }
 
 
@@ -136,22 +131,17 @@ const BillPayment = ({navigation}) => {
         <View style={{flexDirection:'row', marginBottom:5}}>
           <Text style={styles.text}>
             <MaterialCommunityIcons name="currency-ngn" size={25} color="white" />
-            {authCtx.amtvisible === ''  ? authCtx.balance : authCtx.amtvisible === 'true' ? 'XXXXX.XX' : authCtx.balance} 
+            {authCtx.showAmount === 'show'  ? authCtx.balance : 'XXXXX.XX'}
           </Text>
 
-          {authCtx.amtvisible === '' ?
-            <TouchableOpacity style={{alignSelf:'center', marginLeft:10, marginTop:5}} onPress={onAuthenticate}>
-            
-              <Entypo name="eye-with-line" size={22} color="white" />
+          {authCtx.showAmount === 'show' ?
+            <TouchableOpacity style={{alignSelf:'center', marginLeft:10}} onPress={() => onAuthenticate('hide')}>
+              <Entypo name="eye-with-line" size={24} color="white" />
             </TouchableOpacity>
-          : authCtx.amtvisible === 'true' ?
-            <TouchableOpacity style={{alignSelf:'center', marginLeft:10, marginTop:5}} onPress={onAuthenticate}>
-              <Entypo name="eye" size={22} color="white" />
+          :
+            <TouchableOpacity style={{alignSelf:'center', marginLeft:10}} onPress={() => onAuthenticate('show')}>
+              <Entypo name="eye" size={24} color="white" />
             </TouchableOpacity>
-          : 
-          <TouchableOpacity style={{alignSelf:'center', marginLeft:10, marginTop:5}} onPress={onAuthenticate}>
-            <Entypo name="eye-with-line" size={22} color="white" />
-          </TouchableOpacity>
           }
         </View>
         <View style={{flexDirection:'row', justifyContent:'space-between', left:2}}>

@@ -225,33 +225,33 @@ const captureidcardimage = async () => {
 
 //pick address prood image
 const pickaddressImage = async () => {
-    ImagePicker.getMediaLibraryPermissionsAsync()
+  ImagePicker.getCameraPermissionsAsync()
+        
+  let result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect:[4,3],
+    quality: 0.75,
+    base64: true
+  })
 
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect:[4,3],
-        quality: 0.75,
-        base64: true
-    })
-
-    if(result.canceled){
-      toggleAddressModal()
-      return;
-    }
-    
-    if(!result.canceled){
-      setAddressProof(result.assets[0].uri)
-      setAddressProofBase(result.assets[0].base64)
-      toggleAddressModal()
-    }
+  if(result.canceled){
+    toggleAddressModal()
+    return;
+  }
+  
+  if(!result.canceled){
+    setAddressProof(result.assets[0].uri)
+    setAddressProofBase(result.assets[0].base64)
+    toggleAddressModal()
+  }
    
 }
 
 //pick id card image
 const pickidcardImage = async () => {
-    ImagePicker.getMediaLibraryPermissionsAsync()
+    ImagePicker.getCameraPermissionsAsync()
 
     let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,

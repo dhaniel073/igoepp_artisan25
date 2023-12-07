@@ -868,7 +868,7 @@ async function viewcustomerratingonrequest (id, token){
   }
 
   async function viewalertsetup(id,token){
-    const url = `http://phixotech.com/igoepp/public/api/auth/helper/helperalertsetupview/${id}`
+    const url = `https://phixotech.com/igoepp/public/api/auth/helper/helperalertsetupview/${id}`
     const response = axios.get(url, {
         headers:{
             Accept: `application/json`,
@@ -881,7 +881,7 @@ async function viewcustomerratingonrequest (id, token){
   }
 
   async function enablealert(id, event_type, alert_type, token){
-    const url = `http://phixotech.com/igoepp/public/api/auth/helper/helperalertsetups`
+    const url = `https://phixotech.com/igoepp/public/api/auth/helper/helperalertsetups`
     const response = axios.post(url,{
         helper_id: id,
         event_type: event_type,
@@ -908,6 +908,120 @@ async function viewcustomerratingonrequest (id, token){
     const data = response.data
     return data
   }
+
+  async function biometricsetup(id, fingerprinttoken,  token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/helper/${id}/setupbiometric`
+    const response = axios.put(url, {
+      "finger_print": fingerprinttoken,
+    }, {
+      headers:{
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    })
+  
+    const data = response
+    return data;
+  }
+  
+  async function loginwithbiometric(fingerprinttoken){
+    const url = `https://phixotech.com/igoepp/public/api/igoeppauth/loginhelperbiometric`
+    const response = axios.post(url, {
+      "biometric": fingerprinttoken,
+    }) 
+  
+    const data = response
+    return data
+  }
+
+  async function disablebiometric(id, token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/helper/${id}/disablebiometric`
+    const response = axios.get(url, {
+      headers:{
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    })
+  
+    const data = response
+    return data;
+  }
+
+  
+  async function setuppin(id, pin, token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/helper/${id}/setuppin`
+    const response = axios.put(url, {
+      "pin": pin,
+    }, {
+      headers:{
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    }) 
+    const data = response
+    return data
+  }
+  
+  async function validatepin(id, pin, token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/helper/${id}/validatepin`
+    const response = axios.put(url, {
+      "pin": pin,
+    }, {
+      headers:{
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    }) 
+    const data = response
+    return data
+  }
+
+  async function updatepin(id, pin, token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/helper/${id}/resetpin`
+    const response = axios.put(url, {
+      "pin": pin,
+    }, {
+      headers:{
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    }) 
+    const data = response
+    return data
+  }
+
+  async function helperresetpassword(id, password, token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/helper/helperpasswordreset`
+    const response = axios.post(url, {
+      "id": id,
+      "password": password
+    }, {
+      headers:{
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    }) 
+    const data = response
+    return data
+  }
+
+  async function validateLogin(email, password){
+    const loginUrl = 'https://phixotech.com/igoepp/public/api/igoeppauth/validateloginhelper'
+    
+    const response = await axios.post(loginUrl, {
+      'username': email,
+      'password': password,
+    })
+    const data = response.data
+    return data;
+  }
+  
+  
+  
+
+ 
+  
+  
 
 
 
@@ -1180,3 +1294,35 @@ export const EnableAlert = (id, event_type, alert_type, token) => {
 export const SliderImage = (token) => {
     return sliderimage(token)
 }
+
+export const BiometricSetup = (id, fingerprinttoken, token) => {
+    return biometricsetup(id, fingerprinttoken, token)
+  }
+  
+  export const LoginWithBiometric = (fingerprinttoken) => {
+    return loginwithbiometric(fingerprinttoken)
+  }
+  
+  export const SetupPin = (id, pin, token) => {
+    return setuppin(id, pin, token)
+  }
+  
+  export const ValidatePin = (id, pin, token) => {
+    return validatepin(id, pin, token)
+  }
+
+  export const UpdatePin = (id, pin, token) => {
+    return updatepin(id, pin, token)
+  }
+
+  export const HelperResetPassword = (id, password, token) => {
+    return helperresetpassword(id, password, token)
+  }
+
+  export const ValidateLogin = (email, password) => {
+    return validateLogin(email, password)
+  }
+
+  export const DisableBiometric = (id, token) => {
+    return disablebiometric(id, token)
+  }

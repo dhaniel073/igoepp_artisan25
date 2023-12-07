@@ -1,8 +1,8 @@
-import { FlatList, StyleSheet, TouchableOpacity, Text, View, SafeAreaView, Dimensions } from 'react-native'
+import { FlatList, StyleSheet, TouchableOpacity, Text, View, SafeAreaView, Dimensions, Platform } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Border, Color, FontSize, marginStyle } from '../Components/Ui/GlobalStyle'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
-import { ImageBackground } from 'expo-image'
+import { Image, ImageBackground } from 'expo-image'
 import { AuthContext } from '../utils/AuthContext'
 import { RequestByHelperid, ShowRequestWithId } from '../utils/AuthRoute'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
@@ -135,6 +135,13 @@ const ServiceHistory = ({navigation}) => {
                   keyExtractor={(item) => item.id}
                   renderItem={({item}) => (
                     <View>
+                        {
+                          Platform.OS === 'android' ?
+                            <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.12,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
+                          :
+                          <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.05,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
+                        }
+
                         <View style={{justifyContent:'space-between', flexDirection:'row'}}>
                         <Text style={{fontFamily:'poppinsRegular', fontSize :11 }}>Bid Reference : </Text>
                         <Text style={{fontFamily:'poppinsRegular', fontSize :11 }}> {item.id}</Text>

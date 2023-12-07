@@ -40,6 +40,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {FontAwesome5, Ionicons} from '@expo/vector-icons'
 import { Color } from './Components/Ui/GlobalStyle';
 import * as Notification from 'expo-notifications'
+import { BiometricSetup } from './utils/AuthRoute';
+import TransactionPin from './Screens/TransactionPin';
+import Biometric from './Screens/Biometric';
+import * as Device from 'expo-device';
+import PasswordReset from './Screens/PasswordReset';
 
 
 
@@ -58,6 +63,63 @@ const Tabs = createBottomTabNavigator()
 
 
 export default function App() {
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+    notificationListener.current = Notification.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    responseListener.current = Notification.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      Notification.removeNotificationSubscription(notificationListener.current);
+      Notification.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
+  async function registerForPushNotificationsAsync() {
+    let token;
+  
+    if (Platform.OS === 'android') {
+      await Notification.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notification.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+  
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notification.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notification.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        alert('Failed to get push token for push notification!');
+        return;
+      }
+
+      // Learn more about projectId:
+      // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
+      token = (await Notification.getExpoPushTokenAsync({ projectId: '0e18ffeb-cbc7-439c-8348-da5e8ba93af1' })).data;
+      console.log(token);
+    } else {
+      // alert('Must use physical device for Push Notifications');
+    }
+  
+    return token;
+  }
+
 
   const [fontloaded] =  useFonts({
     'poppinsRegular': require("./assets/Fonts/Poppins-Regular.ttf"),
@@ -87,7 +149,6 @@ export default function App() {
   useEffect(() => {
       const permissionget = async () => {
         let {status} = await Notification.requestPermissionsAsync();
-        console.log(status)
 
         if (Platform.OS === 'android') {
           await Notification.setNotificationChannelAsync('default', {
@@ -100,6 +161,8 @@ export default function App() {
       }
       permissionget()
   }, [])
+
+
 
   
 
@@ -195,6 +258,8 @@ export default function App() {
 
   //NOT AUTHENTICATED ROUTE/SCREENS
   function AuthStack(){
+
+    
     return (
       <Stack.Navigator
       screenOptions={{
@@ -232,6 +297,46 @@ export default function App() {
 
   //AUTHENTICATED  ROUTE/SCREENS
   function AuthenticatedStack(){
+    const authCtx = useContext(AuthContext)
+
+    useEffect(() => {
+      checkLastLoginTimestamp()
+    },[])
+    
+      // console.log(authCtx.lastLoginTimestamp + " timestamp")
+  
+      const checkLastLoginTimestamp =  () => {
+        const storedTimestamp = authCtx.lastLoginTimestamp
+        const lastLoginTimestamp = new Date(storedTimestamp);
+        const currentTimestamp = new Date();
+    
+        if(authCtx.lastLoginTimestamp === null || undefined || ""){
+          return 
+        }else{
+          console.log(storedTimestamp + " storedtime")
+          console.log(lastLoginTimestamp + " lastlogintime")
+          console.log(currentTimestamp + " current time")
+
+          const timeDifferenceInMinutes = Math.floor(
+            (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
+          );
+
+          console.log(timeDifferenceInMinutes + " difference")
+      
+          // Adjust the threshold based on your requirements (e.g., 30 minutes)
+          const authenticationThresholdInMinutes = 5;
+      
+          if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
+            // Prompt the user to reauthenticate
+            // You can navigate to a login screen or show a modal for reauthentication
+            console.log('Reauthentication required');
+            authCtx.logout()
+          }
+        }
+      };
+  
+  
+      
     return (
       <Stack.Navigator
           screenOptions={{
@@ -439,13 +544,28 @@ export default function App() {
         }}
       />
 
-      {/* <Stack.Screen
-        name='AcceptedRequest'
-        component={AcceptedRequest}
+      <Stack.Screen
+        name='TransactionPin'
+        component={TransactionPin}
         options={{
           headerShown: false
-        }}
-      /> */}
+        }} 
+      />
+      <Stack.Screen
+        name='Biometric'
+        component={Biometric}
+        options={{
+          headerShown: false
+        }} 
+      />
+
+      <Stack.Screen
+        name='PasswordReset'
+        component={PasswordReset}
+        options={{
+          headerShown: false
+        }} 
+      />
       
       </Stack.Navigator>
     )
@@ -482,8 +602,8 @@ export default function App() {
     const storedsubcatid = await AsyncStorage.getItem('helperSubCatId')
     const storedphone = await AsyncStorage.getItem('helperPhone')
     const storedpicture = await AsyncStorage.getItem('helperPicture')
-
-
+    const storedshowamount = await AsyncStorage.getItem('helperShowAmount')
+    const storedlastlogintime = await AsyncStorage.getItem('helperlastLoginTimestamp')
 
     if(storedToken && storedId && storedemail){
       authCtx.authenticated(storedToken)
@@ -494,7 +614,9 @@ export default function App() {
       authCtx.helperCatId(storedcatid)
       authCtx.helperSubCatId(storedsubcatid)
       authCtx.helperPhone(storedphone)
+      authCtx.helperShowAmount(storedshowamount)
       authCtx.helperPicture(storedpicture)
+      authCtx.helperlastLoginTimestamp(storedlastlogintime)
     }
 
     setisTrying(false)
@@ -513,6 +635,8 @@ export default function App() {
     return <Navigation/>
 
   }
+
+
 
 
 

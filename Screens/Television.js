@@ -1,5 +1,5 @@
-import { Platform, SafeAreaView, ScrollView, StyleSheet,TouchableOpacity, Text, View, Alert } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import { Platform, SafeAreaView, ScrollView, StyleSheet,TouchableOpacity, Text, View, Alert, TextInput } from 'react-native'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
 import axios from 'axios'
@@ -8,7 +8,7 @@ import { AuthContext } from '../utils/AuthContext'
 import { Image, ImageBackground } from 'expo-image'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
-import { TvPayment, TvRenewalPay, ValidateTv } from '../utils/AuthRoute'
+import { HelperUrl, TvPayment, TvRenewalPay, ValidatePin, ValidateTv } from '../utils/AuthRoute'
 import Modal from 'react-native-modal'
 import {Entypo, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
@@ -35,8 +35,36 @@ const Television = ({navigation, route}) => {
   const date = maindate.toDateString()
   const time = maindate.toLocaleTimeString()
 
+  const [pinT, setpinT] = useState()
+  const [pinvalid, setpinvalid] = useState(false)
+  const [pincheckifempty, setpincheckifempty] = useState([])
+  const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
+  const [pinerrormessage, setPinerrorMessage] = useState('')
+  const [ischecking, setischecking] = useState(false)
+
+
   const authCtx = useContext(AuthContext)
   const authId = route?.params?.id
+
+  
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      try {
+        setisLoading(true)
+        const response = await HelperUrl(authCtx.Id, authCtx.token)
+        setpincheckifempty(response.transaction_pin_setup)
+        setisLoading(false)
+      } catch (error) {
+        setisLoading(true)
+        setisLoading(false)
+        return;
+      }
+    })
+    return unsubscribe;
+  }, [])
+
+
+ 
 
   useEffect(() => {
     setisLoading(true)
@@ -112,7 +140,7 @@ const Television = ({navigation, route}) => {
     try {
       setisLoading(true)
       const response = await ValidateTv(authCtx.Id, id, smartcard, authCtx.token)
-      // console.log(response.data)
+      console.log(response)
       if(response.data.status === "Success"){
         if(id === "DSTVR" || id === "GOTVR"){
         setRef(response.data.requestID)
@@ -124,9 +152,17 @@ const Television = ({navigation, route}) => {
         setUserName(response.data.customerName)
         toggleConfirmModal()
         }
+      }else{
+        Alert.alert("Failed", response.data, [
+          {
+            text:"Ok",
+            onPress:() => navigation.goBack()
+          }
+        ])
       }
       setisLoading(false)
     } catch (error) {
+      console.log(error)
       setisLoading(true)
       Alert.alert("Sorry", "An error occured try again later", [
         {
@@ -141,12 +177,13 @@ const Television = ({navigation, route}) => {
   }
 
   const tvRenewalPayment = async (data) => {
+    togglePinModal()
     try {
       setisLoading(true)
       const response = await TvRenewalPay(ref, rprice, authCtx.token)
       // console.log(response.data)  
       // if(response.data.status){
-        if(response.data.message === "failed"){
+        if(response.data.message === "failed" || "Insufficient Balance"){
           Alert.alert(response.data.message, response.data.description + ", fund wallet and try again", [
             {
               text:"Ok",
@@ -175,7 +212,7 @@ const Television = ({navigation, route}) => {
   }
 
   const tvPayment = async () => {
-    toggleConfirmModal()
+    togglePinModal()
     try {
         setisLoading(true)
         const response = await TvPayment(ref, price, bouquetData, authCtx.token)
@@ -208,6 +245,52 @@ const Television = ({navigation, route}) => {
     }
   }
 
+  let refT = useRef(0);
+  
+  function handleClick() {
+    refT.current = refT.current + 1;
+    // alert('You clicked ' + ref.current + ' times!');
+  }
+
+  const togglePinModal = () => {
+    setisSetpinModalVisible(!isSetpinModalVisible)
+  }
+  
+  const pinValidateCheck = async () => {
+    if(refT.current > 3){
+      Alert.alert("", "To many attempt, try again later", [
+        {
+          text: "Ok",
+          onPress: () => navigation.goBack()
+        }
+      ])
+    }else{
+      try {
+        setischecking(true)
+        const response = await ValidatePin(authCtx.Id, pinT, authCtx.token)
+        // console.log(response)
+        if(id === "DSTVR" || id === "GOTVR"){
+          tvRenewalPayment() 
+        }else{
+          tvPayment()
+        }
+      } catch (error) {
+        setischecking(true)
+        setpinT()
+        setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
+        console.log(error.response)
+        Alert.alert("Error", error.response.data.message+ " " + "Try again", [
+          {
+            text: "Ok",
+            onPress: () => {}
+          },
+        ])
+        setischecking(false)
+
+      }
+    }
+  }
+
   
   async function schedulePushNotification(response) {
     await Notifications.scheduleNotificationAsync({
@@ -231,6 +314,21 @@ const Television = ({navigation, route}) => {
     <ScrollView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}} showsVerticalScrollIndicator={false}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.tvtxt}>{route.params.name}</Text>
+
+      {
+      pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
+        {
+          text: "Ok",
+          onPress: () => navigation.navigate('TransactionPin')
+        },
+        {
+          text: "Cancel",
+          onPress: () => navigation.goBack()
+        }
+      ]) 
+      :
+      <>
+
 
       <ImageBackground style={{flexDirection:'row', alignItems:'center', justifyContent:'space-evenly',}}>
         <Image contentFit='contain' source={require("../assets/dstv-logo.png")} style={[styles.image]}/>
@@ -328,6 +426,8 @@ const Television = ({navigation, route}) => {
               : null
             }
         </View>
+      </>
+    }
 
           <Modal isVisible={isCompleteModalVisble}>
             <SafeAreaView style={styles.centeredView}>
@@ -373,7 +473,7 @@ const Television = ({navigation, route}) => {
                                 <Text style={styles.viewtext}>Back</Text>
                           </TouchableOpacity>
 
-                          <TouchableOpacity style={styles.cancelbtn} onPress={() => [id === "DSTVR" || id === "GOTVR" ? tvRenewalPayment() : tvPayment()]}>
+                          <TouchableOpacity style={styles.cancelbtn} onPress={() => [toggleConfirmModal(), togglePinModal()]}>
                               <Text style={styles.canceltext}>Cofirm</Text>
                           </TouchableOpacity>
                         </View>
@@ -381,6 +481,59 @@ const Television = ({navigation, route}) => {
             </View>
             </SafeAreaView>
           </Modal>
+
+      <Modal isVisible={isSetpinModalVisible} animationInTiming={500}>
+        <SafeAreaView style={styles.centeredView}>
+        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [togglePinModal(), setpinT()]}>
+          <MaterialIcons name="cancel" size={30} color="white" />
+        </TouchableOpacity>
+          <View style={[styles.modalView, {width: DIMENSION.WIDTH * 0.7}]}>
+          {
+              ischecking ? 
+              <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
+                <LoadingOverlay/>  
+              </View>
+
+              :
+              <>
+            <View>
+            <Text style={[styles.modalText, {fontSize:14}]}>Enter Transaction Pin</Text>
+
+            <SafeAreaView style={{justifyContent:'center', alignItems:'center', marginHorizontal:40}}>
+              <TextInput
+                keyboardType={"numeric"}
+                maxLength={4}
+                style={{fontSize:25, textAlign:'center',width:150, margin:5, borderBottomWidth:1, padding:5}}
+                onChangeText={setpinT}
+                value={pinT}
+                isInvalid={pinvalid}
+                onFocus={() => [setpinvalid(false), setPinerrorMessage('')]}
+                secureTextEntry
+              />
+              {
+                pinvalid &&
+                <Text style={{fontSize:11, textAlign:'center', color:Color.tomato}}>Pin must be 4 characters</Text>
+              }
+              {
+                pinerrormessage.length !== 0 && <Text  style={{fontSize:11, textAlign:'center', color:Color.tomato}}>{pinerrormessage}</Text>
+              }
+            </SafeAreaView>
+            <View style={{marginBottom:'5%'}}/>
+            </View>
+            {/* <View style={styles.buttonView}> */}
+
+            <View style={{flexDirection:'row', justifyContent:'center'}}>
+              <TouchableOpacity style={styles.cancelbtn} onPress={() => pinT === null || pinT === undefined || pinT === "" || pinT.length < 4  ? setpinvalid(true) : [handleClick(), pinValidateCheck()]}>
+                <Text style={{textAlign:'center', color:Color.white, fontFamily: 'poppinsRegular'}}>Continue</Text>
+              </TouchableOpacity>
+            </View>             
+              {/* </View> */}
+            </>
+          }
+          </View>
+          </SafeAreaView>
+      </Modal>
+
 
 
         <Modal isVisible={isModalVisble}>

@@ -1,5 +1,5 @@
-import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
@@ -8,7 +8,7 @@ import { Dropdown } from 'react-native-element-dropdown'
 import { AuthContext } from '../utils/AuthContext'
 import { Image, ImageBackground } from 'expo-image'
 import Modal from 'react-native-modal'
-import { HelperSelf, HelperThirdParty, HelperVtuAirtime, HelperVtuData } from '../utils/AuthRoute'
+import { HelperSelf, HelperThirdParty, HelperUrl, HelperVtuAirtime, HelperVtuData, ValidatePin } from '../utils/AuthRoute'
 import {MaterialIcons, Entypo, MaterialCommunityIcons} from '@expo/vector-icons'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
@@ -26,6 +26,7 @@ const data = [
 const VirtualTopup = ({navigation, route}) => {
   const [category, setcategory] = useState([])
   const [isloading, setisloading] = useState(false)
+  const [ischecking, setischecking] = useState(false)
   const [id, setid] = useState('')
   const [isFocus, setisFocus] = useState(false)
   const [isSelfFocus, setIsSelfFocus] = useState(false)
@@ -47,6 +48,13 @@ const VirtualTopup = ({navigation, route}) => {
     const maindate = new Date() 
     const date = maindate.toLocaleDateString()
     const time = maindate.toLocaleTimeString()
+
+    const [pinT, setpinT] = useState()
+    const [pinvalid, setpinvalid] = useState(false)
+    const [pincheckifempty, setpincheckifempty] = useState([])
+    const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
+    const [pinerrormessage, setPinerrorMessage] = useState('')
+      
     
     // const phone = self === "self" && authCtx.phone 
     const DATACHECK = id.includes('DATA')
@@ -58,6 +66,22 @@ const VirtualTopup = ({navigation, route}) => {
     let reqId;
 
     // console.log(authCtx.phone)
+  
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      try {
+        setisloading(true)
+        const response = await HelperUrl(authCtx.Id, authCtx.token)
+        setpincheckifempty(response.transaction_pin_setup)
+        setisloading(false)
+      } catch (error) {
+        setisloading(true)
+        setisloading(false)
+        return;
+      }
+    })
+    return unsubscribe;
+  }, [])
 
   useEffect(() => {
     setisloading(true)
@@ -167,6 +191,7 @@ const getBouquets = (value) => {
         setisloading(true)
           const response = await HelperThirdParty(authCtx.Id, phoneValidation, authCtx.token)
           // console.log(response)
+          setRequestId(response.requestID)
           if(response.status === "Success"){
               if(DATACHECK){
                   Alert.alert("Confirm Purchase", `Confirm Data Topup for ${phoneValidation} `, [
@@ -176,7 +201,7 @@ const getBouquets = (value) => {
                       },
                       {
                           text:'Confirm',
-                          onPress: () => datatoptup(response.requestID)
+                          onPress: () => togglePinModal()
                       }
                   ])
               }else{
@@ -188,7 +213,7 @@ const getBouquets = (value) => {
                     },
                     {
                       text:'Confirm',
-                      onPress: () => airtimetopup(response.requestID)
+                      onPress: () => togglePinModal()
                     }
                   ])
                 }
@@ -233,7 +258,7 @@ const getBouquets = (value) => {
                     },
                     {
                       text:'Confirm',
-                      onPress: () => datatoptup(response.requestID)
+                      onPress: () => togglePinModal()
                     }
                   ])
               }else{
@@ -245,7 +270,7 @@ const getBouquets = (value) => {
                       },
                       {
                         text:'Confirm',
-                        onPress: () => airtimetopup(response.requestID)
+                        onPress: () => togglePinModal()
                       }
                     ])
                   }
@@ -272,15 +297,61 @@ const getBouquets = (value) => {
           setisloading(false)
 
       }
-   }
+  }
 
+  let refT = useRef(0);
+  
+  function handleClick() {
+    refT.current = refT.current + 1;
+    // alert('You clicked ' + ref.current + ' times!');
+  }
+
+  const togglePinModal = () => {
+    setisSetpinModalVisible(!isSetpinModalVisible)
+  }
+  
+
+  const pinValidateCheck = async () => {
+    if(refT.current > 3){
+      Alert.alert("", "To many attempt, try again later", [
+        {
+          text: "Ok",
+          onPress: () => navigation.goBack()
+        }
+      ])
+    }else{
+      try {
+        setischecking(true)
+        const response = await ValidatePin(authCtx.Id, pinT, authCtx.token)
+        // console.log(response)
+        if(DATACHECK){
+          datatoptup() 
+        }else{
+          airtimetopup()
+        }
+      } catch (error) {
+        setischecking(true)
+        setpinT()
+        setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " attempts remaining"))
+        console.log(error.response)
+        Alert.alert("Error", error.response.data.message+ " " + "Try again", [
+          {
+            text: "Ok",
+            onPress: () => {}
+          },
+        ])
+        setischecking(false)
+
+      }
+    }
+  }
 
   
-  const airtimetopup = async (requestID) => {
-    setRef(requestID)
+  const airtimetopup = async () => {
+    togglePinModal()
     try {
       setisloading(true)
-        const response = await HelperVtuAirtime(requestID, id, amount, authCtx.token)
+        const response = await HelperVtuAirtime(requestId, id, amount, authCtx.token)
         // console.log(response)
 
         if(response.message === "failed"){
@@ -291,7 +362,6 @@ const getBouquets = (value) => {
               }
             ])
           }else{
-            setRef(requestID)
             schedulePushNotification(response)
             toggleModal()
           }
@@ -307,14 +377,15 @@ const getBouquets = (value) => {
           setisloading(false)
         // console.log(error.response)
     }
-}
+  }
 
-const datatoptup = async(requestID) => {
-    setRef(requestID)
+const datatoptup = async() => {
+  togglePinModal()
+    // setRef()
     // console.log(requestID, id, bosquetPrice, bosquetData, authCtx.token)
     try {
       setisloading(true)
-        const response = await HelperVtuData(requestID, id, bosquetPrice, bosquetData, authCtx.token)
+        const response = await HelperVtuData(requestId, id, bosquetPrice, bosquetData, authCtx.token)
         // console.log(response)
 
         if(response.message === "failed"){
@@ -325,7 +396,6 @@ const datatoptup = async(requestID) => {
               }
             ])
           }else{
-            setRef(requestID)
             schedulePushNotification(response)
             toggleModal()
         }
@@ -364,6 +434,21 @@ const datatoptup = async(requestID) => {
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.internettxt}>VirtualTopup</Text>
 
+      {
+        pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
+          {
+            text: "Ok",
+            onPress: () =>  navigation.navigate('TransactionPin')
+          },
+          {
+            text: "Cancel",
+            onPress: () => navigation.goBack()
+          }
+        ]) 
+
+        :
+
+        <>
       <ImageBackground style={{flexDirection:'row', alignItems:'center', justifyContent:'space-evenly',}}>
         <Image source={require("../assets/Glo_Limited.png")} style={[styles.image, {height:60}]}/>
         <Image source={require("../assets/mtn.png")} contentFit='contain' style={styles.image}/>
@@ -484,6 +569,60 @@ const datatoptup = async(requestID) => {
               </View>
             }
           </View>
+      </>
+    }
+
+        <Modal isVisible={isSetpinModalVisible} animationInTiming={500}>
+        <SafeAreaView style={styles.centeredView}>
+        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [togglePinModal(), setpinT()]}>
+          <MaterialIcons name="cancel" size={30} color="white" />
+        </TouchableOpacity>
+          <View style={[styles.modalView, {width: DIMENSION.WIDTH * 0.7}]}>
+            {
+              ischecking ? 
+              <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
+                <LoadingOverlay/>  
+              </View>
+
+              :
+              <>
+            <View>
+            <Text style={[styles.modalText, {fontSize:14}]}>Enter Transaction Pin</Text>
+
+            <SafeAreaView style={{justifyContent:'center', alignItems:'center', marginHorizontal:40}}>
+              <TextInput
+                keyboardType={"numeric"}
+                maxLength={4}
+                style={{fontSize:25, textAlign:'center',width:150, margin:5, borderBottomWidth:1, padding:5}}
+                onChangeText={setpinT}
+                value={pinT}
+                isInvalid={pinvalid}
+                onFocus={() => [setpinvalid(false), setPinerrorMessage('')]}
+                secureTextEntry
+              />
+              {
+                pinvalid &&
+                <Text style={{fontSize:11, textAlign:'center', color:Color.tomato}}>Pin must be 4 characters</Text>
+              }
+              {
+                pinerrormessage.length !== 0 && <Text  style={{fontSize:11, textAlign:'center', color:Color.tomato}}>{pinerrormessage}</Text>
+              }
+            </SafeAreaView>
+            <View style={{marginBottom:'5%'}}/>
+            </View>
+
+            <View style={{flexDirection:'row', justifyContent:'center'}}>
+              <TouchableOpacity style={styles.cancelbtn} onPress={() => pinT === null || pinT === undefined || pinT === "" || pinT.length < 4  ? setpinvalid(true) : [handleClick(), pinValidateCheck()]}>
+                <Text style={{textAlign:'center', color:Color.white, fontFamily: 'poppinsRegular'}}>Continue</Text>
+              </TouchableOpacity>
+            </View>             
+              {/* </View> */}
+              </>
+            }
+            
+          </View>
+          </SafeAreaView>
+        </Modal>
 
 
 
@@ -526,7 +665,7 @@ const datatoptup = async(requestID) => {
 
                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Ref :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{ref}</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{requestId}</Text>
                       </View> 
 
                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
@@ -536,11 +675,11 @@ const datatoptup = async(requestID) => {
 
                        <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
                         
-                          <TouchableOpacity style={styles.cancelbtn} onPress={() => {}}>
+                          <TouchableOpacity style={{}} onPress={() => {}}>
                                 <Text><Entypo name="forward" size={24} color="black" /></Text>
                           </TouchableOpacity>
 
-                          <TouchableOpacity style={styles.viewbtn} onPress={() => [toggleModal(),  navigation.goBack()]}>
+                          <TouchableOpacity style={{}} onPress={() => [toggleModal(),  navigation.goBack()]}>
                               <Text style={styles.viewtext}>Close</Text>
                           </TouchableOpacity>
                         </View>
@@ -555,6 +694,13 @@ const datatoptup = async(requestID) => {
 export default VirtualTopup
 
 const styles = StyleSheet.create({
+  cancelbtn: {
+    backgroundColor: Color.new_color,
+    borderRadius: 3,
+    justifyContent:'center',
+    width: DIMENSION.WIDTH * 0.36,
+    padding: 5
+  },
   centeredView: {
     flex: 1,
     // backgroundColor: Color.light_black,
