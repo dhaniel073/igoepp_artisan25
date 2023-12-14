@@ -17,6 +17,7 @@ export const  AuthContext = createContext({
   phone: "",
   picture:"",showAmount: "",
   lastLoginTimestamp: "",
+  userid: "",
 
 
   
@@ -32,6 +33,7 @@ export const  AuthContext = createContext({
   helperPicture: (picture) => {},
   helperShowAmount: (showAmount) => {},
   helperlastLoginTimestamp : (lastLoginTimestamp) => {},
+  helperuserid: (userid) => {},
 
   logout: () => {}
 
@@ -53,6 +55,7 @@ function AuthContextProvider({children}){
     const [authShowAmount, setauthShowAmount] = useState()
     const [authpicture, setauthpicture] = useState()
     const [authlogintime, setauthlogintime] = useState()
+    const [authuserid, setauthuserid] = useState()
 
 
     if(IsLogout){
@@ -92,6 +95,11 @@ function AuthContextProvider({children}){
     function helperlastLoginTimestamp(time){
         setauthlogintime(time)
         AsyncStorage.setItem('helperlastLoginTimestamp', time)
+    }
+
+    function helperuserid(userid){
+        setauthuserid(userid)
+        AsyncStorage.setItem('helperuserid', userid)
     }
 
 
@@ -161,6 +169,7 @@ function AuthContextProvider({children}){
         setauthpicture(null)
         setauthShowAmount(null)
         setauthlogintime(null)
+        setauthuserid(null)
         AsyncStorage.removeItem('helpertoken')
         AsyncStorage.removeItem('helperId')
         AsyncStorage.removeItem('helperEmail')
@@ -173,6 +182,7 @@ function AuthContextProvider({children}){
         AsyncStorage.removeItem('helperPicture')
         AsyncStorage.removeItem('helperShowAmount')
         AsyncStorage.removeItem('helperlastLoginTimestamp')
+        AsyncStorage.removeItem('helperuserid')
     
         setIsLogout(false)
     }
@@ -193,6 +203,8 @@ function AuthContextProvider({children}){
         picture: authpicture,
         showAmount: authShowAmount,
         lastLoginTimestamp: authlogintime,
+        userid: authuserid,
+
         authenticated:authenticated,
         helperId:helperId,
         helperEmail: helperEmail,
@@ -205,6 +217,7 @@ function AuthContextProvider({children}){
         helperPicture: helperPicture,
         helperShowAmount: helperShowAmount,
         helperlastLoginTimestamp: helperlastLoginTimestamp,
+        helperuserid:helperuserid,
         logout: logout
         
     }

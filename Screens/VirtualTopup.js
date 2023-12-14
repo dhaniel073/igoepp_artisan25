@@ -1,4 +1,4 @@
-import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Alert, Keyboard, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
@@ -13,6 +13,26 @@ import {MaterialIcons, Entypo, MaterialCommunityIcons} from '@expo/vector-icons'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
 import * as Notifications from 'expo-notifications'
+import styled from 'styled-components'
+import OTPFieldInput from '../Components/Ui/OTPFieldInput'
+
+const StyledButton = styled.TouchableOpacity`
+  padding: 15px;
+  background-color: ${Color.darkolivegreen_100};
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  margin-vertical: 5px;
+  height: 50px;
+  width: 60%
+`;
+
+export const ButtonText = styled.Text`
+  font-size: 15px;
+  color: ${Color.white};
+  font-family: poppinsRegular
+`;
+
 
 
 
@@ -30,7 +50,11 @@ const VirtualTopup = ({navigation, route}) => {
   const [id, setid] = useState('')
   const [isFocus, setisFocus] = useState(false)
   const [isSelfFocus, setIsSelfFocus] = useState(false)
-    
+  
+  const [code, setCode] = useState('')
+  const [pinReady, setPinReady] = useState(false)
+  const MAX_CODE_LENGTH = 4;
+
     const [requestId, setRequestId] = useState()
     const [bosquet, setBosquet] = useState([])
     const [bosquetData, setBosquetData] = useState()
@@ -201,7 +225,7 @@ const getBouquets = (value) => {
                       },
                       {
                           text:'Confirm',
-                          onPress: () => togglePinModal()
+                          onPress: () => toggleModal1()
                       }
                   ])
               }else{
@@ -213,7 +237,7 @@ const getBouquets = (value) => {
                     },
                     {
                       text:'Confirm',
-                      onPress: () => togglePinModal()
+                      onPress: () => toggleModal1()
                     }
                   ])
                 }
@@ -258,7 +282,7 @@ const getBouquets = (value) => {
                     },
                     {
                       text:'Confirm',
-                      onPress: () => togglePinModal()
+                      onPress: () => toggleModal1()
                     }
                   ])
               }else{
@@ -270,7 +294,7 @@ const getBouquets = (value) => {
                       },
                       {
                         text:'Confirm',
-                        onPress: () => togglePinModal()
+                        onPress: () => toggleModal1()
                       }
                     ])
                   }
@@ -306,7 +330,7 @@ const getBouquets = (value) => {
     // alert('You clicked ' + ref.current + ' times!');
   }
 
-  const togglePinModal = () => {
+  const toggleModal1 = () => {
     setisSetpinModalVisible(!isSetpinModalVisible)
   }
   
@@ -322,8 +346,9 @@ const getBouquets = (value) => {
     }else{
       try {
         setischecking(true)
-        const response = await ValidatePin(authCtx.Id, pinT, authCtx.token)
+        const response = await ValidatePin(authCtx.Id, code, authCtx.token)
         // console.log(response)
+        setCode('')
         if(DATACHECK){
           datatoptup() 
         }else{
@@ -331,7 +356,7 @@ const getBouquets = (value) => {
         }
       } catch (error) {
         setischecking(true)
-        setpinT()
+        setCode('')
         setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " attempts remaining"))
         console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
@@ -348,7 +373,7 @@ const getBouquets = (value) => {
 
   
   const airtimetopup = async () => {
-    togglePinModal()
+    toggleModal1()
     try {
       setisloading(true)
         const response = await HelperVtuAirtime(requestId, id, amount, authCtx.token)
@@ -380,7 +405,7 @@ const getBouquets = (value) => {
   }
 
 const datatoptup = async() => {
-  togglePinModal()
+  toggleModal1()
     // setRef()
     // console.log(requestID, id, bosquetPrice, bosquetData, authCtx.token)
     try {
@@ -574,7 +599,7 @@ const datatoptup = async() => {
 
         <Modal isVisible={isSetpinModalVisible} animationInTiming={500}>
         <SafeAreaView style={styles.centeredView}>
-        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [togglePinModal(), setpinT()]}>
+        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal1(), setpinT()]}>
           <MaterialIcons name="cancel" size={30} color="white" />
         </TouchableOpacity>
           <View style={[styles.modalView, {width: DIMENSION.WIDTH * 0.7}]}>
@@ -624,6 +649,48 @@ const datatoptup = async() => {
           </SafeAreaView>
         </Modal>
 
+        <Modal isVisible={isSetpinModalVisible}>
+            <Pressable  onPress={Keyboard.dismiss} style={styles.centeredView}>
+            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal1(), setCode('')]}>
+                <MaterialIcons name="cancel" size={30} color="white" />
+            </TouchableOpacity>
+
+            <View style={styles.modalView1}>
+              {
+                ischecking ? 
+                <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
+                    <LoadingOverlay/>  
+                </View>
+                :
+              <>
+            <View style={{marginTop: '13%'}}/>
+                <Text style={{fontFamily:'poppinsRegular'}}>Enter Transaction Pin</Text>
+
+                <OTPFieldInput
+                  setPinReady={setPinReady}
+                  code={code}
+                  setCode={setCode}
+                  maxLength={MAX_CODE_LENGTH}
+                />
+                {
+                  pinerrormessage.length !== 0 && <Text  style={{fontSize:11, textAlign:'center', color:Color.tomato}}>{pinerrormessage}</Text>
+                }
+            <StyledButton disabled={!pinReady} 
+            onPress={() => [handleClick(), pinValidateCheck()]}
+            style={{
+                backgroundColor: !pinReady ? Color.gray_100 : Color.new_color
+            }}>
+                <ButtonText
+                style={{
+                    color: !pinReady ? Color.black : Color.white
+                }}
+                >Submit</ButtonText>
+            </StyledButton>
+            </>
+            }
+            </View>
+            </Pressable>
+        </Modal>
 
 
             <Modal isVisible={isModalVisble}>
@@ -707,6 +774,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     // marginTop: 22,
+  },
+  modalView1: {
+    backgroundColor: 'white',
+    width: DIMENSION.WIDTH  * 0.9,
+    borderRadius: 20,
+    // flex:1,
+    alignItems:'center',
+    height: DIMENSION.HEIGHT * 0.4
   },
   modalView: {
     margin: 20,

@@ -316,17 +316,14 @@ const AcceptedRequest = ({navigation}) => {
           
            <View style={{flexDirection:'row', justifyContent:'space-between', width:DIMENSION.WIDTH * 0.8, }}>
            <Text style={{fontFamily:'poppinsMedium',  fontSize:11, color:Color.saddlebrown_100}}>
+           <Ionicons name="location" size={10} color={Color.tomato} />  
+           {item.help_lga} {item.help_state} 
+           </Text>
 
-           <Ionicons name="location" size={10} color={Color.tomato} />
+           <View style={{flexDirection:'row', flex:1, justifyContent:'flex-end'}}>
 
-           {item.help_lga} {item.help_state} </Text>
-              <Text style={styles.itemprice}>
-                NGN {item.agreed_price}
-              </Text>
-           </View>
-           {item.end_request_time === null ? 
-             
-              <TouchableOpacity style={{ position:'absolute', top:-5, marginLeft: DIMENSION.HEIGHT * 0.27}} onPress={() => navigation.navigate('Chat', {
+           {item.customer_statisfy === null ? 
+              <TouchableOpacity style={{marginRight:18, marginTop: -5}} onPress={() => navigation.navigate('Chat', {
                 customerId: item.customer_id,
                 bid_id: item.id
               })}>
@@ -335,14 +332,21 @@ const AcceptedRequest = ({navigation}) => {
                 {
                   item.chat_unread_helper === 0 ? "" :
 
-                  <ImageBackground  source={require("../assets/ellipse-127.png")} contentFit="contain" style={{height:15, width:15, justifyContent:'center', position: 'absolute', marginLeft:15, marginTop:-4}}>
+                  <ImageBackground  source={require("../assets/ellipse-127.png")} contentFit="contain" style={{height:15, width:15, justifyContent:'center', position: 'absolute', marginLeft:18, marginTop:-4}}>
                     <Text style={{ fontSize: 8,  color: Color.white, fontFamily:'poppinsBold', textAlign:'center'}}>{item.chat_unread_helper}</Text>
                     {/* <Text style={[styles.text2, styles.text2Typo]}>{chatnum}</Text> */}
                   </ImageBackground>
                 }
               </TouchableOpacity>
+             
             : ""} 
-          </View>
+
+              <Text style={styles.itemprice}>
+                NGN {item.agreed_price}
+              </Text>
+           </View>
+           </View>
+           </View>
             
 
 
@@ -385,21 +389,8 @@ const AcceptedRequest = ({navigation}) => {
 
                : item.customer_statisfy === null ? 
                <>
-               <Text style={[styles.completeservicetext, {position:'absolute', top:-60, left:'60%',  fontSize:10} ]}>Satisfaction Pending</Text>
-               <TouchableOpacity style={{ position:'absolute', top:-38, marginLeft: HEIGHT * 0.26}} onPress={() => navigation.navigate('Chat', {
-                  customerId: item.customer_id,
-                  bid_id: item.id
-                })}>
-                  <Ionicons name="chatbubbles" size={24} color={Color.orange_100} />
-                  {
-                    item.chat_unread_helper === 0 ? "" : 
-                    <ImageBackground  source={require("../assets/ellipse-127.png")} contentFit="contain" style={{height:15, width:15, justifyContent:'center', position: 'absolute', marginLeft:15, marginTop:-4}}>
-                    <Text style={{ fontSize: 8,  color: Color.white, fontFamily:'poppinsBold', textAlign:'center'}}>{item.chat_unread_helper}</Text>
-                    {/* <Text style={[styles.text2, styles.text2Typo]}>{}</Text>  */}
-                   </ImageBackground>
-                  }
-                </TouchableOpacity> 
-
+               <Text style={[styles.completeservicetext, {position:'absolute', top:-57, left:'60%',  fontSize:10} ]}>Satisfaction Pending</Text>
+               
                <TouchableOpacity style={styles.cancelbtn} onPress={() =>
                 navigation.navigate("UploadScreen", {
                     customerId: item.customer_id,
@@ -408,7 +399,7 @@ const AcceptedRequest = ({navigation}) => {
                   })}>
                       <Text style={styles.canceltext}>Upload Proof</Text>
                 </TouchableOpacity>
-               </>
+                </>
                
               : item.customer_statisfy !== null  &&
                   // <Text>{item.custom_rating == undefined && "yes"}</Text>

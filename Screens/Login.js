@@ -63,6 +63,7 @@ const Login = ({navigation}) => {
             authCtx.helperSubCatId(response.subcategory)
             authCtx.helperCatId(response.category)
             authCtx.helperShowAmount('show')
+            authCtx.helperuserid(response.user_id)
             authCtx.helperlastLoginTimestamp(new Date().toString())
             setIsloading(false)
           } catch (error) {
@@ -108,6 +109,7 @@ const Login = ({navigation}) => {
         authCtx.helperSubCatId(response.data.subcategory)
         authCtx.helperCatId(response.data.category)
         authCtx.helperShowAmount('show')
+        authCtx.helperuserid(response.data.user_id)
         authCtx.helperlastLoginTimestamp(new Date().toString())
         setIsloading(false)
       } catch (error) {

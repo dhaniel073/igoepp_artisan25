@@ -18,7 +18,7 @@ import ReNegotiate from './Screens/ReNegotiate';
 import RateCustomer from './Screens/RateCustomer';
 import ProfilePicsView from './Screens/ProfilePicsView';
 import NotificationSetup from './Screens/NotificationSetup';
-import Notifications from './Screens/Notifications';
+import Notifications from './Screens/NotificationScreen';
 import Login from './Screens/Login';
 import Internet from './Screens/Internet';
 import ForgotPassword from './Screens/ForgotPassword';
@@ -45,6 +45,7 @@ import TransactionPin from './Screens/TransactionPin';
 import Biometric from './Screens/Biometric';
 import * as Device from 'expo-device';
 import PasswordReset from './Screens/PasswordReset';
+import NotificationScreen from './Screens/NotificationScreen';
 
 
 
@@ -566,6 +567,14 @@ export default function App() {
           headerShown: false
         }} 
       />
+
+      <Stack.Screen
+        name='NotificationScreen'
+        component={NotificationScreen}
+        options={{
+          headerShown: false
+        }} 
+      />
       
       </Stack.Navigator>
     )
@@ -604,6 +613,8 @@ export default function App() {
     const storedpicture = await AsyncStorage.getItem('helperPicture')
     const storedshowamount = await AsyncStorage.getItem('helperShowAmount')
     const storedlastlogintime = await AsyncStorage.getItem('helperlastLoginTimestamp')
+    const storeduserid = await AsyncStorage.getItem('helperuserid')
+    
 
     if(storedToken && storedId && storedemail){
       authCtx.authenticated(storedToken)
@@ -617,6 +628,7 @@ export default function App() {
       authCtx.helperShowAmount(storedshowamount)
       authCtx.helperPicture(storedpicture)
       authCtx.helperlastLoginTimestamp(storedlastlogintime)
+      authCtx.helperuserid(storeduserid)
     }
 
     setisTrying(false)

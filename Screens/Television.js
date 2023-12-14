@@ -1,4 +1,4 @@
-import { Platform, SafeAreaView, ScrollView, StyleSheet,TouchableOpacity, Text, View, Alert, TextInput } from 'react-native'
+import { Platform, SafeAreaView, ScrollView, StyleSheet,TouchableOpacity, Text, View, Alert, TextInput, Keyboard, Pressable } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
@@ -13,6 +13,25 @@ import Modal from 'react-native-modal'
 import {Entypo, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import * as Notifications from 'expo-notifications'
+import styled from 'styled-components'
+import OTPFieldInput from '../Components/Ui/OTPFieldInput'
+
+const StyledButton = styled.TouchableOpacity`
+  padding: 15px;
+  background-color: ${Color.darkolivegreen_100};
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  margin-vertical: 5px;
+  height: 50px;
+  width: 60%
+`;
+
+export const ButtonText = styled.Text`
+  font-size: 15px;
+  color: ${Color.white};
+  font-family: poppinsRegular
+`;
 
 
 const Television = ({navigation, route}) => {
@@ -31,10 +50,14 @@ const Television = ({navigation, route}) => {
   const [isModalVisble, setIsModalVisible] = useState(false)
   const [isCompleteModalVisble, setIsCompleteModalVisible] = useState(false)
 
+  const [code, setCode] = useState('')
+  const [pinReady, setPinReady] = useState(false)
+  const MAX_CODE_LENGTH = 4;
+  
   const maindate = new Date() 
   const date = maindate.toDateString()
   const time = maindate.toLocaleTimeString()
-
+  
   const [pinT, setpinT] = useState()
   const [pinvalid, setpinvalid] = useState(false)
   const [pincheckifempty, setpincheckifempty] = useState([])
@@ -177,7 +200,7 @@ const Television = ({navigation, route}) => {
   }
 
   const tvRenewalPayment = async (data) => {
-    togglePinModal()
+    toggleModal1()
     try {
       setisLoading(true)
       const response = await TvRenewalPay(ref, rprice, authCtx.token)
@@ -212,7 +235,7 @@ const Television = ({navigation, route}) => {
   }
 
   const tvPayment = async () => {
-    togglePinModal()
+    toggleModal1()
     try {
         setisLoading(true)
         const response = await TvPayment(ref, price, bouquetData, authCtx.token)
@@ -252,7 +275,7 @@ const Television = ({navigation, route}) => {
     // alert('You clicked ' + ref.current + ' times!');
   }
 
-  const togglePinModal = () => {
+  const toggleModal1 = () => {
     setisSetpinModalVisible(!isSetpinModalVisible)
   }
   
@@ -267,8 +290,9 @@ const Television = ({navigation, route}) => {
     }else{
       try {
         setischecking(true)
-        const response = await ValidatePin(authCtx.Id, pinT, authCtx.token)
+        const response = await ValidatePin(authCtx.Id, code, authCtx.token)
         // console.log(response)
+        setCode('')
         if(id === "DSTVR" || id === "GOTVR"){
           tvRenewalPayment() 
         }else{
@@ -276,7 +300,7 @@ const Television = ({navigation, route}) => {
         }
       } catch (error) {
         setischecking(true)
-        setpinT()
+        setCode('')
         setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
         console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
@@ -328,7 +352,6 @@ const Television = ({navigation, route}) => {
       ]) 
       :
       <>
-
 
       <ImageBackground style={{flexDirection:'row', alignItems:'center', justifyContent:'space-evenly',}}>
         <Image contentFit='contain' source={require("../assets/dstv-logo.png")} style={[styles.image]}/>
@@ -473,7 +496,7 @@ const Television = ({navigation, route}) => {
                                 <Text style={styles.viewtext}>Back</Text>
                           </TouchableOpacity>
 
-                          <TouchableOpacity style={styles.cancelbtn} onPress={() => [toggleConfirmModal(), togglePinModal()]}>
+                          <TouchableOpacity style={styles.cancelbtn} onPress={() => [toggleConfirmModal(), toggleModal1()]}>
                               <Text style={styles.canceltext}>Cofirm</Text>
                           </TouchableOpacity>
                         </View>
@@ -482,57 +505,48 @@ const Television = ({navigation, route}) => {
             </SafeAreaView>
           </Modal>
 
-      <Modal isVisible={isSetpinModalVisible} animationInTiming={500}>
-        <SafeAreaView style={styles.centeredView}>
-        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [togglePinModal(), setpinT()]}>
-          <MaterialIcons name="cancel" size={30} color="white" />
-        </TouchableOpacity>
-          <View style={[styles.modalView, {width: DIMENSION.WIDTH * 0.7}]}>
-          {
-              ischecking ? 
-              <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
-                <LoadingOverlay/>  
-              </View>
+          <Modal isVisible={isSetpinModalVisible}>
+            <Pressable  onPress={Keyboard.dismiss} style={styles.centeredView}>
+            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal1(), setCode('')]}>
+                <MaterialIcons name="cancel" size={30} color="white" />
+            </TouchableOpacity>
 
-              :
+            <View style={styles.modalView1}>
+              {
+                ischecking ? 
+                <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
+                    <LoadingOverlay/>  
+                </View>
+                :
               <>
-            <View>
-            <Text style={[styles.modalText, {fontSize:14}]}>Enter Transaction Pin</Text>
+            <View style={{marginTop: '13%'}}/>
+                <Text style={{fontFamily:'poppinsRegular'}}>Enter Transaction Pin</Text>
 
-            <SafeAreaView style={{justifyContent:'center', alignItems:'center', marginHorizontal:40}}>
-              <TextInput
-                keyboardType={"numeric"}
-                maxLength={4}
-                style={{fontSize:25, textAlign:'center',width:150, margin:5, borderBottomWidth:1, padding:5}}
-                onChangeText={setpinT}
-                value={pinT}
-                isInvalid={pinvalid}
-                onFocus={() => [setpinvalid(false), setPinerrorMessage('')]}
-                secureTextEntry
-              />
-              {
-                pinvalid &&
-                <Text style={{fontSize:11, textAlign:'center', color:Color.tomato}}>Pin must be 4 characters</Text>
-              }
-              {
-                pinerrormessage.length !== 0 && <Text  style={{fontSize:11, textAlign:'center', color:Color.tomato}}>{pinerrormessage}</Text>
-              }
-            </SafeAreaView>
-            <View style={{marginBottom:'5%'}}/>
-            </View>
-            {/* <View style={styles.buttonView}> */}
-
-            <View style={{flexDirection:'row', justifyContent:'center'}}>
-              <TouchableOpacity style={styles.cancelbtn} onPress={() => pinT === null || pinT === undefined || pinT === "" || pinT.length < 4  ? setpinvalid(true) : [handleClick(), pinValidateCheck()]}>
-                <Text style={{textAlign:'center', color:Color.white, fontFamily: 'poppinsRegular'}}>Continue</Text>
-              </TouchableOpacity>
-            </View>             
-              {/* </View> */}
+                <OTPFieldInput
+                  setPinReady={setPinReady}
+                  code={code}
+                  setCode={setCode}
+                  maxLength={MAX_CODE_LENGTH}
+                />
+                {
+                  pinerrormessage.length !== 0 && <Text  style={{fontSize:11, textAlign:'center', color:Color.tomato}}>{pinerrormessage}</Text>
+                }
+            <StyledButton disabled={!pinReady} 
+            onPress={() => [handleClick(), pinValidateCheck()]}
+            style={{
+                backgroundColor: !pinReady ? Color.gray_100 : Color.new_color
+            }}>
+                <ButtonText
+                style={{
+                    color: !pinReady ? Color.black : Color.white
+                }}
+                >Submit</ButtonText>
+            </StyledButton>
             </>
-          }
-          </View>
-          </SafeAreaView>
-      </Modal>
+            }
+            </View>
+            </Pressable>
+        </Modal>
 
 
 
@@ -610,7 +624,14 @@ const styles = StyleSheet.create({
     width: DIMENSION.WIDTH * 0.36,
     padding: 5
   },
-
+  modalView1: {
+    backgroundColor: 'white',
+    width: DIMENSION.WIDTH  * 0.9,
+    borderRadius: 20,
+    // flex:1,
+    alignItems:'center',
+    height: DIMENSION.HEIGHT * 0.4
+  },
   viewbtn:{
     backgroundColor:Color.white,
     borderColor: Color.brown,

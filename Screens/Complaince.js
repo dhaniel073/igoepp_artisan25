@@ -225,9 +225,9 @@ const captureidcardimage = async () => {
 
 //pick address prood image
 const pickaddressImage = async () => {
-  ImagePicker.getCameraPermissionsAsync()
+  ImagePicker.getMediaLibraryPermissionsAsync()
         
-  let result = await ImagePicker.launchCameraAsync({
+  let result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
     aspect:[4,3],

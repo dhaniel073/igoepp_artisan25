@@ -53,6 +53,19 @@ async function helperurl(id, token){
     return data
 } 
 
+async function notificationunread(Id, token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/general/viewpushnotificationcount/${Id}`
+    const response = await axios.get(url, {
+      headers:{
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    })
+    const data = response.data
+    return data
+  
+}
+
 
 
 //view wallet balance endpoint
@@ -1015,6 +1028,31 @@ async function viewcustomerratingonrequest (id, token){
     const data = response.data
     return data;
   }
+
+  async function notification(Id, token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/general/viewpushnotification/${Id}`
+    const response = await axios.get(url, {
+      headers:{
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    })
+    const data = response.data.data
+    return data
+  }
+
+  async function notificationbyid(Id, token){
+    const url = `https://phixotech.com/igoepp/public/api/auth/general/viewpushnotificationbyid//${Id}`
+    const response = await axios.get(url, {
+      headers:{
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    })
+    const data = response.data
+    return data
+  }
+  
   
   
   
@@ -1063,7 +1101,10 @@ export const SubCategory = (Id) => {
     return subcategory(Id)
 }
 
-
+export function Notification(Id, token){
+    return notification(Id, token)
+}
+  
 //Start Services
 export const StartService = (bookId, startTime, token) => {
     return startservice(bookId, startTime, token)
@@ -1325,4 +1366,12 @@ export const BiometricSetup = (id, fingerprinttoken, token) => {
 
   export const DisableBiometric = (id, token) => {
     return disablebiometric(id, token)
+  }
+
+  export const NotificationUnread = (id, token) => {
+    return notificationunread(id, token)
+  }
+
+  export const NotificationById = (id, token) => {
+    return notificationbyid(id, token)
   }

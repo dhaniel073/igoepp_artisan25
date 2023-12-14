@@ -230,7 +230,7 @@ useEffect(() => {
       // setIsLoading(true)
       const emailIsValid = enteredEmail.includes('@');
       const passwordIsValid = enteredPassword === null || enteredPassword === undefined || enteredPassword.length < 7;
-      const passcheck =  enteredPassword === enteredConfirmPassword || enteredConfirmPassword !== null || undefined
+      const passcheck =  enteredConfirmPassword === enteredPassword
       const phonecheck = enteredPhone === null || "" || enteredPhone.length === 0
       const addresscheck = address === null || undefined || "" || address.length === 0
       const countrycheck = countryName === null || undefined || "" || countryName.length === 0
@@ -243,7 +243,7 @@ useEffect(() => {
       const idtypecheck = idtype === null || undefined || "" || idtype.length === 0
 
        
-      // console.log(categorycheck, subcategorycheck)
+      console.log(passcheck)
 
         if(!enteredLastName || !enteredFirstname || !emailIsValid || !enteredPhone || !enteredGender || !category || !subcategory || passwordIsValid ||
          !passcheck || !countryName || !stateName || !cityName || !address
@@ -252,7 +252,7 @@ useEffect(() => {
             const InvalidLastName = !enteredLastName
             const InvalidPhone = phonecheck
             const InvalidPassword = passwordIsValid
-            const InvalidConfirmPassword = passcheck
+            const InvalidConfirmPassword = !passcheck
             const InvalidEmail = !emailIsValid
             const InvalidAddress = addresscheck
             const InvalidCountry = countrycheck
@@ -309,6 +309,7 @@ useEffect(() => {
         authCtx.helperSubCatId(response.subcategory) 
         authCtx.helperPhone(response.phone)
         authCtx.helperPicture(response.photo)
+        authCtx.helperuserid(response.user_id)
         authCtx.helperShowAmount('show')
         authCtx.helperlastLoginTimestamp(new Date().toString())
         setIsLoading(false)
@@ -577,6 +578,7 @@ useEffect(() => {
       secure
       value={enteredPassword}
       isInvalid={IsenteredPassword}
+      autoCapitalize={'none'}
       onFocus={() => setIsEnteredPassword(false)}
     />
 
@@ -593,6 +595,7 @@ useEffect(() => {
       'confirmPassword'
       )}
       secure
+      autoCapitalize={'none'}
       value={enteredConfirmPassword}
       isInvalid={IsenteredConfirmPassword}
       onFocus={() => setIsEnteredConfirmPassword(false)}

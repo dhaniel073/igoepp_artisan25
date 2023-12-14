@@ -7,7 +7,7 @@ import { Border, Color, marginStyle } from '../Components/Ui/GlobalStyle';
 import Swiper from 'react-native-swiper'
 import { AuthContext } from '../utils/AuthContext';
 import * as LocalAuthentication from 'expo-local-authentication'
-import { HelperUrl, RequestByHelperid, RequestSumTotal, SliderImage, SubCategory, TrendingService } from '../utils/AuthRoute';
+import { HelperUrl, NotificationUnread, RequestByHelperid, RequestSumTotal, SliderImage, SubCategory, TrendingService } from '../utils/AuthRoute';
 import LoadingOverlay from '../Components/Ui/LoadingOverlay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications'
@@ -48,6 +48,7 @@ const WelcomeScreen = ({navigation}) => {
   const authCtx = useContext(AuthContext)
   const [sliimage, setsliimage] = useState([])
   const [request, setRequest] = useState([])
+  const [notificationnumber, setnotificationnumber] = useState('')
 
   useEffect(() => {
     const unsuscribe = async () => {
@@ -94,44 +95,45 @@ const WelcomeScreen = ({navigation}) => {
   }
 
 
-  useEffect(() => {
-    // Function to handle app state changes
-    const handleAppStateChange = (nextAppState) => {
-      // If the app goes into the background or inactive state, log out the user
-      if (appState.match(/active/) && nextAppState === 'background') {
-        // Call your logout function here
-        console.log('User logged out');
-        // checkLastLoginTimestamp()
-        const storedTimestamp = authCtx.lastLoginTimestamp
-        const lastLoginTimestamp = new Date(storedTimestamp);
-        const currentTimestamp = new Date();
-        console.log(storedTimestamp + " " + new Date())
-        if(authCtx.lastLoginTimestamp === null || undefined || ""){
-          return 
-        }else{
-          const timeDifferenceInMinutes = Math.floor(
-            (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
-          );
+  // useEffect(() => {
+  //   // Function to handle app state changes
+  //   const handleAppStateChange = (nextAppState) => {
+  //     // If the app goes into the background or inactive state, log out the user
+  //     if (appState.match(/active/) && nextAppState === 'background') {
+  //       // Call your logout function here
+  //       console.log('User logged out');
+  //       // checkLastLoginTimestamp()
+  //       const storedTimestamp = authCtx.lastLoginTimestamp
+  //       const lastLoginTimestamp = new Date(storedTimestamp);
+  //       const currentTimestamp = new Date();
+  //       console.log(storedTimestamp + " " + new Date())
+  //       if(authCtx.lastLoginTimestamp === null || undefined || ""){
+  //         return 
+  //       }else{
+  //         const timeDifferenceInMinutes = Math.floor(
+  //           (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
+  //         );
 
-          const authenticationThresholdInMinutes = 5;
+  //         const authenticationThresholdInMinutes = 5;
 
-          if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
-            authCtx.logout()
-          }
+  //         if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
+  //           authCtx.logout()
+  //         }
 
-        }
-      }
+  //       }
+  //     }
 
-      setAppState(nextAppState);
-    };
+  //     setAppState(nextAppState);
+  //   };
 
-    // Subscribe to app state changes
-    AppState.addEventListener('change', handleAppStateChange);
+  //   // Subscribe to app state changes
+  //   AppState.addEventListener('change', handleAppStateChange);
 
-    // Cleanup: Remove the event listener when the component unmounts
-      return;
-  }, [appState]);
+  //   // Cleanup: Remove the event listener when the component unmounts
+  //     return;
+  // }, [appState]);
    
+  // console.log(authCtx.userid)
   
     useEffect(() => {
       TrendsArray()
@@ -139,6 +141,16 @@ const WelcomeScreen = ({navigation}) => {
       Slider()
       // checkLastLoginTimestamp()
     }, [])
+
+    const NotifiationNumber = async () => {
+      try {
+        const response  = await NotificationUnread(authCtx.userid, authCtx.token)
+        console.log(response)
+        setnotificationnumber(response)
+      } catch (error) {
+        return
+      }
+    }
 
 
     useEffect(() => {
@@ -152,6 +164,12 @@ const WelcomeScreen = ({navigation}) => {
         return reqLength()
       })
     }, [request])
+
+    useEffect(() => {
+        navigation.addListener('focus', async () => {
+          NotifiationNumber()
+        })
+    }, [notificationnumber])
 
 
     useEffect(() => {
@@ -234,38 +252,7 @@ const WelcomeScreen = ({navigation}) => {
       }
     }
 
-      // console.log(authCtx.lastLoginTimestamp + " timestamp")
-  
-      // const checkLastLoginTimestamp =  async () => {
-      //   try {
-      //     setIsLoading(true)
-      //     const storedTimestamp = await AsyncStorage.getItem('helperlastLoginTimestamp')
-      //     const lastLoginTimestamp = new Date(storedTimestamp);
-      //     const currentTimestamp = new Date();
-      
-      //     console.log(storedTimestamp + " storedtime")
-      //     console.log(lastLoginTimestamp + " lastlogintime")
-      //     console.log(currentTimestamp + " current time")
-  
-      //     const timeDifferenceInMinutes = Math.floor(
-      //       (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
-      //     );
-  
-      //     console.log(timeDifferenceInMinutes + " difference")
-      
-      //     // Adjust the threshold based on your requirements (e.g., 30 minutes)
-      //     const authenticationThresholdInMinutes = 5;
-      
-      //     if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
-      //       // Prompt the user to reauthenticate
-      //       // You can navigate to a login screen or show a modal for reauthentication
-      //       console.log('Reauthentication required');
-      //     }
-      //     setIsLoading(false)
-      //   } catch (error) {
-      //     console.log(error)
-      //   }
-      // };
+    
 
 
   return (
@@ -275,38 +262,37 @@ const WelcomeScreen = ({navigation}) => {
         <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
           {/* <FontAwesome name="reorder" size={24} color={Color.orange_200} /> */}
           <View style={{flexDirection:'row', marginHorizontal:10}}>
-                  {/* <Foundation name="list" size={24} color={Color.orange_200} />   */}
-                  
-                  {
-                    authCtx.picture === null || authCtx.picture === undefined || authCtx.picture === "null" || authCtx.picture === ""  || authCtx.picture === "NoImage"? 
-                    <TouchableOpacity onPress={() => navigation.navigate('ProfilePicsView')}>
-                      <Image transition={1000} source={require("../assets/person-4.png")} style={{width:35, height:35, borderRadius:30, borderWidth:1, top:-5}}/>
-                    </TouchableOpacity>
-                    :
-                    <TouchableOpacity onPress={() => navigation.navigate('ProfilePicsView')}>
-                      <Image transition={1000} source={{uri: `https://phixotech.com/igoepp/public/handyman/${authCtx.picture}`}} style={{width:35, height:35, borderRadius:30, borderWidth:1, top:-5}}/>
-                    </TouchableOpacity>
-                  }
-                  
+            {/* <Foundation name="list" size={24} color={Color.orange_200} />   */}
             
+            {
+              authCtx.picture === null || authCtx.picture === undefined || authCtx.picture === "null" || authCtx.picture === ""  || authCtx.picture === "NoImage"? 
+              <TouchableOpacity onPress={() => navigation.navigate('ProfilePicsView')}>
+                <Image transition={1000} source={require("../assets/person-4.png")} style={{width:35, height:35, borderRadius:30, borderWidth:1, top:-5}}/>
+              </TouchableOpacity>
+              :
+              <TouchableOpacity onPress={() => navigation.navigate('ProfilePicsView')}>
+                <Image transition={1000} source={{uri: `https://phixotech.com/igoepp/public/handyman/${authCtx.picture}`}} style={{width:35, height:35, borderRadius:30, borderWidth:1, top:-5}}/>
+              </TouchableOpacity>
+            }
             <Text style={styles.hiChris}>Hi {authCtx.firstname}</Text>
           </View>
-          
-
 
           <TouchableOpacity style={{flexDirection:'row', marginRight:3, justifyContent:'space-around'}} onPress={() => navigation.navigate('Notifications')}>
             <View style={{marginRight:8}}>
               <FontAwesome name="bell" size={24} color={Color.new_color} />
             </View>
-           <View>
+            <View>
 
-            <ImageBackground transition={1000} style={{padding:5, position:'absolute', marginTop:-10, right:0}}
-                contentFit='contain'
-                source={require("../assets/ellipse-127.png")}>
-            <Text style={[styles.text2, styles.text2Typo]}>0</Text>
+            {
+              notificationnumber === 0 ? null :
+                <ImageBackground transition={1000} style={{padding:5, position:'absolute', marginTop:-10, right:0}}
+                    contentFit='contain'
+                    source={require("../assets/ellipse-127.png")}>
+                <Text style={[styles.text2, styles.text2Typo]}>{notificationnumber}</Text>
 
-            </ImageBackground>
-           </View>
+                </ImageBackground>
+            }
+            </View>
 
 
           </TouchableOpacity>
