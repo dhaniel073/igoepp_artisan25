@@ -6,7 +6,7 @@ import GoBack from '../Components/Ui/GoBack'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { Dropdown } from 'react-native-element-dropdown'
 import { AuthContext } from '../utils/AuthContext'
-import { DiscoPayment, HelperUrl, ValidateDisco, ValidatePin } from '../utils/AuthRoute'
+import { DiscoPayment, HelperBillerCommission, HelperUrl, ValidateDisco, ValidatePin } from '../utils/AuthRoute'
 import Input from '../Components/Ui/Input'
 import {MaterialCommunityIcons, Entypo, MaterialIcons} from '@expo/vector-icons'
 import SubmitButton from '../Components/Ui/SubmitButton'
@@ -60,6 +60,7 @@ const Disco = ({navigation, route}) => {
   const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
   const [pinerrormessage, setPinerrorMessage] = useState('')
   const [ischecking, setischecking] = useState(false)
+  const [commissonvalue, setcommissonvalue] = useState()
 
   const maindate = new Date() 
   const date = maindate.toDateString()
@@ -76,8 +77,14 @@ const Disco = ({navigation, route}) => {
       setisLoading(false)
     } catch (error) {
       setisLoading(true)
+      Alert.alert('Error', "An error occured try again later", [
+        {
+          text:"Ok",
+          onPress: () => navigation.goBack()
+        }
+      ])
       setisLoading(false)
-      return
+      // return
     }
     })
     return unsubscribe;
@@ -210,14 +217,24 @@ const Disco = ({navigation, route}) => {
     }
   }
 
+  const commissionget = async (id) => {
+    try {
+      const response = await HelperBillerCommission(id, authCtx.token)
+      console.log(response)
+      setcommissonvalue(response)
+    } catch (error) {
+      return;
+    }
+  }
+
   const makePayment = async () => {
     toggleModal1()
     try {
         setisLoading(true)
-        const response = await DiscoPayment(ref, amount, authCtx.token)
+        const response = await DiscoPayment(ref, amount, authCtx.token, commissonvalue)
         // console.log(response)
-        if(response.message === "failed"){
-          Alert.alert(response.message, response.description + ", fund wallet and try again", [
+        if(response.message === "failed" || "Failed" && response.description === "Insufficient wallet balance"){
+          Alert.alert("Failed", response.description, [
             {
               text:"Ok",
               onPress:() => navigation.goBack()
@@ -253,7 +270,7 @@ const Disco = ({navigation, route}) => {
         body: `${response.message}.\nElectricity Token:${response.token}\nRef:${response.requestID}\nAmount:${amount}\nDate: ${date} ${time}`,
         data: { data: 'goes here' },
       },
-      trigger: { seconds: 2 },
+      trigger: { seconds: 10 },
     });
   }
 
@@ -315,6 +332,7 @@ const Disco = ({navigation, route}) => {
             onChange={item => {
                 setid(item.value);
                 setisFocus(false);
+                commissionget(item.value)
             }}
             />
             <View style={{ marginBottom:20}}/>

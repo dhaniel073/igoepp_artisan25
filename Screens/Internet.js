@@ -9,14 +9,14 @@ import { AuthContext } from '../utils/AuthContext'
 import { Image, ImageBackground } from 'expo-image'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
-import { HelperUrl, InternetPayment, ValidateInternet, ValidatePin } from '../utils/AuthRoute'
+import { HelperBillerCommission, HelperUrl, InternetPayment, ValidateInternet, ValidatePin } from '../utils/AuthRoute'
 import Modal from 'react-native-modal'
 import {MaterialIcons, MaterialCommunityIcons, Ionicons, Entypo} from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
 import styled from 'styled-components'
 import OTPFieldInput from '../Components/Ui/OTPFieldInput'
 
-const StyledButton = styled.TouchableOpacity`
+export const StyledButton = styled.TouchableOpacity`
   padding: 15px;
   background-color: ${Color.darkolivegreen_100};
   justify-content: center;
@@ -57,6 +57,7 @@ const Internet = ({route, navigation}) => {
   const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
   const [pinerrormessage, setPinerrorMessage] = useState('')
   const [ischecking, setischecking] = useState(false)
+  const [commissonvalue, setcommissonvalue] = useState()
   
   const [code, setCode] = useState('')
   const [pinReady, setPinReady] = useState(false)
@@ -74,8 +75,14 @@ const Internet = ({route, navigation}) => {
         setisLoading(false)
       } catch (error) {
         setisLoading(true)
+        Alert.alert('Error', "An error occured try again later", [
+          {
+            text:"Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
         setisLoading(false)
-        return;
+        // return;
       }
     })
     return unsubscribe;
@@ -225,6 +232,15 @@ const Internet = ({route, navigation}) => {
       }
     }
 
+    const commissionget = async (id) => {
+       try {
+         const response = await HelperBillerCommission(id, authCtx.token)
+         console.log(response)
+         setcommissonvalue(response)
+       } catch (error) {
+         return;
+       }
+     }
 
   const updatevalue = (inputType, enteredValue) => {
     switch(inputType){
@@ -238,10 +254,10 @@ const Internet = ({route, navigation}) => {
     toggleModal1()
     try {
       setisLoading(true)
-      const response = await InternetPayment(ref, price, bouquestData, authCtx.token)
+      const response = await InternetPayment(ref, price, bouquestData, authCtx.token, commissonvalue)
       // console.log(response)
-      if(response.data.message === "failed"){
-        Alert.alert(response.data.message, response.data.description + ", fund wallet and try again", [
+      if(response.data.message === "failed" || "Failed" && response.data.description === "Insufficient wallet balance"){
+        Alert.alert("Failed", response.data.description, [
           {
             text:"Ok",
             onPress:() => navigation.goBack()
@@ -273,7 +289,7 @@ const Internet = ({route, navigation}) => {
         body: `Internet subscription payment was successful\nAmount: ${price}\nSmartCard Id: ${smartcard}\nRef: ${response.data.requestID}\nDate: ${date} ${time} `,
         data: { data: 'goes here' },
       },
-      trigger: { seconds: 2 },
+      trigger: { seconds: 10 },
     });
   }
 
@@ -285,7 +301,7 @@ const Internet = ({route, navigation}) => {
     <ScrollView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}} showsVerticalScrollIndicator={false}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.internettxt}>Internet</Text>
-            {/* <Text style={styles.label}>Select Distribution Company</Text> */}
+        {/* <Text style={styles.label}>Select Distribution Company</Text> */}
           
           
       {
@@ -330,6 +346,7 @@ const Internet = ({route, navigation}) => {
               setid(item.value);
               setisFocus(false);
               getBouquets(item.value)
+              commissionget(item.value)
             }}
             />
 

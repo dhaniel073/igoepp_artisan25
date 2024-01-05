@@ -1,11 +1,11 @@
-import { Platform, Pressable, Keyboard, SafeAreaView, ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert, TextInput } from 'react-native'
+import { Platform, Pressable, Keyboard, SafeAreaView, ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert, TextInput, Share, PermissionsAndroid} from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Image, ImageBackground } from 'expo-image'
 import { Dropdown } from 'react-native-element-dropdown'
 import Modal from 'react-native-modal'
 import {MaterialIcons, MaterialCommunityIcons, Entypo} from '@expo/vector-icons'
 import axios from 'axios'
-import { BetPay, HelperUrl, ValidateBet, ValidatePin } from '../utils/AuthRoute'
+import { BetPay, HelperBillerCommission, HelperUrl, ValidateBet, ValidatePin } from '../utils/AuthRoute'
 import { AuthContext } from '../utils/AuthContext'
 import GoBack from '../Components/Ui/GoBack'
 import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
@@ -15,10 +15,15 @@ import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import * as Notification from 'expo-notifications'
 import styled from 'styled-components'
 import OTPFieldInput from '../Components/Ui/OTPFieldInput'
+import { captureRef } from 'react-native-view-shot'
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 
-const StyledButton = styled.TouchableOpacity`
+
+export const StyledButton = styled.TouchableOpacity`
   padding: 15px;
-  background-color: ${Color.darkolivegreen_100};
+  background-color: ${Color.new_color};
   justify-content: center;
   align-items: center;
   border-radius: 5px;
@@ -58,12 +63,82 @@ const Bet = ({route, navigation}) => {
   const [code, setCode] = useState('')
   const [pinReady, setPinReady] = useState(false)
   const MAX_CODE_LENGTH = 4;
+  const [commissonvalue, setcommissonvalue] = useState()
 
   const maindate = new Date() 
   const date = maindate.toDateString()
   const time = maindate.toLocaleTimeString()
 
   const amountCheck = amount >= 100
+
+  const viewRef = useRef(0);
+
+  // console.log(viewRef)
+
+  const sharedummyimage = async () => {
+
+  }
+  
+  const handleShareClick = async () => {
+    try {
+      const uri = await captureRef(viewRef.current, {
+        format: 'png',
+        quality: 1.0,
+      });
+
+      // Save or share the captured image
+      downloadImage(uri);
+    } catch (error) {
+      console.error('Error capturing image:', error.message);
+    }
+  };
+
+  const shareImage = async (uri) => {
+    try {
+      await Sharing.shareAsync(uri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Share Image',
+        UTI: 'public.png',
+      });
+    } catch (error) {
+      console.error('Error sharing image:', error.message);
+    }
+  };
+
+  const downloadImage = async (uri) => {
+    try {
+      // Example: Saving the image using expo-file-system
+      // You can replace this with your preferred method of saving or sharing
+      const fileUri = `${FileSystem.documentDirectory}captured_image.png`;
+
+      await FileSystem.copyAsync({
+        from: uri,
+        to: fileUri,
+      });
+
+      // Show an alert with options to Save or Share
+      Alert.alert(
+        'Save or Share Image',
+        'Do you want to save or share this image?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Save',
+            onPress: () => Alert.alert('Image Saved', 'The image has been saved to your device.'),
+          },
+          {
+            text: 'Share',
+            onPress: () => shareImage(fileUri),
+          },
+        ],
+        { cancelable: false }
+      );
+    } catch (error) {
+      console.error('Error saving or sharing image:', error.message);
+    }
+  };
+
+  
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
@@ -74,8 +149,14 @@ const Bet = ({route, navigation}) => {
         setisloading(false)
       } catch (error) {
         setisloading(true)
+        Alert.alert('Error', "An error occured try again later", [
+          {
+            text:"Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
         setisloading(false)
-        return;
+        // return;
       }
     })
      return unsubscribe;
@@ -206,16 +287,26 @@ const Bet = ({route, navigation}) => {
       }
     }
   
+
+    const commissionget = async (id) => {
+      try {
+        const response = await HelperBillerCommission(id, authCtx.token)
+        // console.log(response)
+        setcommissonvalue(response)
+      } catch (error) {
+        return;
+      }
+    }
     // console.log(ref)
 
     const betPayment = async () => {
       toggleModal1()
       try {
         setisloading(true)
-        const response = await BetPay(ref, amount, authCtx.token)
-        // console.log(response)
-        if(response.data.message === "failed"){
-          Alert.alert(response.data.message, response.data.description + ", fund wallet and try again", [
+        const response = await BetPay(ref, amount, authCtx.token, commissonvalue)
+        console.log(commissonvalue)
+        if(response.data.message === "failed" || "Failed" && response.data.description === "Insufficient wallet balance"){
+          Alert.alert("Failed", response.data.description, [
             {
               text:"Ok",
               onPress:() => navigation.goBack()
@@ -229,7 +320,7 @@ const Bet = ({route, navigation}) => {
         setisloading(false)
     } catch (error) {
       setisloading(true)
-        // console.log(error)
+        console.log(error.response.data)
         Alert.alert("Sorry", "An error occured try again later", [
           {  
             text:"Ok",
@@ -253,7 +344,7 @@ const Bet = ({route, navigation}) => {
           body: `You successfully funded your betting account\nBet Id: ${betId}\nAmount: NGN${amount}\nRef: ${ref}\nDate: ${date} ${time}`,
           data: { data: 'goes here' },
         },
-        trigger: { seconds: 2 },
+        trigger: { seconds: 10 },
       });
     }
 
@@ -308,8 +399,9 @@ const Bet = ({route, navigation}) => {
               onFocus={() => setisFocus(true)}
               onBlur={() => setisFocus(false)}
               onChange={item => {
-                  setid(item.value);
-                  setisFocus(false);
+                setid(item.value);
+                setisFocus(false);
+                commissionget(item.value)
               }}
             />
             <View style={{ marginBottom:20}}/>
@@ -386,7 +478,7 @@ const Bet = ({route, navigation}) => {
 
                       <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
                       
-                        <TouchableOpacity style={{}} onPress={() => {}}>
+                        <TouchableOpacity style={{}} onPress={() => handleShareClick()}>
                           <Text><Entypo name="forward" size={24} color="black" /></Text>
                         </TouchableOpacity>
 

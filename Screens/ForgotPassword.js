@@ -26,7 +26,7 @@ const ForgotPassword = ({navigation}) => {
       try {
         setisLoading(true)
         const response = await ForgotHelperPassword(email)
-        Alert.alert("Successful", `A mail has been sent to ${email}`, [
+        Alert.alert("Successful", `A mail has been sent to \n${email}`, [
           {
             text:"Ok",
             onPress: () => navigation.navigate("Login")
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     // alignItems: 'center'
   },
   buttons: {
-    marginTop: 25,
+    marginTop: 15,
   },
   Title:{
     marginTop: 30, 

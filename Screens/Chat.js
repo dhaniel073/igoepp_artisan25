@@ -51,15 +51,15 @@ useLayoutEffect(() => {
         let stateArray = []
         for (var i = 0; i < count; i++){
             stateArray.push({
-                _id: response.data[i].id,
-                createdAt: response.data[i].created_at,
-                text: response.data[i].message,
-                user:{
-                    _id: response.data[i].from_user_id,
-                    name: 'React Native',
-                    avatar: null
-                    // avatar: customer.picture === null ? `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKLYtkaHut2_Xctb0hUZGZk7pbCbIzcoMSNA&usqp=CAU`: `https://phixotech.com/igoepp/public/customers/${customer.picture}`,
-                },
+              _id: response.data[i].id,
+              createdAt: response.data[i].created_at,
+              text: response.data[i].message,
+              user:{
+                _id: response.data[i].from_user_id,
+                name: 'React Native',
+                avatar: null
+                // avatar: customer.picture === null ? `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKLYtkaHut2_Xctb0hUZGZk7pbCbIzcoMSNA&usqp=CAU`: `https://phixotech.com/igoepp/public/customers/${customer.picture}`,
+              },
             }, 
             )
             setPreviousMessage(response.data[i].from_user_id)

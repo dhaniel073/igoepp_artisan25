@@ -18,6 +18,7 @@ export const  AuthContext = createContext({
   picture:"",showAmount: "",
   lastLoginTimestamp: "",
   userid: "",
+  sumtot:"",
 
 
   
@@ -34,6 +35,7 @@ export const  AuthContext = createContext({
   helperShowAmount: (showAmount) => {},
   helperlastLoginTimestamp : (lastLoginTimestamp) => {},
   helperuserid: (userid) => {},
+  helpersumtot: (sumtot) => {},
 
   logout: () => {}
 
@@ -56,6 +58,7 @@ function AuthContextProvider({children}){
     const [authpicture, setauthpicture] = useState()
     const [authlogintime, setauthlogintime] = useState()
     const [authuserid, setauthuserid] = useState()
+    const [authsumtot, setauthsumtot] = useState()
 
 
     if(IsLogout){
@@ -78,6 +81,12 @@ function AuthContextProvider({children}){
         const phonecheck = number.toString()
         setauthphone(phonecheck)
         AsyncStorage.setItem('helperPhone', phonecheck)
+    }
+
+    function helpersumtot(number){
+        const stingify = number.toLocaleString()
+        setauthsumtot(stingify)
+        AsyncStorage.setItem('helpersumtot', stingify)
     }
 
     
@@ -170,6 +179,7 @@ function AuthContextProvider({children}){
         setauthShowAmount(null)
         setauthlogintime(null)
         setauthuserid(null)
+        setauthsumtot(null)
         AsyncStorage.removeItem('helpertoken')
         AsyncStorage.removeItem('helperId')
         AsyncStorage.removeItem('helperEmail')
@@ -183,6 +193,7 @@ function AuthContextProvider({children}){
         AsyncStorage.removeItem('helperShowAmount')
         AsyncStorage.removeItem('helperlastLoginTimestamp')
         AsyncStorage.removeItem('helperuserid')
+        AsyncStorage.removeItem('helpersumtot')
     
         setIsLogout(false)
     }
@@ -204,6 +215,7 @@ function AuthContextProvider({children}){
         showAmount: authShowAmount,
         lastLoginTimestamp: authlogintime,
         userid: authuserid,
+        sumtot: authsumtot,
 
         authenticated:authenticated,
         helperId:helperId,
@@ -218,6 +230,7 @@ function AuthContextProvider({children}){
         helperShowAmount: helperShowAmount,
         helperlastLoginTimestamp: helperlastLoginTimestamp,
         helperuserid:helperuserid,
+        helpersumtot: helpersumtot,
         logout: logout
         
     }

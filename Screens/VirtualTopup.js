@@ -8,7 +8,7 @@ import { Dropdown } from 'react-native-element-dropdown'
 import { AuthContext } from '../utils/AuthContext'
 import { Image, ImageBackground } from 'expo-image'
 import Modal from 'react-native-modal'
-import { HelperSelf, HelperThirdParty, HelperUrl, HelperVtuAirtime, HelperVtuData, ValidatePin } from '../utils/AuthRoute'
+import { HelperBillerCommission, HelperSelf, HelperThirdParty, HelperUrl, HelperVtuAirtime, HelperVtuData, ValidatePin } from '../utils/AuthRoute'
 import {MaterialIcons, Entypo, MaterialCommunityIcons} from '@expo/vector-icons'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
@@ -78,6 +78,7 @@ const VirtualTopup = ({navigation, route}) => {
     const [pincheckifempty, setpincheckifempty] = useState([])
     const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
     const [pinerrormessage, setPinerrorMessage] = useState('')
+    const [commissonvalue, setcommissonvalue] = useState()
       
     
     // const phone = self === "self" && authCtx.phone 
@@ -100,8 +101,14 @@ const VirtualTopup = ({navigation, route}) => {
         setisloading(false)
       } catch (error) {
         setisloading(true)
+        Alert.alert('Error', "An error occured try again later", [
+          {
+            text:"Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
         setisloading(false)
-        return;
+        // return;
       }
     })
     return unsubscribe;
@@ -135,12 +142,12 @@ const VirtualTopup = ({navigation, route}) => {
 
   const updatevalue = (inputType, enteredValue) => {
     switch(inputType){
-        case 'phonevalidation':
-            setPhoneValidation(enteredValue);
-            break;
-        case 'amount':
-            setAmount(enteredValue);
-            break;
+      case 'phonevalidation':
+        setPhoneValidation(enteredValue);
+        break;
+      case 'amount':
+        setAmount(enteredValue);
+        break;
     }
 }
 
@@ -323,6 +330,16 @@ const getBouquets = (value) => {
       }
   }
 
+  const commissionget = async (id) => {
+     try {
+       const response = await HelperBillerCommission(id, authCtx.token)
+       console.log(response)
+       setcommissonvalue(response)
+     } catch (error) {
+       return;
+     }
+   }
+
   let refT = useRef(0);
   
   function handleClick() {
@@ -376,16 +393,16 @@ const getBouquets = (value) => {
     toggleModal1()
     try {
       setisloading(true)
-        const response = await HelperVtuAirtime(requestId, id, amount, authCtx.token)
+        const response = await HelperVtuAirtime(requestId, id, amount, authCtx.token, commissonvalue)
         // console.log(response)
 
-        if(response.message === "failed"){
-            Alert.alert(response.message, response.description + ", fund wallet and try again", [
-              {
-                text:"Ok",
-                onPress:() => navigation.goBack()
-              }
-            ])
+        if(response.message === "failed" || "Failed" && response.description === "Insufficient wallet balance"){
+          Alert.alert("Failed", response.description, [
+            {
+              text:"Ok",
+              onPress:() => navigation.goBack()
+            }
+          ])
           }else{
             schedulePushNotification(response)
             toggleModal()
@@ -400,7 +417,7 @@ const getBouquets = (value) => {
             }
           ])
           setisloading(false)
-        // console.log(error.response)
+        console.log(error.response)
     }
   }
 
@@ -410,16 +427,16 @@ const datatoptup = async() => {
     // console.log(requestID, id, bosquetPrice, bosquetData, authCtx.token)
     try {
       setisloading(true)
-        const response = await HelperVtuData(requestId, id, bosquetPrice, bosquetData, authCtx.token)
+        const response = await HelperVtuData(requestId, id, bosquetPrice, bosquetData, authCtx.token, commissonvalue)
         // console.log(response)
 
-        if(response.message === "failed"){
-            Alert.alert(response.message, response.description + ", fund wallet and try again", [
-              {
-                text:"Ok",
-                onPress:() => navigation.goBack()
-              }
-            ])
+        if(response.message === "failed" || "Failed" && response.description === "Insufficient wallet balance"){
+          Alert.alert("Failed", response.description, [
+            {
+              text:"Ok",
+              onPress:() => navigation.goBack()
+            }
+          ])
           }else{
             schedulePushNotification(response)
             toggleModal()
@@ -445,7 +462,7 @@ const datatoptup = async() => {
         body: `${id} ${response.message}.\nAmount: ${DATACHECK ? bosquetPrice : amount} \nPhone Number ${self === "self" ? authCtx.phone : phoneValidation} \nReference: ${response.requestID} \nDate: ${date} ${time}`,
         data: { data: 'goes here' },
       },
-      trigger: { seconds: 2 },
+      trigger: { seconds: 10 },
     });
   }
 
@@ -457,7 +474,7 @@ const datatoptup = async() => {
   return (
     <ScrollView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <Text style={styles.internettxt}>VirtualTopup</Text>
+      <Text style={styles.internettxt}>Virtual Top-up</Text>
 
       {
         pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
@@ -506,6 +523,7 @@ const datatoptup = async() => {
                 setid(item.value);
                 setisFocus(false);
                 getBouquets(item.value)
+                commissionget(item.value)
             }}
             />
             <View style={{ marginBottom:20}}/>
@@ -531,14 +549,12 @@ const datatoptup = async() => {
                 onFocus={() => setIsSelfFocus(true)}
                 onBlur={() => setIsSelfFocus(false)}
                 onChange={item => {
-                    setSelf(item.value);
-                    setIsSelfFocus(false);
-                    
-                    
+                  setSelf(item.value);
+                  setIsSelfFocus(false);
                 }}
                 />
             <View style={{ marginBottom:30}}/>
-                </>
+              </>
             }
 
             {DATACHECK && 

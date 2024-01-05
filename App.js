@@ -46,6 +46,7 @@ import Biometric from './Screens/Biometric';
 import * as Device from 'expo-device';
 import PasswordReset from './Screens/PasswordReset';
 import NotificationScreen from './Screens/NotificationScreen';
+import FeedBack from './Screens/FeedBack';
 
 
 
@@ -300,8 +301,12 @@ export default function App() {
   function AuthenticatedStack(){
     const authCtx = useContext(AuthContext)
 
-    useEffect(() => {
-      checkLastLoginTimestamp()
+   useEffect(() => {
+      try {
+        checkLastLoginTimestamp()
+      } catch (error) {
+        return;
+      }
     },[])
     
       // console.log(authCtx.lastLoginTimestamp + " timestamp")
@@ -325,7 +330,7 @@ export default function App() {
           console.log(timeDifferenceInMinutes + " difference")
       
           // Adjust the threshold based on your requirements (e.g., 30 minutes)
-          const authenticationThresholdInMinutes = 5;
+          const authenticationThresholdInMinutes = 10;
       
           if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
             // Prompt the user to reauthenticate
@@ -575,6 +580,14 @@ export default function App() {
           headerShown: false
         }} 
       />
+
+      <Stack.Screen
+        name='FeedBack'
+        component={FeedBack}
+        options={{
+          headerShown: false
+        }} 
+      />
       
       </Stack.Navigator>
     )
@@ -614,6 +627,9 @@ export default function App() {
     const storedshowamount = await AsyncStorage.getItem('helperShowAmount')
     const storedlastlogintime = await AsyncStorage.getItem('helperlastLoginTimestamp')
     const storeduserid = await AsyncStorage.getItem('helperuserid')
+    const storedsumtot = await AsyncStorage.getItem('helpersumtot')
+
+    
     
 
     if(storedToken && storedId && storedemail){
@@ -629,6 +645,7 @@ export default function App() {
       authCtx.helperPicture(storedpicture)
       authCtx.helperlastLoginTimestamp(storedlastlogintime)
       authCtx.helperuserid(storeduserid)
+      authCtx.helpersumtot(storedsumtot)
     }
 
     setisTrying(false)
@@ -657,7 +674,7 @@ export default function App() {
 
   return (
     <>
-      <StatusBar style='auto'/>
+      <StatusBar style="dark-content"/>
       <AuthContextProvider>
         <Root/>
       </AuthContextProvider>

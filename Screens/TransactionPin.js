@@ -12,7 +12,7 @@ import OTPFieldInput from '../Components/Ui/OTPFieldInput'
 import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
 import SubmitButton from '../Components/Ui/SubmitButton'
 
-const StyledButton = styled.TouchableOpacity`
+export const StyledButton = styled.TouchableOpacity`
     padding: 15px;
     background-color: ${Color.new_color};
     justify-content: center;

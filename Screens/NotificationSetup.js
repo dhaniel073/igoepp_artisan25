@@ -1,5 +1,5 @@
 import { Alert, StyleSheet, Switch, Text, View } from 'react-native'
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import { AuthContext } from '../utils/AuthContext'
 import GoBack from '../Components/Ui/GoBack'
@@ -16,12 +16,12 @@ const NotificationSetup = ({navigation}) => {
   const [notalert, setnotalert] = useState([])
 
 
-  useState(() => {
+  useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
       try {
         setisloading(true)
         const response = await ViewAlertSetup(authCtx.Id, authCtx.token)
-        // console.log(response.data)
+        console.log(response.data)
         setnotalert(response.data)
         setisloading(false)
       } catch (error) {

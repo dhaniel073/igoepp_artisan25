@@ -389,15 +389,15 @@ const AcceptedRequest = ({navigation}) => {
 
                : item.customer_statisfy === null ? 
                <>
-               <Text style={[styles.completeservicetext, {position:'absolute', top:-57, left:'60%',  fontSize:10} ]}>Satisfaction Pending</Text>
+               <Text style={[styles.completeservicetext, {position:'absolute', top:-50, left:'68%',  fontSize:10} ]}>Satisfaction Pending</Text>
                
                <TouchableOpacity style={styles.cancelbtn} onPress={() =>
                 navigation.navigate("UploadScreen", {
-                    customerId: item.customer_id,
-                    request_id: item.id,
-                    date: item.start_request_time
+                  customerId: item.customer_id,
+                  request_id: item.id,
+                  date: item.start_request_time
                   })}>
-                      <Text style={styles.canceltext}>Upload Proof</Text>
+                    <Text style={styles.canceltext}>Upload Proof</Text>
                 </TouchableOpacity>
                 </>
                

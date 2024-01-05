@@ -81,14 +81,19 @@ const BillPayment = ({navigation}) => {
     }
   }
 
+  // console.log(method)
   const toggleModal = () => {
     setModalVisible(!ismodalVisible)
   }
 
  const check = () => {
+  if(method === 'C'){
+    Alert.alert("", "Payment method not available")
+  }else{
     navigation.navigate("AddToWallet") 
     setMethod(null)
     toggleModal()
+  }
  }
 
  function onAuthenticate (spec){
@@ -104,6 +109,8 @@ const BillPayment = ({navigation}) => {
           }else{
             ShowAmount()
           }
+      }else if (result.error === 'not_enrolled'){
+        Alert.alert("", "Device not enrolled, setup up a screen lock to use this feature")
       }
     })
   }
@@ -131,7 +138,7 @@ const BillPayment = ({navigation}) => {
         <View style={{flexDirection:'row', marginBottom:5}}>
           <Text style={styles.text}>
             <MaterialCommunityIcons name="currency-ngn" size={25} color="white" />
-            {authCtx.showAmount === 'show'  ? authCtx.balance : 'XXXXX.XX'}
+            {authCtx.showAmount === 'show'  ? authCtx.balance : <Text>******</Text>}
           </Text>
 
           {authCtx.showAmount === 'show' ?

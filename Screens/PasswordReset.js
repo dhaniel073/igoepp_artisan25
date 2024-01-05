@@ -10,7 +10,7 @@ import { useRef } from 'react'
 import { HelperResetPassword, ValidateLogin } from '../utils/AuthRoute'
 import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-
+import { Base64 } from 'js-base64'
 
 const PasswordReset = ({navigation}) => {
     const authCtx = useContext(AuthContext)
@@ -43,9 +43,10 @@ const PasswordReset = ({navigation}) => {
             }
           ])
         }else{
+          const passwordMd5Old = Base64.encode(oldpassword)
           try {
             setisloading(true)
-            const response = await ValidateLogin(authCtx.email, oldpassword)
+            const response = await ValidateLogin(authCtx.email, passwordMd5Old)
             console.log(response.message)
             if(response.message === "Invalid passoword"){
               setoldpassworderrormessage(response.message)
@@ -69,9 +70,11 @@ const PasswordReset = ({navigation}) => {
       }
 
     const ResetHandler = async () => {
+      const passwordMd5New = Base64.encode(password)
+
         try {
           setisloading(true)
-          const response = await HelperResetPassword(authCtx.Id, password, authCtx.token)
+          const response = await HelperResetPassword(authCtx.Id, passwordMd5New, authCtx.token)
           console.log(response)
           Alert.alert("Successful", "Password reset successful", [
             {

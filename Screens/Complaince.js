@@ -332,7 +332,7 @@ const pickidcardImage = async () => {
         setisloading(false)
         setImages()
         setImageBase()
-        Alert.alert('Success', 'Passport Updated Successfully', [
+        Alert.alert('Success', 'Passport Uploaded Successfully', [
           {
             text: 'Ok',
             onPress: () => {Customer()}
@@ -359,7 +359,7 @@ const pickidcardImage = async () => {
       setisloading(false)
       setIdCard()
       setIdCardBase()
-      Alert.alert('Success', 'Passport Updated Successfully', [
+      Alert.alert('Success', 'Id Card Uploaded Successfully', [
         {
           text: 'Ok',
           onPress: () => {Customer()}
@@ -385,7 +385,7 @@ const pickidcardImage = async () => {
       setisloading(false)
       setAddressProof()
       setAddressProofBase()
-      Alert.alert('Success', 'Passport Updated Successfully', [
+      Alert.alert('Success', 'Address proof Uploaded Successfully', [
         {
           text: 'Ok',
           onPress: () => {Customer()}

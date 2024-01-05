@@ -1,7 +1,7 @@
 import { Dimensions, Platform, StatusBar } from "react-native";
 
 export const marginStyle = {
-    marginTp: Platform.OS === 'android' ? StatusBar.currentHeight + 5 : 50
+    marginTp: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50
 }
 
 export const FontSize = {

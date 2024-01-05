@@ -218,13 +218,13 @@ if(IsLoading){
 
             <View style={{ marginBottom:10}}/>  
 
-          <View style={{flexDirection:'row', justifyContent:'center'}}>
-            <View style={{alignItems:'center', justifyContent:'center'}}>
+          <View style={{flexDirection:'row', justifyContent:'center', alignItems:'center'}}>
+            {/* <View style={{alignItems:'center', justifyContent:'center'}}>
               <TouchableOpacity style={[styles.shadow,{borderWidth:1, padding:15, borderRadius:10, marginRight:10, borderColor:Color.new_color}]} onPress={captureimage}>
                 <FontAwesome name="camera" size={24} color={Color.new_color} />
               </TouchableOpacity>
               <Text style={[styles.panelBottomTitle, {marginRight:15}]}> Camera</Text>
-            </View>
+            </View> */}
 
             <View style={{alignItems:'center', justifyContent:'center'}}>
               <TouchableOpacity style={[styles.shadow,{borderWidth:1, padding:15, borderRadius:10, marginLeft:10, borderColor:Color.new_color}]} onPress={pickImage}>

@@ -1,9 +1,9 @@
-import { Alert, AppState, Dimensions, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, AppState, Dimensions, FlatList, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Image, ImageBackground } from 'expo-image'
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
-import { Border, Color, marginStyle } from '../Components/Ui/GlobalStyle';
+import { Border, Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle';
 import Swiper from 'react-native-swiper'
 import { AuthContext } from '../utils/AuthContext';
 import * as LocalAuthentication from 'expo-local-authentication'
@@ -90,6 +90,8 @@ const WelcomeScreen = ({navigation}) => {
         }else{
           ShowAmount()
         }
+      }else if (result.error === 'not_enrolled'){
+        Alert.alert("", "Device not enrolled, setup up a screen lock to use this feature")
       }
     })   
   }
@@ -224,6 +226,12 @@ const WelcomeScreen = ({navigation}) => {
       try {
         const response = await RequestSumTotal(authCtx.Id , authCtx.token)
         setsumtot(response)
+        console.log(response)
+        if(response === 0){
+          authCtx.helpersumtot("0.00")
+        }else{
+          authCtx.helpersumtot(response)
+        }
       } catch (error) {
         return;
       }
@@ -315,8 +323,9 @@ const WelcomeScreen = ({navigation}) => {
                   <Text style={styles.text}>{request}</Text>
                   <Text style={{paddingRight:20, color:Color.white,  fontSize:12, fontFamily:'poppinsMedium', textAlign:'center', top:5}}>{
                     subcatname.map((item) => (
-                      item.sub_cat_name
+                      item.id === authCtx.subCatId ? item.sub_cat_name : null
                     ))
+                    // subcatname.id === authCtx.subCatId ? subcatname.sub_cat_name : null
                   }</Text>
                 </View>
 
@@ -330,7 +339,7 @@ const WelcomeScreen = ({navigation}) => {
                   <View>
                   <Text style={styles.text}>
                     <MaterialCommunityIcons name="currency-ngn" size={20} color={Color.white} />
-                    {authCtx.showAmount === 'show'  ? sumtot.toLocaleString() : 'XXXXX.XX'} 
+                    {authCtx.showAmount === 'show'  ? authCtx.sumtot : <Text>******</Text>} 
                   </Text>
                   </View>
 
@@ -378,7 +387,7 @@ const WelcomeScreen = ({navigation}) => {
 
         
 
-      <ScrollView style={{ marginTop:'2%'}} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ marginTop:'2%',}} showsVerticalScrollIndicator={false}>
       <View style={{marginHorizontal:10}}>
         <Text style={[styles.quickLinks,{fontFamily:'poppinsRegular', fontSize:15} ] }>Quick Links</Text>
       </View>
@@ -390,7 +399,7 @@ const WelcomeScreen = ({navigation}) => {
           <ScrollView 
             horizontal={true}
             showsHorizontalScrollIndicator={false}
-            style={[styles.subContainer,]}
+            style={[styles.subContainer]}
           >
 
               <View style={{marginRight:10, marginTop:5,}}>
@@ -422,8 +431,8 @@ const WelcomeScreen = ({navigation}) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.acceptedrequest}  onPress={() => navigation.navigate('AcceptedRequest')}>
-                  <Image contentFit='contain' source={require('../assets/vector14.png')} style={{width:37, marginTop:15, height: 37, marginLeft:15, marginBottom:10  }} transition={1000}/>
-                  <Text style={{textAlign:'center', color:'#fff', fontFamily: 'poppinsRegular', fontSize: 10}}>Accepted Request</Text>
+                  <Image contentFit='contain' source={require('../assets/vector14.png')} style={{width:37,  height: 37, marginLeft:10, marginBottom:5  }} transition={1000}/>
+                  <Text style={{color:'#fff', fontFamily: 'poppinsRegular', fontSize: 10}}>Accepted Request</Text>
                 </TouchableOpacity>
 
               </View>
@@ -452,7 +461,7 @@ const WelcomeScreen = ({navigation}) => {
       {
         trend.length === 0 ? null :
         <>
-        <View style={{marginTop:10}}>
+        <View style={{marginTop:10, marginBottom:20}}>
           <Text style={{fontSize:15, marginLeft:10, fontFamily:'poppinsSemiBold'}}>Trending Service</Text>
           {
             trend.map((item, key) => {
@@ -478,10 +487,11 @@ const WelcomeScreen = ({navigation}) => {
             })
           }
          
-        </View>
         <Text style={{fontSize:15, marginLeft:10, fontFamily:'poppinsSemiBold'}}>Top Selling Product</Text>
+        </View>
         </>
       }
+
         <View style={{marginBottom:'20%'}}/>
 
       </ScrollView>
@@ -546,7 +556,8 @@ const styles = StyleSheet.create({
     height: HEIGHT * 0.12,
     backgroundColor: Color.limegreen_100,
     borderRadius: Border.br_3xs,
-    width: WIDTH * 0.4
+    width: WIDTH * 0.4,
+    padding:10
   },
   availability:{
     backgroundColor: Color.skyblue,
@@ -557,7 +568,9 @@ const styles = StyleSheet.create({
     // marginBottom:10
   },
   nameContainer:{
-    marginBottom:25 
+    marginBottom:10,
+    marginTop:10,
+    // marginHorizontal:10
   },
   viewrequest:{
     backgroundColor: Color.mediumpurple,
@@ -571,6 +584,20 @@ const styles = StyleSheet.create({
     maxHeight: HEIGHT * 0.3,
     borderRadius: Border.br_3xs,
     width: WIDTH * 0.4,
+    marginBottom:10,
+  },
+  viewrequest:{
+    backgroundColor: Color.mediumpurple,
+    maxHeight: HEIGHT * 0.3,
+    borderRadius: Border.br_3xs,
+    width: WIDTH * 0.4,
+    marginBottom:10
+  },
+  searchhistory:{
+    backgroundColor: Color.lightcoral,
+    maxHeight: DIMENSION.HEIGHT * 0.3,
+    borderRadius: Border.br_3xs,
+    width: DIMENSION.WIDTH * 0.4,
     marginBottom:10,
 
   },
@@ -606,7 +633,7 @@ const styles = StyleSheet.create({
     color: Color.gray6,
   },
   hiChris:{
-    top: -4,
+    top: 2,
     left: 5,
     fontSize: 18,
     fontFamily:'poppinsRegular',

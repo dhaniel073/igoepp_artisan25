@@ -11,12 +11,12 @@ import { AuthContext } from '../utils/AuthContext'
 import {Entypo, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
 import Modal from 'react-native-modal'
 import { Image, ImageBackground } from 'expo-image'
-import { HelperUrl, ValidatePin, WaecCard } from '../utils/AuthRoute'
+import { HelperBillerCommission, HelperUrl, ValidatePin, WaecCard } from '../utils/AuthRoute'
 import * as Notifications from 'expo-notifications'
 import styled from 'styled-components'
 import OTPFieldInput from '../Components/Ui/OTPFieldInput'
 
-const StyledButton = styled.TouchableOpacity`
+export const StyledButton = styled.TouchableOpacity`
   padding: 15px;
   background-color: ${Color.darkolivegreen_100};
   justify-content: center;
@@ -58,6 +58,7 @@ const Education = ({route, navigation}) => {
   const [code, setCode] = useState('')
   const [pinReady, setPinReady] = useState(false)
   const MAX_CODE_LENGTH = 4;
+  const [commissonvalue, setcommissonvalue] = useState()
   
   const maindate = new Date() 
   const date = maindate.toDateString()
@@ -72,8 +73,14 @@ const Education = ({route, navigation}) => {
         setisLoading(false)
       } catch (error) {
         setisLoading(true)
+        Alert.alert('Error', "An error occured try again later", [
+          {
+            text:"Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
         setisLoading(false)
-        return;
+        // return;
       }
     })
     return unsubscribe;
@@ -163,7 +170,7 @@ const Education = ({route, navigation}) => {
     }else{
       try {
         setischecking(true)
-        const response = await ValidatePin(authCtx.Id, code, authCtx.token)
+        const response = await ValidatePin(authCtx.Id, code, authCtx.token, commissonvalue)
         console.log(response)
         setCode('')
         validate()
@@ -184,15 +191,25 @@ const Education = ({route, navigation}) => {
     }
   }
 
+  const commissionget = async (id) => {
+     try {
+       const response = await HelperBillerCommission(id, authCtx.token)
+       console.log(response)
+       setcommissonvalue(response)
+     } catch (error) {
+       return;
+     }
+   }
+
 
   const validate = async () => {
     toggleModal1()
     try{
       setisLoading(true)
-      const response = await WaecCard(authCtx.Id, id, edu, price, authCtx.token)
+      const response = await WaecCard(authCtx.Id, id, edu, price, authCtx.token, commissonvalue)
       // console.log(response)
-      if(response.data.message === "failed"){
-        Alert.alert(response.data.message, response.data.description + ", fund wallet and try again", [
+      if(response.data.message === "failed" || "Failed" && response.data.description === "Insufficient wallet balance"){
+        Alert.alert("Failed", response.data.description, [
           {
             text:"Ok",
             onPress:() => navigation.goBack()
@@ -227,7 +244,7 @@ const Education = ({route, navigation}) => {
         body: `${response.data.status}\nWaec Pin: ${response.data.PIN}\nAmount: ${price}\nRef: ${response.data.requestID}\nDate: ${date} ${time}`,
         data: { data: 'goes here' },
       },
-      trigger: { seconds: 2 },
+      trigger: { seconds: 10 },
     });
   }
 
@@ -286,6 +303,7 @@ const Education = ({route, navigation}) => {
               setid(item.value);
               setisFocus(false);
               getBouquets(item.value)
+              commissionget(item.value)
             }}
             />
             <View style={{ marginBottom:20}}/>

@@ -12,6 +12,7 @@ import { SignUpHandyman } from '../utils/AuthRoute'
 import {AuthContext} from '../utils/AuthContext'
 import Modal from 'react-native-modal'
 import {MaterialIcons} from '@expo/vector-icons'
+import { Base64 } from 'js-base64'
 
 
 const data = [
@@ -40,7 +41,7 @@ const State = [
 
 const LGA = [
   { label: 'SuruLere', value: 'SuruLere' },
-  { label: 'Amuwo Odofin', value: 'Amuwo Odofin' },
+  { label: 'Amuwo-odofin', value: 'Amuwo-odofin' },
 ];
 
 const IDTYPE = [
@@ -81,6 +82,7 @@ const SignUp = ({navigation}) => {
     const [Iscategory, setIsCategory] = useState('');
     const [Issubcategory, setIsSubcategory] = useState('');
     const [Isidtype, setIsIdtype] = useState('');
+    const [referral_code, setreferral_code] = useState()
 
 
 
@@ -212,8 +214,11 @@ useEffect(() => {
         setAddress(enteredValue);
         break;
       case 'idnum':
-      setIdnum(enteredValue);
-      break;
+        setIdnum(enteredValue);
+        break;
+      case 'referral':
+        setreferral_code(enteredValue)
+        break;
     }
   }
 
@@ -241,15 +246,17 @@ useEffect(() => {
       const subcategorycheck = subcategory === null || undefined || "" || subcategory.length === 0
       const idnumcheck = idnum === null || undefined || "" || idnum.length === 0
       const idtypecheck = idtype === null || undefined || "" || idtype.length === 0
+      const firstnamecheck = enteredFirstname.length > 4
+      const lastnamecheck = enteredLastName.length > 4
 
        
       console.log(passcheck)
 
-        if(!enteredLastName || !enteredFirstname || !emailIsValid || !enteredPhone || !enteredGender || !category || !subcategory || passwordIsValid ||
+        if(!firstnamecheck || !lastnamecheck || !emailIsValid || !enteredPhone || !enteredGender || !category || !subcategory || passwordIsValid ||
          !passcheck || !countryName || !stateName || !cityName || !address
         ){
-            const InvalidFirstName = !enteredFirstname
-            const InvalidLastName = !enteredLastName
+            const InvalidFirstName = !firstnamecheck
+            const InvalidLastName = !lastnamecheck
             const InvalidPhone = phonecheck
             const InvalidPassword = passwordIsValid
             const InvalidConfirmPassword = !passcheck
@@ -295,10 +302,11 @@ useEffect(() => {
       const geocodeLocation = await Location.geocodeAsync(addresstoUse);
       const latitude = !address ? '' : geocodeLocation[0].latitude
       const longitude = !address ? '' : geocodeLocation[0].longitude
+      const passwordMd5 = Base64.encode(enteredPassword)
       // console.log(addresstoUse)
       try {
         setIsLoading(true)
-        const response = await SignUpHandyman(enteredLastName, enteredFirstname, enteredEmail, enteredPhone, category, subcategory, enteredConfirmPassword, enteredGender, countryName, stateName, cityName, address, latitude, longitude, idtype, idnum)
+        const response = await SignUpHandyman(enteredLastName, enteredFirstname, enteredEmail, enteredPhone, category, subcategory, passwordMd5, enteredGender, countryName, stateName, cityName, address, latitude, longitude, idtype, idnum, referral_code)
         console.log(response)
         authCtx.authenticated(response.access_token)
         authCtx.helperId(response.helper_id)
@@ -312,13 +320,12 @@ useEffect(() => {
         authCtx.helperuserid(response.user_id)
         authCtx.helperShowAmount('show')
         authCtx.helperlastLoginTimestamp(new Date().toString())
+        authCtx.helpersumtot("0.00")
         setIsLoading(false)
       } catch (error) {
         setIsLoading(true)
         console.log(error.response)
         const myObj = error.response.data.email[0];
-        // console.log(myObj.helper_rating)
-        // Alert.alert('SignUp Failed', JSON.stringify(error.response.data.email))
         Alert.alert('SignUp Failed', myObj)
         setIsLoading(false)
         return;
@@ -326,10 +333,10 @@ useEffect(() => {
     }
 
     if(isLoading){
-        return <LoadingOverlay message={"Creating User"}/>
+      return <LoadingOverlay message={"Creating User"}/>
     }
   return (
-    <ScrollView style={{marginTop: marginStyle.marginTp, marginHorizontal:18}} showsVerticalScrollIndicator={false}>
+    <ScrollView style={{marginTop:55, marginHorizontal:18}} showsVerticalScrollIndicator={false}>
 
     <View style={{alignSelf:'center'}}>
     <Image style={{ width:100, height:100,}} source={require("../assets/igoepp_transparent2.png")}   placeholder={'blurhash'}
@@ -349,8 +356,8 @@ useEffect(() => {
           value={enteredFirstname}
           isInvalid={IsenteredFirstname}
           onFocus={() => setIsEnteredFirstName(false)}
-
           />
+        {IsenteredFirstname && <Text style={{fontSize:10, color:Color.red}}>First name must beat least 5 characters</Text>}
     </View>
     <View style={styles.lastname}>
       <Input
@@ -360,6 +367,7 @@ useEffect(() => {
         isInvalid={IsenteredLastName}
         onFocus={() => setIsEnteredLastName(false)}
         />
+        {IsenteredLastName && <Text style={{fontSize:10, color:Color.red}}>Last name must beat least 5 characters</Text>}
       </View>
     </View>
 
@@ -572,6 +580,14 @@ useEffect(() => {
     }
 
     <>
+      <Input
+        placeholder={"Referral Code"}
+        onUpdateValue={updateInputValueHandler.bind(this, 'referral')}
+        value={referral_code}
+      />
+    </>
+
+    <>
     <Input
       placeholder="Password"
       onUpdateValue={updateInputValueHandler.bind(this, 'password')}
@@ -632,14 +648,14 @@ useEffect(() => {
     <View style={{marginBottom:'2%'}}/>
     <ScrollView showsVerticalScrollIndicator={false}>
     <View style={{alignItems:'center'}}>
-      <Text style={{textAlign:'center'}}>CUSTOMER SERVICE LEVEL AGREEMENT</Text> 
+      <Text style={{textAlign:'center'}}>Artisan SERVICE LEVEL AGREEMENT</Text> 
     </View>
 
     <Text> A.	SERVICE LEVEL AGREEMENT(SLA)</Text>
 
     <Text style={styles.textsty}> 
     1.	Services to be Performed
-    I have agreed to work in the capacity of <Text> {authCtx.firstName } { authCtx.lastName}</Text> as an Artisan 
+    I have agreed to work in the capacity of <Text  style={{fontFamily:'poppinsBold'}}> {enteredFirstname} { enteredLastName}</Text> as an Artisan 
     </Text>
 
     <Text style={styles.textsty}>
@@ -685,24 +701,24 @@ useEffect(() => {
       This Agreement does not create a partnership relationship. Artisan does not have authority to enter contracts on IGOEPP’s behalf.
     </Text>
 
+    <View style={{flexDirection:'row', justifyContent:'center', flex:1, marginTop:10, paddingLeft:15 }}>
     <View style={{marginTop:'1%'}}>
       {data.map((item, key) => 
         <View key={key} style={{flexDirection:'row', justifyContent:'center', }}>
           <TouchableOpacity style={[styles.outer, ]} onPress={() => setavail(item.id)}>
             {avail === item.id && <View style={styles.inner}/>} 
           </TouchableOpacity>
-          <Text> Accept</Text>
+          <Text style={{marginTop:5}}> Accept</Text>
       </View>
       )}
     </View>
         <View style={{marginBottom:10}}/>
     {
       avail  && 
-      <View style={{marginHorizontal:20}}>
-        <SubmitButton message={"Continue"} onPress={() => signupSend()}/>
-      </View>
+        <SubmitButton style={{flex:1, marginLeft:10, marginHorizontal:20}} message={"Continue"} onPress={() => signupSend()}/>
     }
-      <View style={{marginBottom:10}}/>
+    </View>
+      <View style={{marginBottom:20}}/>
 
     </ScrollView>
 

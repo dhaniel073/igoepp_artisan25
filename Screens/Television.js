@@ -8,7 +8,7 @@ import { AuthContext } from '../utils/AuthContext'
 import { Image, ImageBackground } from 'expo-image'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
-import { HelperUrl, TvPayment, TvRenewalPay, ValidatePin, ValidateTv } from '../utils/AuthRoute'
+import { HelperBillerCommission, HelperUrl, TvPayment, TvRenewalPay, ValidatePin, ValidateTv } from '../utils/AuthRoute'
 import Modal from 'react-native-modal'
 import {Entypo, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
@@ -57,6 +57,7 @@ const Television = ({navigation, route}) => {
   const maindate = new Date() 
   const date = maindate.toDateString()
   const time = maindate.toLocaleTimeString()
+  const [commissonvalue, setcommissonvalue] = useState()
   
   const [pinT, setpinT] = useState()
   const [pinvalid, setpinvalid] = useState(false)
@@ -79,8 +80,14 @@ const Television = ({navigation, route}) => {
         setisLoading(false)
       } catch (error) {
         setisLoading(true)
+        Alert.alert('Error', "An error occured try again later", [
+          {
+            text:"Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
         setisLoading(false)
-        return;
+        // return;
       }
     })
     return unsubscribe;
@@ -103,7 +110,7 @@ const Television = ({navigation, route}) => {
         let catarray = []
         for (var i = 0; i < count; i++){
             catarray.push({
-                label: res.data[i].name,
+                label: res.data[i].name === "SHOMAX" ? null : res.data[i].name,
                 value: res.data[i].id,
             })
             // setCityCode(response.data.data[i].lga_code)
@@ -203,11 +210,11 @@ const Television = ({navigation, route}) => {
     toggleModal1()
     try {
       setisLoading(true)
-      const response = await TvRenewalPay(ref, rprice, authCtx.token)
+      const response = await TvRenewalPay(ref, rprice, authCtx.token, commissonvalue)
       // console.log(response.data)  
       // if(response.data.status){
-        if(response.data.message === "failed" || "Insufficient Balance"){
-          Alert.alert(response.data.message, response.data.description + ", fund wallet and try again", [
+        if(response.data.message === "failed" || "Failed" && response.data.description === "Insufficient wallet balance"){
+          Alert.alert("Failed", response.data.description, [
             {
               text:"Ok",
               onPress:() => navigation.goBack()
@@ -238,11 +245,11 @@ const Television = ({navigation, route}) => {
     toggleModal1()
     try {
         setisLoading(true)
-        const response = await TvPayment(ref, price, bouquetData, authCtx.token)
+        const response = await TvPayment(ref, price, bouquetData, authCtx.token, commissonvalue)
         // console.log(response.data)
         
-        if(response.data.message === "failed"){
-          Alert.alert(response.data.message, response.data.description + ", fund wallet and try again", [
+        if(response.data.message === "failed" || "Failed" && response.data.description === "Insufficient wallet balance"){
+          Alert.alert("Failed", response.data.description, [
             {
               text:"Ok",
               onPress:() => navigation.goBack()
@@ -315,6 +322,19 @@ const Television = ({navigation, route}) => {
     }
   }
 
+  const commissionget = async (id) => {
+    // if(id === "SHOWMAX"){
+    //   Alert.alert("SH")
+    // }
+     try {
+      const response = await HelperBillerCommission(id, authCtx.token)
+      console.log(response)
+      setcommissonvalue(response)
+     } catch (error) {
+       return;
+     }
+   }
+
   
   async function schedulePushNotification(response) {
     await Notifications.scheduleNotificationAsync({
@@ -323,7 +343,7 @@ const Television = ({navigation, route}) => {
         body: `${id === "DSTVR" ? "Dstv Renewal" : id === "GOTVR" ? "Gotv Renewal" : id + "Subscription"}  ${response.data.message}\nAmount: ${id === "DSTVR" || id === "GOTVR" ? rprice : price}\nSmartCard Number: ${smartcard}\nRef: ${response.data.requestID}\nDate: ${date} ${time}`,
         data: { data: 'goes here' },
       },
-      trigger: { seconds: 2 },
+      trigger: { seconds: 10 },
     });
   }
 
@@ -332,6 +352,7 @@ const Television = ({navigation, route}) => {
     return <LoadingOverlay message={"..."}/>
   }
 
+  console.log(id)
 
 
   return (
@@ -382,9 +403,10 @@ const Television = ({navigation, route}) => {
             onFocus={() => setisFocus(true)}
             onBlur={() => setisFocus(false)}
             onChange={item => {
-                setid(item.value);
-                setisFocus(false);
-                getBouquets(item.value)
+              setid(item.value);
+              setisFocus(false);
+              getBouquets(item.value)
+              commissionget(item.value)
             }}
             />
 
@@ -497,7 +519,7 @@ const Television = ({navigation, route}) => {
                           </TouchableOpacity>
 
                           <TouchableOpacity style={styles.cancelbtn} onPress={() => [toggleConfirmModal(), toggleModal1()]}>
-                              <Text style={styles.canceltext}>Cofirm</Text>
+                              <Text style={styles.canceltext}>Confirm</Text>
                           </TouchableOpacity>
                         </View>
                     </View>              

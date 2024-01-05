@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "igoepp_artisan",
+    "name": "IgoeppArt",
     "slug": "igoepp_artisan",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,11 +11,19 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "updates": {
+      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/0e18ffeb-cbc7-439c-8348-da5e8ba93af1"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Igoepp Customer uses Face Id and Touch ID to verify the user's identity and protect sensitive data"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -31,6 +39,9 @@
       "eas": {
         "projectId": "0e18ffeb-cbc7-439c-8348-da5e8ba93af1"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

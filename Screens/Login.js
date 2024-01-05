@@ -11,6 +11,7 @@ import { Color } from '../Components/Ui/GlobalStyle'
 import { AuthContext } from '../utils/AuthContext'
 import Input from '../Components/Ui/Input'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
+import { Base64 } from 'js-base64'
   
 
 const Login = ({navigation}) => {
@@ -24,7 +25,11 @@ const Login = ({navigation}) => {
     const authCtx = useContext(AuthContext)
     const timestamp = new Date();
 
-   
+    const cleardata = () => {
+      setEnteredEmail('')
+      setEnteredPassword('')
+    }
+  
     const updateInputValueHandler = (inputType, enteredValue) => {
       switch (inputType) {
         case 'email':
@@ -48,9 +53,10 @@ const Login = ({navigation}) => {
       if(!emailcheck || !passwordcheck){
         Alert.alert('Invalid details', 'Please check your entered credentials.')
       }else{
+        const passwordMd5 = Base64.encode(enteredPassword)
           try {
             setIsloading(true)
-            const response = await LoginHandyman(enteredEmail, enteredPassword)
+            const response = await LoginHandyman(enteredEmail, passwordMd5)
             console.log(response)
             authCtx.authenticated(response.access_token)  
             authCtx.helperId(response.helper_id)
@@ -110,6 +116,7 @@ const Login = ({navigation}) => {
         authCtx.helperCatId(response.data.category)
         authCtx.helperShowAmount('show')
         authCtx.helperuserid(response.data.user_id)
+        authCtx.helpersumtot("0.00")
         authCtx.helperlastLoginTimestamp(new Date().toString())
         setIsloading(false)
       } catch (error) {
@@ -181,13 +188,13 @@ const Login = ({navigation}) => {
         </TouchableOpacity> */}
 
         <View style={styles.button}>
-          <Flat onPress={() => navigation.navigate("ForgotPassword")}>
+          <Flat onPress={() => [navigation.navigate("ForgotPassword"), cleardata()]}>
             Forgot Password
           </Flat>
         </View>
       <View style={{flexDirection:'row', alignItem:'center', justifyContent:'center', }}>
         <Text style={styles.newuser}>Dont have an account? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+        <TouchableOpacity onPress={() => [navigation.navigate('SignUp'), cleardata()]}>
           <Text style={styles.backtext}> SignUp</Text>
         </TouchableOpacity>
       </View>
