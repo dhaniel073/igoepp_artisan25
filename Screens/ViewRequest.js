@@ -237,10 +237,11 @@ const ViewRequest = ({navigation}) => {
               : 
               <>
               <TouchableOpacity style={{position:'absolute', left:'87%', top:'15%'}} onPress={() => [toggleBidModal(), ShowBidinfo(item.id)]}>
-                  <Image contentFit='contain' style={{width: 40, height:40, borderRadius:20, borderColor: 'red', borderWidth: 1, marginRight:28}}  source={require("../assets/gavel_5741343.png")}/>
+                  <Image contentFit='contain' style={{width: 35, height:35, borderRadius:20, borderColor: 'red', borderWidth: 1, marginRight:28}}  source={require("../assets/gavel_5741343.png")}/>
                   
               </TouchableOpacity>
-              <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 15, marginBottom:10}}>
+
+              <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20, marginBottom:10}}>
               <TouchableOpacity style={styles.viewbtn} onPress={() => [toggleModal(), showRequest(item.id)]}>
                   <Text style={styles.viewtext}>View Request</Text>
               </TouchableOpacity>

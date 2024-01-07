@@ -7,7 +7,7 @@ import GoBack from '../Components/Ui/GoBack'
 import SubmitButton from '../Components/Ui/SubmitButton'
 import Input from '../Components/Ui/Input'
 import { useRef } from 'react'
-import { HelperResetPassword, ValidateLogin } from '../utils/AuthRoute'
+import { ConvertPassword, HelperResetPassword, ValidateLogin } from '../utils/AuthRoute'
 import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { Base64 } from 'js-base64'
@@ -35,70 +35,110 @@ const PasswordReset = ({navigation}) => {
     }
 
     const ValidateOldPassword = async () => {
-        if(refT.current > 3){
-          Alert.alert("", "To many attempt, try again later", [
+      if(refT.current > 3){
+        Alert.alert("", "To many attempt, try again later", [
+          {
+            text: "Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
+      }else{
+        try {
+          setisloading(true)
+          const response = await ConvertPassword(oldpassword)
+          console.log(response)
+          const passwordCon = response
+          passwordvalidate(passwordCon)
+        } catch (error) {
+          setisloading(true)
+          console.log(error)
+          Alert.alert("Error", "An error occured try again later", [
             {
               text: "Ok",
               onPress: () => navigation.goBack()
             }
           ])
-        }else{
-          const passwordMd5Old = Base64.encode(oldpassword)
-          try {
-            setisloading(true)
-            const response = await ValidateLogin(authCtx.email, passwordMd5Old)
-            console.log(response.message)
-            if(response.message === "Invalid passoword"){
-              setoldpassworderrormessage(response.message)
-              setoldpasswordvalid(true)
-              Alert.alert("Error", response.message, [
-                {
-                    text:"Ok",
-                    onPress: () => setisloading(false)
-                }
-              ])
-            }else{
-              ResetHandler()
-            }
-            // setisloading(false)
-          } catch (error) {
-            setisloading(true)
-            console.log(error)
-            setisloading(true)
-          }
+          setisloading(false)
         }
       }
+    }
+
+    const passwordvalidate = async (conpass) => {
+      try {
+        setisloading(true)
+        const response = await ValidateLogin(authCtx.email, conpass)
+        console.log(response.message)
+        if(response.message === "Invalid passoword"){
+          setoldpassworderrormessage(response.message)
+          setoldpasswordvalid(true)
+          Alert.alert("Error", response.message, [
+            {
+              text:"Ok",
+              onPress: () => setisloading(false)
+            }
+          ])
+        }else{
+          ResetHandler()
+        }
+        // setisloading(false)
+      } catch (error) {
+        setisloading(true)
+        console.log(error)
+        setisloading(true)
+      }
+
+    }
 
     const ResetHandler = async () => {
       const passwordMd5New = Base64.encode(password)
+      try {
+        setisloading(true)
+        const response = await ConvertPassword(password)
+        console.log(response)
+        const passwordCon = response
+        passwordreset(passwordCon)
+      } catch (error) {
+        setisloading(true)
+        console.log(error)
+        Alert.alert("Error", "An error occured try again later", [
+          {
+            text: "Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
+        setisloading(false)
+      }
+    }
 
-        try {
-          setisloading(true)
-          const response = await HelperResetPassword(authCtx.Id, passwordMd5New, authCtx.token)
-          console.log(response)
-          Alert.alert("Successful", "Password reset successful", [
-            {
+    const passwordreset = async (conpass) => {
+      try {
+        setisloading(true)
+        const response = await HelperResetPassword(authCtx.Id, conpass, authCtx.token)
+        console.log(response)
+        Alert.alert("Successful", "Password reset successful", [
+          {
+            text:'Ok',
+            onPress: () => navigation.goBack()
+          }
+        ])
+        setisloading(false)
+        setPassword('')
+        setoldpassword('')
+        setoldpassworderrormessage('')
+        setpassworderrormessage('')
+      } catch (error) {
+        setisloading(true)
+        console.log(error)
+        Alert.alert('Error', "An error occured while reseting your password", [
+          {
               text:'Ok',
               onPress: () => navigation.goBack()
             }
-          ])
-          setisloading(false)
-          setPassword('')
-          setoldpassword('')
-          setoldpassworderrormessage('')
-          setpassworderrormessage('')
-        } catch (error) {
-          setisloading(true)
-          console.log(error)
-          Alert.alert('Error', "An error occured while reseting your password", [
-            {
-                text:'Ok',
-                onPress: () => navigation.goBack()
-              }
-          ])
-          setisloading(false)
-        }
+        ])
+        setisloading(false)
       }
+    }
+
 
     if(isloading){
     return <LoadingOverlay message={"..."}/>

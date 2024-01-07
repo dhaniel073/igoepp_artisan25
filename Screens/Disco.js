@@ -93,7 +93,7 @@ const Disco = ({navigation, route}) => {
 
   useEffect(() => {
     setisLoading(true)
-    const url = `https://phixotech.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
+    const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
     const response = axios.get(url, {
         headers:{
             Accept:'application/json',

@@ -128,7 +128,7 @@ return (
     <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
     <Text style={styles.ratecustomertxt}>RateCustomer</Text>
     <SafeAreaView style={styles.container}>
-        <Image style={styles.profile} source={customerdetails.picture === null ? require("../assets/person-4.png")  : {uri: `https://phixotech.com/igoepp/public/customers/${customerdetails.picture}`}}/>
+        <Image style={styles.profile} source={customerdetails.picture === null ? require("../assets/person-4.png")  : {uri: `https://igoeppms.com/igoepp/public/customers/${customerdetails.picture}`}}/>
             
             <View style={{flexDirection:'row', alignContent:'center', alignSelf:'center'}}>
                 <Text style={[styles.title , {marginTop: 15, marginBottom: 5, textAlign:'center'}]}>{customerdetails.first_name}</Text>

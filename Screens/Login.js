@@ -4,7 +4,7 @@ import { Image } from 'expo-image'
 import {Ionicons} from '@expo/vector-icons'
 import * as LocalAuthentication from 'expo-local-authentication'
 import * as Device from 'expo-device'
-import { LoginHandyman, LoginWithBiometric } from '../utils/AuthRoute'
+import { ConvertPassword, LoginHandyman, LoginWithBiometric } from '../utils/AuthRoute'
 import SubmitButton from '../Components/Ui/SubmitButton'
 import Flat from '../Components/Ui/Flat'
 import { Color } from '../Components/Ui/GlobalStyle'
@@ -42,42 +42,54 @@ const Login = ({navigation}) => {
       }
     }
 
-    const loginhandler = async () => {
+    const convertpasswordget = async () => {
       const emailcheck = enteredEmail.includes('@') && enteredEmail.includes(".com")
-      const passwordcheck = enteredPassword.length > 7
-      
-      // console.log(emailcheck, passwordcheck)
-      setEmailIsInvalid(emailcheck)
-      setPasswordIsInvalid(passwordcheck)
-
+      const passwordcheck = enteredPassword.length > 6
+    
       if(!emailcheck || !passwordcheck){
         Alert.alert('Invalid details', 'Please check your entered credentials.')
+        setEmailIsInvalid(emailcheck)
+        setPasswordIsInvalid(passwordcheck)  
       }else{
-        const passwordMd5 = Base64.encode(enteredPassword)
-          try {
-            setIsloading(true)
-            const response = await LoginHandyman(enteredEmail, passwordMd5)
-            console.log(response)
-            authCtx.authenticated(response.access_token)  
-            authCtx.helperId(response.helper_id)
-            authCtx.helperEmail(response.email)
-            authCtx.helperFirstName(response.first_name)
-            authCtx.helperLastName(response.last_name)
-            authCtx.helperBalance(response.wallet_balance)
-            authCtx.helperPhone(response.phone)
-            authCtx.helperPicture(response.photo)
-            authCtx.helperSubCatId(response.subcategory)
-            authCtx.helperCatId(response.category)
-            authCtx.helperShowAmount('show')
-            authCtx.helperuserid(response.user_id)
-            authCtx.helperlastLoginTimestamp(new Date().toString())
-            setIsloading(false)
-          } catch (error) {
-            setIsloading(true)
-            Alert.alert('Login Failed', error.response.data.message)
-            // console.log(error.response)
-            setIsloading(false)
-          }
+      try {
+        setIsloading(true)
+        const response = await ConvertPassword(enteredPassword)
+        console.log(response)
+        const password = response
+        loginhandler(password)
+      } catch (error) {
+        setIsloading(true)
+        console.log(error.response)
+        Alert.alert("Error", "An error occured")
+        setIsloading(false)
+      }
+      }
+    }
+
+    const loginhandler = async (conpass) => {
+      try {
+        setIsloading(true)
+        const response = await LoginHandyman(enteredEmail, conpass)
+        console.log(response)
+        authCtx.authenticated(response.access_token)  
+        authCtx.helperId(response.helper_id)
+        authCtx.helperEmail(response.email)
+        authCtx.helperFirstName(response.first_name)
+        authCtx.helperLastName(response.last_name)
+        authCtx.helperBalance(response.wallet_balance)
+        authCtx.helperPhone(response.phone)
+        authCtx.helperPicture(response.photo)
+        authCtx.helperSubCatId(response.subcategory)
+        authCtx.helperCatId(response.category)
+        authCtx.helperShowAmount('show')
+        authCtx.helperuserid(response.user_id)
+        authCtx.helperlastLoginTimestamp(new Date().toString())
+        setIsloading(false)
+      } catch (error) {
+        setIsloading(true)
+        Alert.alert('Login Failed', error.response.data.message)
+        console.log(error.response)
+        setIsloading(false)
       }
     }
 
@@ -123,7 +135,7 @@ const Login = ({navigation}) => {
         setIsloading(true)
         Alert.alert('Login Failed', error.response.data.message)
         setIsloading(false)   
-        // console.log(error.response)     
+        console.log(error.response)     
       }
     }
 
@@ -168,9 +180,7 @@ const Login = ({navigation}) => {
             </> */}
         </View>
 
-        <View style={{marginHorizontal:50, marginTop:10}}>
-          <SubmitButton message={"Login"} onPress={() => loginhandler()}/>
-        </View>
+          <SubmitButton style={{marginHorizontal:50, marginTop:10}} message={"Login"} onPress={() => convertpasswordget()}/>
 
         <TouchableOpacity style={{alignItems:'center', justifyContent:'center', marginTop: 10}} onPress={() => onAuthenticate()}>
           {

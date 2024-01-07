@@ -78,7 +78,7 @@ export default function App() {
     });
 
     responseListener.current = Notification.addNotificationResponseReceivedListener(response => {
-      console.log(response);
+      // console.log(response);
     });
 
     return () => {
@@ -114,7 +114,7 @@ export default function App() {
       // Learn more about projectId:
       // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
       token = (await Notification.getExpoPushTokenAsync({ projectId: '0e18ffeb-cbc7-439c-8348-da5e8ba93af1' })).data;
-      console.log(token);
+      // console.log(token);
     } else {
       // alert('Must use physical device for Push Notifications');
     }
@@ -319,15 +319,15 @@ export default function App() {
         if(authCtx.lastLoginTimestamp === null || undefined || ""){
           return 
         }else{
-          console.log(storedTimestamp + " storedtime")
-          console.log(lastLoginTimestamp + " lastlogintime")
-          console.log(currentTimestamp + " current time")
+          // console.log(storedTimestamp + " storedtime")
+          // console.log(lastLoginTimestamp + " lastlogintime")
+          // console.log(currentTimestamp + " current time")
 
           const timeDifferenceInMinutes = Math.floor(
             (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
           );
 
-          console.log(timeDifferenceInMinutes + " difference")
+          // console.log(timeDifferenceInMinutes + " difference")
       
           // Adjust the threshold based on your requirements (e.g., 30 minutes)
           const authenticationThresholdInMinutes = 10;
@@ -335,7 +335,7 @@ export default function App() {
           if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
             // Prompt the user to reauthenticate
             // You can navigate to a login screen or show a modal for reauthentication
-            console.log('Reauthentication required');
+            // console.log('Reauthentication required');
             authCtx.logout()
           }
         }

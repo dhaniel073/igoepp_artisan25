@@ -97,6 +97,8 @@ const WelcomeScreen = ({navigation}) => {
   }
 
 
+  // console.log(authCtx.token, authCtx.Id)
+
   // useEffect(() => {
   //   // Function to handle app state changes
   //   const handleAppStateChange = (nextAppState) => {
@@ -279,7 +281,7 @@ const WelcomeScreen = ({navigation}) => {
               </TouchableOpacity>
               :
               <TouchableOpacity onPress={() => navigation.navigate('ProfilePicsView')}>
-                <Image transition={1000} source={{uri: `https://phixotech.com/igoepp/public/handyman/${authCtx.picture}`}} style={{width:35, height:35, borderRadius:30, borderWidth:1, top:-5}}/>
+                <Image transition={1000} source={{uri: `https://igoeppms.com/igoepp/public/handyman/${authCtx.picture}`}} style={{width:35, height:35, borderRadius:30, borderWidth:1, top:-5}}/>
               </TouchableOpacity>
             }
             <Text style={styles.hiChris}>Hi {authCtx.firstname}</Text>
@@ -376,7 +378,7 @@ const WelcomeScreen = ({navigation}) => {
                 <>
                 {
                   isLoading ? <LoadingOverlay/> :
-                  <ImageBackground key={key} contentFit='contain' source={{uri: `https://phixotech.com/igoepp/public/slider/${item.slide}`}} style={styles.slide2}></ImageBackground>
+                  <ImageBackground key={key} contentFit='contain' source={{uri: `https://igoeppms.com/igoepp/public/slider/${item.slide}`}} style={styles.slide2}></ImageBackground>
                 }
                 </>
               ))}  
@@ -468,7 +470,7 @@ const WelcomeScreen = ({navigation}) => {
               return(
                 <View key={key} style={[styles.shadowProps, {flexDirection:'row', borderWidth:1, borderColor:Color.new_color, height:HEIGHT*0.1, alignSelf:'center', borderRadius:10,  width:WIDTH*0.8, margin:10, padding:10, marginLeft:20}]}>
                   <View style={{padding:10, borderColor:Color.new_color, borderWidth:1, borderRadius:10, top:10, left:-25, position:'absolute', backgroundColor:'white'}}>
-                    <Text><Entypo name="tools" size={30} color={Color.new_color} />,</Text>
+                    <Text><Entypo name="tools" size={30} color={Color.new_color} /></Text>
                   </View>
 
                   <View style={{marginLeft:30,  flex:1, justifyContent:'center'}}>

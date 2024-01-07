@@ -39,7 +39,7 @@ const Chat = ({navigation, route}) => {
 useLayoutEffect(() => {
   const unsubscribe = async() => {
       // do something
-      const url = `https://phixotech.com/igoepp/public/api/auth/hrequest/helpchatview/${bidid}/helpers`
+      const url = `https://igoeppms.com/igoepp/public/api/auth/hrequest/helpchatview/${bidid}/helpers`
       try {
       const response = await axios.get(url, {
         headers:{
@@ -58,7 +58,7 @@ useLayoutEffect(() => {
                 _id: response.data[i].from_user_id,
                 name: 'React Native',
                 avatar: null
-                // avatar: customer.picture === null ? `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKLYtkaHut2_Xctb0hUZGZk7pbCbIzcoMSNA&usqp=CAU`: `https://phixotech.com/igoepp/public/customers/${customer.picture}`,
+                // avatar: customer.picture === null ? `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKLYtkaHut2_Xctb0hUZGZk7pbCbIzcoMSNA&usqp=CAU`: `https://igoeppms.com/igoepp/public/customers/${customer.picture}`,
               },
             }, 
             )
@@ -86,7 +86,7 @@ useLayoutEffect(() => {
 
 
 const SendMessage = (text) => {
-  const url = `https://phixotech.com/igoepp/public/api/auth/hrequest/helpchat`
+  const url = `https://igoeppms.com/igoepp/public/api/auth/hrequest/helpchat`
   // console.log(text)
   axios.post(url, {
       help_id: route?.params?.bid_id,
@@ -164,7 +164,7 @@ const scrollToBottomComponent = (props) => {
         customer.picture === null ? 
           <Image style={styles.image} source={require("../assets/person-4.png")}/>
         :
-        <Image style={styles.image} source={{uri: `https://phixotech.com/igoepp/public/customers/${customer.picture}`}}/>
+        <Image style={styles.image} source={{uri: `https://igoeppms.com/igoepp/public/customers/${customer.picture}`}}/>
       }
       <Text style={{fontSize: 14, fontFamily: 'poppinsSemiBold'}}>{customer.first_name} {customer.last_name}</Text>
       {/* <Text style={styles.chattxt}>Chat</Text> */}
@@ -177,7 +177,7 @@ const scrollToBottomComponent = (props) => {
       user={{ 
           _id: CustomerId,
           name: authCtx.firstname,
-          // avatar: authCtx.picture === null || "" ? <Image source={require("../assets/person-4.png")}/> : `https://phixotech.com/igoepp/public/handyman/${authCtx.picture}`
+          // avatar: authCtx.picture === null || "" ? <Image source={require("../assets/person-4.png")}/> : `https://igoeppms.com/igoepp/public/handyman/${authCtx.picture}`
       }}
 
       renderBubble={renderBubble}

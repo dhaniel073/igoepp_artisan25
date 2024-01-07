@@ -8,7 +8,7 @@ import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
 import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
 import * as Location from 'expo-location';
-import { SignUpHandyman } from '../utils/AuthRoute'
+import { ConvertPassword, SignUpHandyman } from '../utils/AuthRoute'
 import {AuthContext} from '../utils/AuthContext'
 import Modal from 'react-native-modal'
 import {MaterialIcons} from '@expo/vector-icons'
@@ -129,7 +129,7 @@ const SignUp = ({navigation}) => {
 
     var config = {
         method: 'get',
-        url: "https://phixotech.com/igoepp/public/api/category"
+        url: "https://igoeppms.com/igoepp/public/api/category"
     }
 
     axios(config)
@@ -154,7 +154,7 @@ const handleState = (categorycode) => {
 
     var config = {
         method: 'get',
-        url: `https://phixotech.com/igoepp/public/api/showsubcategorybycatid/${categorycode}`,
+        url: `https://igoeppms.com/igoepp/public/api/showsubcategorybycatid/${categorycode}`,
     }
 
     axios(config)
@@ -228,6 +228,21 @@ useEffect(() => {
     return <LoadingOverlay message={'...'}/>
   }
 
+  const convertpasswordget = async () => {
+    toggleAcceptTermsModal()
+    try {
+      setIsLoading(true)
+      const response = await ConvertPassword(enteredPassword)
+      console.log(response)
+      const password = response
+      signupSend(password)
+    } catch (error) {
+      setIsLoading(true)
+      // console.log(error.response)
+      Alert.alert("Error", "An error occured")
+      setIsLoading(false)
+    }
+  }
     
 
     
@@ -297,16 +312,16 @@ useEffect(() => {
       // setIsLoading(false)
     }
 
-    const signupSend = async () => {
+    const signupSend = async (conpass) => {
       const addresstoUse = address + " " + cityName  + " " + stateName + " " + countryName
       const geocodeLocation = await Location.geocodeAsync(addresstoUse);
       const latitude = !address ? '' : geocodeLocation[0].latitude
       const longitude = !address ? '' : geocodeLocation[0].longitude
-      const passwordMd5 = Base64.encode(enteredPassword)
+      // const passwordMd5 = Base64.encode(enteredPassword)
       // console.log(addresstoUse)
       try {
         setIsLoading(true)
-        const response = await SignUpHandyman(enteredLastName, enteredFirstname, enteredEmail, enteredPhone, category, subcategory, passwordMd5, enteredGender, countryName, stateName, cityName, address, latitude, longitude, idtype, idnum, referral_code)
+        const response = await SignUpHandyman(enteredLastName, enteredFirstname, enteredEmail, enteredPhone, category, subcategory, conpass, enteredGender, countryName, stateName, cityName, address, latitude, longitude, idtype, idnum, referral_code)
         console.log(response)
         authCtx.authenticated(response.access_token)
         authCtx.helperId(response.helper_id)
@@ -357,7 +372,7 @@ useEffect(() => {
           isInvalid={IsenteredFirstname}
           onFocus={() => setIsEnteredFirstName(false)}
           />
-        {IsenteredFirstname && <Text style={{fontSize:10, color:Color.red}}>First name must beat least 5 characters</Text>}
+        {IsenteredFirstname && <Text style={{fontSize:10, color:Color.red}}>First name must be at least 5 characters</Text>}
     </View>
     <View style={styles.lastname}>
       <Input
@@ -367,7 +382,7 @@ useEffect(() => {
         isInvalid={IsenteredLastName}
         onFocus={() => setIsEnteredLastName(false)}
         />
-        {IsenteredLastName && <Text style={{fontSize:10, color:Color.red}}>Last name must beat least 5 characters</Text>}
+        {IsenteredLastName && <Text style={{fontSize:10, color:Color.red}}>Last name must be at least 5 characters</Text>}
       </View>
     </View>
 
@@ -621,9 +636,7 @@ useEffect(() => {
     </>
 
     <View style={{marginBottom:50}}>
-      <View style={styles.buttons}>   
-        <SubmitButton onPress={signupHandler} message={'Sign Up'}/>
-      </View>
+        <SubmitButton style={{marginHorizontal:30, marginTop:20, marginBottom:10}} onPress={signupHandler} message={'Sign Up'}/>
       <View style={{flexDirection:'row', alignItems:'center', justifyContent:'center'}}>
         <Text style={{fontFamily:'poppinsRegular', fontSize:15,}}>Already Have An Account? </Text>
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -715,7 +728,7 @@ useEffect(() => {
         <View style={{marginBottom:10}}/>
     {
       avail  && 
-        <SubmitButton style={{flex:1, marginLeft:10, marginHorizontal:20}} message={"Continue"} onPress={() => signupSend()}/>
+        <SubmitButton style={{flex:1, marginLeft:10, marginHorizontal:20}} message={"Continue"} onPress={() => convertpasswordget()}/>
     }
     </View>
       <View style={{marginBottom:20}}/>
@@ -779,12 +792,7 @@ const styles = StyleSheet.create({
   placeholderStyle: {
     fontSize: 16,
   },
-  buttons: {
-    marginTop: 25,
-    marginBottom:20,
-    marginLeft:20,
-    marginRight:20
-  },
+
   nameContainer:{
     flex: 1,
     flexDirection: "row",

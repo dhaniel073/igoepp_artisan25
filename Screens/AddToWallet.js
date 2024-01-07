@@ -31,7 +31,6 @@ const AddToWallet = ({navigation}) => {
     try {
       setisloading(true)
       const response = await UpdateWallet(amount, authCtx.Id, authCtx.token)
-      // authCtx.helperbalance(response.wallet_balance)
       setAmount(null)
       navigation.goBack()
       setisloading(false)

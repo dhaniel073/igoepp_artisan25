@@ -17,7 +17,7 @@ const ForgotPassword = ({navigation}) => {
   const submitHandler = async () => {
     
     const emailIsValid = email.includes('@')
-    console.log(email, emailIsValid)
+    // console.log(email, emailIsValid)
 
     if(!emailIsValid){
       setemailinvalid(!emailIsValid)
@@ -34,6 +34,7 @@ const ForgotPassword = ({navigation}) => {
         ])  
         setisLoading(false)
       } catch (error) {
+        console.log(error.response)
         setisLoading(true)
         Alert.alert("Error", `${error.response.data.message}`, [
           {
@@ -59,11 +60,12 @@ const ForgotPassword = ({navigation}) => {
       placeholder={"Email"}
       value={email}
       onUpdateValue={setemail}
+      autoCapitalize={'none'}
       isInvalid={emailinvalid}
       onFocus={() => setemailinvalid(false)}
     />
       <View style={styles.buttons}>
-        <SubmitButton onPress={() => submitHandler()} message={'Submit'}/>
+        <SubmitButton style={{marginHorizontal:30}} onPress={() => submitHandler()} message={'Submit'}/>
 
         <View style={styles.space}></View>
         <Flat onPress={() => navigation.navigate('Login')}>
@@ -90,7 +92,7 @@ const styles = StyleSheet.create({
   },
   Title:{
     marginTop: 30, 
-    marginBottom: 50,
+    marginBottom: 10,
     // marginHorizontal: 50,
     fontSize: 25,
     // fontWeight: 'bold',
