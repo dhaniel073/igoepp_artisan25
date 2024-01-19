@@ -1,13 +1,17 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext } from 'react'
 import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import GoBack from '../Components/Ui/GoBack'
 import { AuthContext } from '../utils/AuthContext'
 import {Ionicons, Feather, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
 import * as Updates from 'expo-updates'
+import { DeleteAccount } from '../utils/AuthRoute'
+import { useState } from 'react'
+import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 
 const Settings = ({navigation}) => {
   const authCtx = useContext(AuthContext)
+  const [isloading, setisloading] = useState(false)
 
   const triggerUpdateCheck = async () => {
     try {
@@ -24,13 +28,42 @@ const Settings = ({navigation}) => {
     }
   }
 
+  const deleteAccountpermanently = async () => {
+    try {
+      setisloading(true)
+      const response = await DeleteAccount(authCtx.Id, authCtx.token)
+      console.log(response)
+      Alert.alert('Success', "Your account has been deleted successfully", [
+        {
+          text: "Ok",
+          onPress: () => authCtx.logout()
+        }
+      ])
+      setisloading(false)
+    } catch (error) {
+      setisloading(true)
+      Alert.alert('Error', "An error occured while deleting your account", [
+        {
+          text: "Ok",
+          onPress: () => {}
+        }
+      ])
+      console.log(error.response)
+      setisloading(false)
+    }
+  }
+
+  if(isloading){
+    return <LoadingOverlay message={"..."}/>
+  }
+
   return (
-    <View style={{marginTop:marginStyle.marginTp, marginHorizontal:10}}>
+    <View style={{flex:1, marginTop:marginStyle.marginTp, marginHorizontal:10}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.settingstxt}>Settings</Text>
 
 
-      <View style={{ padding:15 }}>
+      <ScrollView style={{ padding:15, flex:1 }} showsVerticalScrollIndicator={false}>
       
         <TouchableOpacity style={{ alignItems: 'flex-start', borderBottomWidth:1,}} onPress={() => navigation.navigate("Compliance")}>
           <View style={{ flexDirection: 'row',   paddingBottom: 15, marginTop: 15 }}>
@@ -98,7 +131,28 @@ const Settings = ({navigation}) => {
             <Text style={styles.textStyle}>LogOut</Text>
           </View>
         </TouchableOpacity>
-      </View>
+
+        
+        <TouchableOpacity style={{ alignItems: 'flex-start', borderBottomWidth:1,}} onPress={() => 
+          Alert.alert("Warning", "Are you sure you want to delete your account permanently from Igoepp", [
+            {
+              text: "No",
+              onPress: () => {}
+            },
+            {
+              text: "Yes",
+              onPress: () => deleteAccountpermanently()
+            }
+          ])
+          }>
+          <View style={{ flexDirection: 'row',   paddingBottom: 15, marginTop: 15 }}>
+          {/* <MaterialIcons name="update" size={24} color="black" /> */}
+          <MaterialIcons name="delete" size={24} color="black" />
+            <Text style={styles.textStyle}>Delete Account</Text>
+          </View>
+        </TouchableOpacity>
+        <View style={{marginBottom:40}}/>
+      </ScrollView>
     </View>
   )
 }
@@ -118,6 +172,5 @@ const styles = StyleSheet.create({
     fontFamily: 'poppinsSemiBold',
     left: 10,
     marginTop:10,
-    marginBottom:15,
   },
 })

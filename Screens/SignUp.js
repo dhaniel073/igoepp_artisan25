@@ -1,4 +1,4 @@
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import { Dropdown } from 'react-native-element-dropdown'
@@ -13,6 +13,7 @@ import {AuthContext} from '../utils/AuthContext'
 import Modal from 'react-native-modal'
 import {MaterialIcons} from '@expo/vector-icons'
 import { Base64 } from 'js-base64'
+import DateTimePicker from "@react-native-community/datetimepicker"
 
 
 const data = [
@@ -22,33 +23,15 @@ const data = [
   },
 ]
 
-
 const sex = [
   { label: 'Male', value: 'M' },
   { label: 'Female', value: 'F' },
-  // { label: 'transgender', value: 'T' },
-  // { label: 'non-binary', value: 'NB' },
-];
-
-const Country = [
-  { label: 'Nigeria', value: 'Nigeria' },
-];
-
-const State = [
-  { label: 'Lagos', value: 'Lagos' },
-
-];
-
-const LGA = [
-  { label: 'SuruLere', value: 'SuruLere' },
-  { label: 'Amuwo-odofin', value: 'Amuwo-odofin' },
 ];
 
 const IDTYPE = [
-  { label: 'Nimc', value: 'nin' },
-  { label: 'Drivers license', value: 'DL' },
-  { label: 'Identification Card', value: 'idcard' },
-
+  { label: 'Nimc', value: 'NIN' },
+  { label: 'Drivers License', value: 'Drivers License' },
+  { label: 'Identification Card', value: 'ID Card' },
 ];
 
 
@@ -65,7 +48,12 @@ const SignUp = ({navigation}) => {
     const [idnum, setIdnum] = useState('')
     const [idtype, setIdType] = useState('')
 
+    const [helpdate, setHelpDate] = useState('')
+    const [date, setDate] = useState(new Date())
+    const [showdatePicker, setShowDatePicker] = useState(false)
+    const [helpdateInvalid, sethelpdateInvalid] = useState(false)
 
+  
 
     const [IsenteredEmail, setIsEnteredEmail] = useState(false);
     const [IsenteredFirstname, setIsEnteredFirstName] = useState(false);
@@ -76,9 +64,33 @@ const SignUp = ({navigation}) => {
     const [Isidnum, setIsIdnum] = useState(false);
     const [Isaddress, setIsAddress] = useState(false)
     const [IsenteredGender, setIsEnteredGender] = useState('');
+
+    
+    
+    const [isCountryFocus, setIsCountryFocus] = useState(false);
+    const [isStateFocus, setIsStateFocus] = useState(false);
+    const [isCityFocus, setIsCityFocus] = useState(false);
+    
+    const [countryData, setCountryData] = useState([]);
+    const [stateData, setStateData] = useState([]);
+    const [cityData, setCityData] = useState([]);
+    
+    const [country, setCountry] = useState([]);
+    const [state, setState] = useState([]);
+    const [city, setCity] = useState([]);
+
+    const [countryName, setCountryName] = useState([]);
+    const [stateName, setStateName] = useState([]);
+    const [cityName, setCityName] = useState([]);
+    
     const [IscountryName, setIsCountryName] = useState('');
     const [IsstateName, setIsStateName] = useState('');
     const [IscityName, setIsCityName] = useState('');
+
+
+    
+    
+
     const [Iscategory, setIsCategory] = useState('');
     const [Issubcategory, setIsSubcategory] = useState('');
     const [Isidtype, setIsIdtype] = useState('');
@@ -88,16 +100,7 @@ const SignUp = ({navigation}) => {
 
 
 
-
     const [isSexFocus, setSexFocus] = useState('')
-
-    const [isCountryFocus, setIsCountryFocus] = useState(false);
-    const [isStateFocus, setIsStateFocus] = useState(false);
-    const [isCityFocus, setIsCityFocus] = useState(false);
-
-    const [countryName, setCountryName] = useState('');
-    const [stateName, setStateName] = useState('');
-    const [cityName, setCityName] = useState('');
 
     const [categorydata, setCategoryData] = useState([]);
     const [subcategorydata, setSubcategoryData] = useState([]);
@@ -150,29 +153,163 @@ const SignUp = ({navigation}) => {
     // setIsLoading(false)
 }, [])
 
-const handleState = (categorycode) => {
-
+const subcat = (categorycode) => {
     var config = {
-        method: 'get',
-        url: `https://igoeppms.com/igoepp/public/api/showsubcategorybycatid/${categorycode}`,
+      method: 'get',
+      url: `https://igoeppms.com/igoepp/public/api/showsubcategorybycatid/${categorycode}`,
     }
 
-    axios(config)
-    .then(function (response) {
-        var count = Object.keys(response.data.data).length;
-        let subcategoryarray = []
-        for (var i = 0; i < count; i++){
-          subcategoryarray.push({
-                label: response.data.data[i].sub_cat_name,
-                value: response.data.data[i].id,
-            })
-          }
-          setSubcategoryData(subcategoryarray)
+  axios(config)
+  .then(function (response) {
+      var count = Object.keys(response.data.data).length;
+      let subcategoryarray = []
+      for (var i = 0; i < count; i++){
+        subcategoryarray.push({
+            label: response.data.data[i].sub_cat_name,
+            value: response.data.data[i].id,
+          })
+        }
+      setSubcategoryData(subcategoryarray)
     })
     .catch(function (error) {
-        return;
+      return;
     })
   }
+
+
+  useEffect(() => {
+    var config = {
+      method: 'get',
+      url: "https://igoeppms.com/igoepp/public/api/general/country2",
+      headers:{
+        Accept: 'application/json',
+        Authorization: `Bearer ${authCtx.token}`
+      } 
+    }
+    axios(config)
+    .then(function (response) {
+      console.log(JSON.stringify(response.data.data))
+      // console.log(response)
+      var count = Object.keys(response.data.data).length
+      // console.log(re)
+      let countryArray = []
+      for (var i = 0; i < count; i++){
+        countryArray.push({
+          label: response.data.data[i].country_name,
+          value: response.data.data[i].id,
+        })
+        // setCountryCode(response.data.data[i].id)
+      }
+      setCountryData(countryArray)
+    })
+    .catch(function (error) {
+      // console.log(error);
+      return;
+    })
+  }, [])
+
+
+
+const handleState = (countryCode) => {
+  var config = {
+    method: 'get',
+    url: `https://igoeppms.com/igoepp/public/api/general/state2/${countryCode}`,
+    // headers:{
+    //   Accept: 'application/json',
+    //   Authorization: `Bearer ${authCtx.token}`
+    // }
+  }
+  axios(config)
+  .then(function (response) {
+      console.log(JSON.stringify(response.data))
+    var count = Object.keys(response.data.data).length;
+    let stateArray = []
+    for (var i = 0; i < count; i++){
+      stateArray.push({
+        label: response.data.data[i].state_name,
+        value: response.data.data[i].id,
+      })
+      // setStateCode(response.data.data[i].id)
+    }
+    setStateData(stateArray)
+  })
+  .catch(function (error) {
+    // console.log(error);
+    return;
+  })
+}
+const handleCity = (stateCode) => {
+  // console.log(stateCode)
+  var config = {
+    method: 'get',
+    url: `https://igoeppms.com/igoepp/public/api/general/lga2/${stateCode}`,
+    headers:{
+      Accept: 'application/json',
+      Authorization: `Bearer ${authCtx.token}`
+    }
+  }
+
+  axios(config)
+  .then(function (response) {
+    // console.log(JSON.stringify(response.data))
+    var count = Object.keys(response.data.data).length;
+    let cityArray = []
+    for (var i = 0; i < count; i++){
+      cityArray.push({
+        label: response.data.data[i].lga_name,
+        value: response.data.data[i].id,
+      })
+      // setCityCode(response.data.data[i].lga_code)
+    }
+    setCityData(cityArray)
+  })
+  .catch(function (error) {
+    // console.log(error);
+    return;
+  })
+}
+
+const toggleDatePicker = () => {
+  setShowDatePicker(!showdatePicker)
+}
+
+const onChangeDatePicker = ({type}, selectdDate) => {
+  if(type == 'set'){
+    const currentDate = selectdDate;
+    setDate(currentDate)
+
+    if(Platform.OS === 'android'){
+      toggleDatePicker();
+      const getdobdate = currentDate.getDate()
+      const getdobyear = currentDate.getFullYear()
+      const getdobmonth = currentDate.getMonth()+1
+
+      // console.log(currentDate.getMonth())
+      // console.log(currentDate.getDate())
+
+
+      const dobtosend = getdobyear + "-" + getdobmonth + "-" + getdobdate
+      // console.log(dobtosend)
+      // setHelpDate(currentDate.toLocaleDateString())
+      setHelpDate(dobtosend)
+    }
+  }else{
+    toggleDatePicker()
+  }
+}
+
+const confirmIOSDate = () => {
+  const getdobdate = date.getDate()
+  const getdobyear = date.getFullYear()
+  const getdobmonth = date.getMonth()+1
+
+  const dobtosend = getdobyear + "-" + getdobmonth + "-" + getdobdate
+
+  // setHelpDate(date.toDateString())
+  setHelpDate(date.toDateString())
+  toggleDatePicker()
+}
+
 
 
 useEffect(() => {
@@ -188,6 +325,8 @@ useEffect(() => {
   };
   getPermissions();
 }, [])
+
+
 
 
   function updateInputValueHandler(inputType, enteredValue) {
@@ -219,6 +358,9 @@ useEffect(() => {
       case 'referral':
         setreferral_code(enteredValue)
         break;
+      case 'date':
+        setDate(enteredValue)
+        break;
     }
   }
 
@@ -233,7 +375,7 @@ useEffect(() => {
     try {
       setIsLoading(true)
       const response = await ConvertPassword(enteredPassword)
-      console.log(response)
+      // console.log(response)
       const password = response
       signupSend(password)
     } catch (error) {
@@ -244,6 +386,7 @@ useEffect(() => {
     }
   }
     
+  // console.log(helpdate)
 
     
     const signupHandler = async () => {
@@ -253,22 +396,23 @@ useEffect(() => {
       const passcheck =  enteredConfirmPassword === enteredPassword
       const phonecheck = enteredPhone === null || "" || enteredPhone.length === 0
       const addresscheck = address === null || undefined || "" || address.length === 0
-      const countrycheck = countryName === null || undefined || "" || countryName.length === 0
-      const statecheck = stateName === null || undefined || "" || stateName.length === 0
-      const citycheck = cityName === null || undefined || "" || cityName.length === 0
+      const countrycheck = country === null || undefined || "" || country.length === 0
+      const statecheck = state === null || undefined || "" || state.length === 0
+      const citycheck = city === null || undefined || "" || city.length === 0
+      const helpdatecheck = helpdate === null || helpdate === undefined || helpdate === "" || helpdate.length === 0
+
       const gendercheck = enteredGender === null || undefined || "" || enteredGender.length === 0
       const categorycheck = category == null || undefined || "" || category.length === 0
       const subcategorycheck = subcategory === null || undefined || "" || subcategory.length === 0
       const idnumcheck = idnum === null || undefined || "" || idnum.length === 0
       const idtypecheck = idtype === null || undefined || "" || idtype.length === 0
-      const firstnamecheck = enteredFirstname.length > 4
-      const lastnamecheck = enteredLastName.length > 4
+      const firstnamecheck = enteredFirstname.length > 0  
+      const lastnamecheck = enteredLastName.length > 0
 
        
-      console.log(passcheck)
-
+      
         if(!firstnamecheck || !lastnamecheck || !emailIsValid || !enteredPhone || !enteredGender || !category || !subcategory || passwordIsValid ||
-         !passcheck || !countryName || !stateName || !cityName || !address
+         !passcheck || !country || !state || !city || !address || helpdatecheck
         ){
             const InvalidFirstName = !firstnamecheck
             const InvalidLastName = !lastnamecheck
@@ -302,6 +446,8 @@ useEffect(() => {
             setIsSubcategory(InvalidSubcategory)
             setIsIdnum(Invalididnum)
             setIsIdtype(Invalididtype)
+            sethelpdateInvalid(helpdatecheck)
+
 
 
             Alert.alert('Invalid details', 'Please check the information provided.')
@@ -313,15 +459,35 @@ useEffect(() => {
     }
 
     const signupSend = async (conpass) => {
-      const addresstoUse = address + " " + cityName  + " " + stateName + " " + countryName
+      const addresstoUse = address + " " + city  + " " + state + " " + country
       const geocodeLocation = await Location.geocodeAsync(addresstoUse);
       const latitude = !address ? '' : geocodeLocation[0].latitude
       const longitude = !address ? '' : geocodeLocation[0].longitude
       // const passwordMd5 = Base64.encode(enteredPassword)
       // console.log(addresstoUse)
+
+      console.log(enteredEmail,
+        enteredPassword,
+        enteredConfirmPassword,
+        enteredPhone,
+        address,
+        country,
+        state,
+        city,
+        helpdate,
+        enteredGender,
+        category,
+        subcategory,
+        idnum,
+        idtype,
+        enteredFirstname,
+        enteredLastName, latitude, longitude)
+
+        // lastname, firstname, email, dob, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude, identification_type,identification_num, referral_code
+
       try {
         setIsLoading(true)
-        const response = await SignUpHandyman(enteredLastName, enteredFirstname, enteredEmail, enteredPhone, category, subcategory, conpass, enteredGender, countryName, stateName, cityName, address, latitude, longitude, idtype, idnum, referral_code)
+        const response = await SignUpHandyman(enteredLastName, enteredFirstname, enteredEmail, helpdate, enteredPhone, category, subcategory, conpass, enteredGender, country, state, city, address, latitude, longitude, idtype, idnum, referral_code)
         console.log(response)
         authCtx.authenticated(response.access_token)
         authCtx.helperId(response.helper_id)
@@ -372,7 +538,7 @@ useEffect(() => {
           isInvalid={IsenteredFirstname}
           onFocus={() => setIsEnteredFirstName(false)}
           />
-        {IsenteredFirstname && <Text style={{fontSize:10, color:Color.red}}>First name must be at least 5 characters</Text>}
+        {/* {IsenteredFirstname && <Text style={{fontSize:10, color:Color.red}}>First name must be at least 5 characters</Text>} */}
     </View>
     <View style={styles.lastname}>
       <Input
@@ -382,9 +548,53 @@ useEffect(() => {
         isInvalid={IsenteredLastName}
         onFocus={() => setIsEnteredLastName(false)}
         />
-        {IsenteredLastName && <Text style={{fontSize:10, color:Color.red}}>Last name must be at least 5 characters</Text>}
+        {/* {IsenteredLastName && <Text style={{fontSize:10, color:Color.red}}>Last name must be at least 5 characters</Text>} */}
       </View>
     </View>
+
+        {showdatePicker && (
+          <DateTimePicker
+            mode="date"
+            display='spinner'
+            value={date}
+            onChange={onChangeDatePicker}
+            style={{ height: 120, marginTop: -10, fontFamily: 'poppinsRegular'}}
+            // minimumDate={new Date()}
+          />
+        )}  
+
+        {showdatePicker && Platform.OS === "ios" && (
+        <View style={{ flexDirection: "row", justifyContent: 'space-around' }}>
+          <TouchableOpacity style={[styles.button1, styles.pickerButton, {backgroundColor: "#11182711"}]}
+            onPress={toggleDatePicker}
+          >
+            <Text style={[styles.buttonText, {color: "#075985", fontFamily: 'poppinsRegular'}]}>Cancel</Text>
+          </TouchableOpacity>
+
+
+          <TouchableOpacity style={[styles.button1, styles.pickerButton,]}
+            onPress={confirmIOSDate}
+          >
+            <Text style={[styles.buttonText, {fontFamily: 'poppinsRegular'}]}>Confirm</Text>
+          </TouchableOpacity>
+        </View>
+        )}
+
+      {!showdatePicker && (
+        <Pressable onPress={ () => [toggleDatePicker(), helpdateInvalid && sethelpdateInvalid(false)]}>
+
+          <Input
+            placeholder="Select Date of Birth"
+            value={helpdate}
+            onChangeText={updateInputValueHandler.bind(this, 'date')}
+            placeholderTextColor={"#11182744"}
+            editable={false}
+            isInvalid={helpdateInvalid}
+            onFocus={() => sethelpdateInvalid(false)}
+            onPressIn={toggleDatePicker}
+          />
+        </Pressable>
+        )}
 
     <Input
       placeholder="Email Address"
@@ -396,66 +606,67 @@ useEffect(() => {
       onFocus={() => setIsEnteredEmail(false)}
       // style={}
     />
-      <View style={{ borderBottomColor: Color.dimgray_100, borderBottomWidth:1}}>
-        <Dropdown
-          style={[styles.dropdown, isSexFocus && { borderColor: 'blue' }, IsenteredGender ? styles.inputInvalid : null]}
-          placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
-          inputSearchStyle={styles.inputSearchStyle}
-          iconStyle={styles.iconStyle}
-          data={sex}
-          search
-          maxHeight={300}
-          labelField="label"
-          valueField="value"
-          placeholder={!isSexFocus ? 'Select Gender' : enteredGender}
-          searchPlaceholder="Search..."
-          value={enteredGender}
-          onFocus={() => [setSexFocus(true), setIsEnteredGender(false)]}
-          onBlur={() => setSexFocus(false)}
-          onChange={item => {
-              setEnteredGender(item.value);
-              setSexFocus(false);
-          }}
-        />
+
+    <View style={{ borderBottomColor: Color.dimgray_100, borderBottomWidth:1}}>
+      <Dropdown
+        style={[styles.dropdown, isSexFocus && { borderColor: 'blue' }, IsenteredGender ? styles.inputInvalid : null]}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        inputSearchStyle={styles.inputSearchStyle}
+        iconStyle={styles.iconStyle}
+        data={sex}
+        search
+        maxHeight={300}
+        labelField="label"
+        valueField="value"
+        placeholder={!isSexFocus ? 'Select Gender' : enteredGender}
+        searchPlaceholder="Search..."
+        value={enteredGender}
+        onFocus={() => [setSexFocus(true), setIsEnteredGender(false)]}
+        onBlur={() => setSexFocus(false)}
+        onChange={item => {
+          setEnteredGender(item.value);
+          setSexFocus(false);
+        }}
+      />
         <View style={{ marginBottom:10 }}/>
       </View>
-
-
+      
       <View style={{ borderBottomColor: Color.dimgray_100, borderBottomWidth:1}}>
-        <Dropdown
-          style={[styles.dropdown, isCountryFocus && { borderColor: 'blue' }, IscountryName && styles.inputInvalid]}
-          placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
-          inputSearchStyle={styles.inputSearchStyle}
-          iconStyle={styles.iconStyle}
-          data={Country}
-          search
-          maxHeight={300}
-          labelField="label"
-          valueField="value"
-          placeholder={!isCountryFocus ? 'Select Country' : '...'}
-          searchPlaceholder="Search..."
-          value={countryName}
-          onFocus={() =>[ setIsCountryFocus(true), setIsCountryName(false)]}
-          onBlur={() => setIsCountryFocus(false)}
-          onChange={item => {
-              setCountryName(item.value);
-              setIsCountryFocus(false);
-          }}
-        />
-          <View style={{ marginBottom:10 }}/>
-      </View>
+      <Dropdown
+        style={[styles.dropdown, isCountryFocus && { borderColor: 'blue' }, IscountryName && styles.inputInvalid]}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        inputSearchStyle={styles.inputSearchStyle}
+        iconStyle={styles.iconStyle}
+        data={countryData}
+        search
+        maxHeight={300}
+        labelField="label"
+        valueField="value"
+        placeholder={!isCountryFocus ? 'Select Country' : '...'}
+        searchPlaceholder="Search..."
+        value={countryName}
+        onFocus={() =>[ setIsCountryFocus(true), setIsCountryName(false)]}
+        onBlur={() => setIsCountryFocus(false)}
+        onChange={item => {
+          setCountry(item.label);
+          setCountryName(item.value)
+          setIsCountryFocus(false);
+          handleState(item.value)
+        }}
+      />
+        <View style={{ marginBottom:10 }}/>
+    </View>
 
-
-  
+    <View style={{ borderBottomColor: Color.dimgray_100, borderBottomWidth:1}}> 
     <Dropdown
       style={[styles.dropdown, isStateFocus && { borderColor: 'blue' }, IsstateName && styles.inputInvalid]}
       placeholderStyle={[styles.placeholderStyle, {fontFamily: 'poppinsRegular'}]}
       selectedTextStyle={[styles.selectedTextStyle, {fontFamily: 'poppinsRegular'}]}
       inputSearchStyle={[styles.inputSearchStyle, {fontFamily: 'poppinsRegular'}]}
       iconStyle={styles.iconStyle}
-      data={State}
+      data={stateData}
       search
       maxHeight={300}
       labelField="label"
@@ -466,19 +677,23 @@ useEffect(() => {
       onFocus={() => [setIsStateFocus(true), setIsStateName(false)]}
       onBlur={() => setIsStateFocus(false)}
       onChange={item => {
-          setStateName(item.value)
-          setIsStateFocus(false);
+        setState(item.label)
+        setStateName(item.value)
+        setIsStateFocus(false);
+        handleCity(item.value)
       }}
-    />
+      />
+      <View style={{marginBottom:10}}/>
+    </View>
 
-  
-  <Dropdown
+    <View style={{ borderBottomColor: Color.dimgray_100, borderBottomWidth:1}}> 
+    <Dropdown
       style={[styles.dropdown, isCityFocus && { borderColor: 'blue' }, IscityName && styles.inputInvalid]}
       placeholderStyle={[styles.placeholderStyle, {fontFamily: 'poppinsRegular'}]}
       selectedTextStyle={[styles.selectedTextStyle, {fontFamily: 'poppinsRegular'}]}
       inputSearchStyle={[styles.inputSearchStyle, {fontFamily: 'poppinsRegular'}]}
       iconStyle={styles.iconStyle}
-      data={LGA}
+      data={cityData}
       search
       maxHeight={300}
       labelField="label"
@@ -489,11 +704,13 @@ useEffect(() => {
       onFocus={() => [setIsCityFocus(true), setIsCityName(false)]}
       onBlur={() => setIsCityFocus(false)}
       onChange={item => {
-          setCityName(item.value)
-          setIsCityFocus(false);
-    }}
-  />
-
+        setCity(item.label)
+        setCityName(item.value)
+        setIsCityFocus(false);
+      }}
+    />
+      <View style={{marginBottom:10}}/>
+    </View>
 
       <>
       <Input placeholder="Address" value={address} onUpdateValue={updateInputValueHandler.bind(this, 'address')} isInvalid={Isaddress} onFocus={() => setIsAddress(false)}/>
@@ -529,7 +746,7 @@ useEffect(() => {
         onFocus={() => [setIsCategoryFocus(true), setIsCategory(false)]}
         onBlur={() => setIsCategoryFocus(false)}
         onChange={item => {
-          handleState(item.value);
+          subcat(item.value);
           setCategory(item.value)
           setIsCategoryFocus(false);
       }}

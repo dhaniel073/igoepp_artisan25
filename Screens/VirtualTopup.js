@@ -333,7 +333,7 @@ const getBouquets = (value) => {
   const commissionget = async (id) => {
      try {
        const response = await HelperBillerCommission(id, authCtx.token)
-       console.log(response)
+      //  console.log(response)
        setcommissonvalue(response)
      } catch (error) {
        return;
@@ -375,7 +375,7 @@ const getBouquets = (value) => {
         setischecking(true)
         setCode('')
         setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " attempts remaining"))
-        console.log(error.response)
+        // console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
           {
             text: "Ok",
@@ -417,7 +417,7 @@ const getBouquets = (value) => {
             }
           ])
           setisloading(false)
-        console.log(error.response)
+        // console.log(error.response)
     }
   }
 

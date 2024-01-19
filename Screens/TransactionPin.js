@@ -45,7 +45,7 @@ const TransactionPin = ({navigation}) => {
     const [pinReady, setPinReady] = useState(false)
     const MAX_CODE_LENGTH = 4;
 
-    console.log(code)
+    // console.log(code)
 
     useEffect(() => {
       const unsuscribe = navigation.addListener('focus', async () => {
@@ -58,6 +58,12 @@ const TransactionPin = ({navigation}) => {
         } catch (error) {
         setisloading(true)
         // console.log(error)
+        Alert.alert("Sorry", "An error occured try again later", [
+          {
+            text:"Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
         setisloading(false)
         }
       })
@@ -100,7 +106,7 @@ const TransactionPin = ({navigation}) => {
         setischecking(false) 
       } catch (error) {
         setischecking(true)
-        console.log(error)
+        // console.log(error)
         setCode('')
         toggleTransactionpin()
         Alert.alert("Error", "An error occured while setting up your transaction pin", [
@@ -132,7 +138,7 @@ const TransactionPin = ({navigation}) => {
             setischecking(false)
           } catch (error) {
             setischecking(true)
-            console.log(error)
+            // console.log(error)
             setCode('')
             setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " attempts remaining"))
             // console.log(error.response)

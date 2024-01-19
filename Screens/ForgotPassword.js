@@ -34,7 +34,7 @@ const ForgotPassword = ({navigation}) => {
         ])  
         setisLoading(false)
       } catch (error) {
-        console.log(error.response)
+        // console.log(error.response)
         setisLoading(true)
         Alert.alert("Error", `${error.response.data.message}`, [
           {

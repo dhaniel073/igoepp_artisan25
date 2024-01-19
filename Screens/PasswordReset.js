@@ -46,12 +46,12 @@ const PasswordReset = ({navigation}) => {
         try {
           setisloading(true)
           const response = await ConvertPassword(oldpassword)
-          console.log(response)
+          // console.log(response)
           const passwordCon = response
           passwordvalidate(passwordCon)
         } catch (error) {
           setisloading(true)
-          console.log(error)
+          // console.log(error)
           Alert.alert("Error", "An error occured try again later", [
             {
               text: "Ok",
@@ -67,7 +67,7 @@ const PasswordReset = ({navigation}) => {
       try {
         setisloading(true)
         const response = await ValidateLogin(authCtx.email, conpass)
-        console.log(response.message)
+        // console.log(response.message)
         if(response.message === "Invalid passoword"){
           setoldpassworderrormessage(response.message)
           setoldpasswordvalid(true)
@@ -83,7 +83,7 @@ const PasswordReset = ({navigation}) => {
         // setisloading(false)
       } catch (error) {
         setisloading(true)
-        console.log(error)
+        // console.log(error)
         setisloading(true)
       }
 
@@ -94,12 +94,12 @@ const PasswordReset = ({navigation}) => {
       try {
         setisloading(true)
         const response = await ConvertPassword(password)
-        console.log(response)
+        // console.log(response)
         const passwordCon = response
         passwordreset(passwordCon)
       } catch (error) {
         setisloading(true)
-        console.log(error)
+        // console.log(error)
         Alert.alert("Error", "An error occured try again later", [
           {
             text: "Ok",
@@ -114,7 +114,7 @@ const PasswordReset = ({navigation}) => {
       try {
         setisloading(true)
         const response = await HelperResetPassword(authCtx.Id, conpass, authCtx.token)
-        console.log(response)
+        // console.log(response)
         Alert.alert("Successful", "Password reset successful", [
           {
             text:'Ok',
@@ -128,7 +128,7 @@ const PasswordReset = ({navigation}) => {
         setpassworderrormessage('')
       } catch (error) {
         setisloading(true)
-        console.log(error)
+        // console.log(error)
         Alert.alert('Error', "An error occured while reseting your password", [
           {
               text:'Ok',
@@ -152,13 +152,13 @@ const PasswordReset = ({navigation}) => {
         <View style={{marginHorizontal:10}}>
         <Input value={authCtx.email} editable={false}/>
         <Input 
-            onUpdateValue={setoldpassword}
-            value={oldpassword}
-            placeholder={'Enter old password'}
-            autoCapitalize={'none'}
-            secure
-            onFocus={() => setoldpasswordvalid(false)}
-            isInvalid={oldpasswordvalid}
+          onUpdateValue={setoldpassword}
+          value={oldpassword}
+          placeholder={'Enter old password'}
+          autoCapitalize={'none'}
+          secure
+          onFocus={() => setoldpasswordvalid(false)}
+          isInvalid={oldpasswordvalid}
         />
 
         {

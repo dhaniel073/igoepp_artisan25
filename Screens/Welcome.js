@@ -7,10 +7,11 @@ import { Border, Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalSt
 import Swiper from 'react-native-swiper'
 import { AuthContext } from '../utils/AuthContext';
 import * as LocalAuthentication from 'expo-local-authentication'
-import { HelperUrl, NotificationUnread, RequestByHelperid, RequestSumTotal, SliderImage, SubCategory, TrendingService } from '../utils/AuthRoute';
+import { HelperUrl, NotificationUnread, RequestByHelperid, RequestSumTotal, SliderImage, SubCategory, TrendingService, ViewSubCategory } from '../utils/AuthRoute';
 import LoadingOverlay from '../Components/Ui/LoadingOverlay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications'
+import axios from 'axios';
 
 
 const WIDTH = Dimensions.get('window').width
@@ -53,11 +54,12 @@ const WelcomeScreen = ({navigation}) => {
   useEffect(() => {
     const unsuscribe = async () => {
       const token = (await Notifications.getExpoPushTokenAsync({ projectId: '0e18ffeb-cbc7-439c-8348-da5e8ba93af1' })).data;
-      console.log(token)
+      // console.log(token)
     }
     unsuscribe()
   }, [])
 
+ 
   
 
 
@@ -96,49 +98,9 @@ const WelcomeScreen = ({navigation}) => {
     })   
   }
 
-
-  // console.log(authCtx.token, authCtx.Id)
-
-  // useEffect(() => {
-  //   // Function to handle app state changes
-  //   const handleAppStateChange = (nextAppState) => {
-  //     // If the app goes into the background or inactive state, log out the user
-  //     if (appState.match(/active/) && nextAppState === 'background') {
-  //       // Call your logout function here
-  //       console.log('User logged out');
-  //       // checkLastLoginTimestamp()
-  //       const storedTimestamp = authCtx.lastLoginTimestamp
-  //       const lastLoginTimestamp = new Date(storedTimestamp);
-  //       const currentTimestamp = new Date();
-  //       console.log(storedTimestamp + " " + new Date())
-  //       if(authCtx.lastLoginTimestamp === null || undefined || ""){
-  //         return 
-  //       }else{
-  //         const timeDifferenceInMinutes = Math.floor(
-  //           (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
-  //         );
-
-  //         const authenticationThresholdInMinutes = 5;
-
-  //         if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
-  //           authCtx.logout()
-  //         }
-
-  //       }
-  //     }
-
-  //     setAppState(nextAppState);
-  //   };
-
-  //   // Subscribe to app state changes
-  //   AppState.addEventListener('change', handleAppStateChange);
-
-  //   // Cleanup: Remove the event listener when the component unmounts
-  //     return;
-  // }, [appState]);
-   
-  // console.log(authCtx.userid)
   
+
+
     useEffect(() => {
       TrendsArray()
       HelperGet()
@@ -149,7 +111,7 @@ const WelcomeScreen = ({navigation}) => {
     const NotifiationNumber = async () => {
       try {
         const response  = await NotificationUnread(authCtx.userid, authCtx.token)
-        console.log(response)
+        // console.log(response)
         setnotificationnumber(response)
       } catch (error) {
         return
@@ -178,7 +140,7 @@ const WelcomeScreen = ({navigation}) => {
 
     useEffect(() => {
       navigation.addListener('focus', async () => {
-        return SubCatGet()
+        return unavailable()
       })
     }, [subcatname])
 
@@ -211,24 +173,11 @@ const WelcomeScreen = ({navigation}) => {
       }
     }
 
-    const SubCatGet = async () => {
-      try {
-        const response = await SubCategory(authCtx.subCatId, authCtx.token)
-        // console.log(response)
-        setSubCatName(response)
-      } catch (error) {
-        return;
-        
-      }
-    }
-
-
-
     async function  Sumtotal(){
       try {
         const response = await RequestSumTotal(authCtx.Id , authCtx.token)
         setsumtot(response)
-        console.log(response)
+        // console.log(response)
         if(response === 0){
           authCtx.helpersumtot("0.00")
         }else{
@@ -261,6 +210,19 @@ const WelcomeScreen = ({navigation}) => {
         return;
       }
     }
+
+      const unavailable = async () => {
+        try {
+          const response = await axios.get(`https://igoeppms.com/igoepp/public/api/showsubcategorybycatid/${authCtx.catId}`)
+          // console.log(response.data.data)
+          // console.log(response.data)
+          // console.log(response)
+          setSubCatName(response.data.data)
+        } catch (error) {
+          // console.log(error)
+          // console.log(error)
+        }
+      }
 
     
 
@@ -323,13 +285,27 @@ const WelcomeScreen = ({navigation}) => {
               <View style={styles.slide1}>
                 <View style={{flexDirection:'row', justifyContent:'space-between'}}>
                   <Text style={styles.text}>{request}</Text>
-                  <Text style={{paddingRight:20, color:Color.white,  fontSize:12, fontFamily:'poppinsMedium', textAlign:'center', top:5}}>{
-                    subcatname.map((item) => (
-                      item.id === authCtx.subCatId ? item.sub_cat_name : null
-                    ))
-                    // subcatname.id === authCtx.subCatId ? subcatname.sub_cat_name : null
-                  }</Text>
-                </View>
+                    {/* {
+                      subcatname.map((item, key) => (
+                        <Text style={{paddingRight:20, color:Color.white,  fontSize:12, fontFamily:'poppinsMedium', textAlign:'center', top:5}}>
+                          {item.id === authCtx.subCatId ? "ues" : null } 
+                        </Text>
+                      ))
+                    } */}
+                     <FlatList
+                        style={{position: 'absolute', right:0}}
+                        data={subcatname}
+                        showsVerticalScrollIndicator={false}
+                        keyExtractor={(item) => item.id}
+                        
+                        renderItem={({item}) => (
+                          <>
+                            <Text style={{paddingRight:20, color:Color.white,  fontSize:12, bottom:15, fontFamily:'poppinsMedium', textAlign:'center', top:1}}>{item.id.toString() === authCtx.subCatId && item.sub_cat_name}</Text>
+                          </>
+                          )
+                        }
+                      />
+                  </View>
 
                 <Text style={{fontFamily: 'interBold', fontSize:10, color: Color.white}}>Services Performed</Text>
               </View>
@@ -340,7 +316,7 @@ const WelcomeScreen = ({navigation}) => {
                 <View style={{flexDirection:'row',}}>
                   <View>
                   <Text style={styles.text}>
-                    <MaterialCommunityIcons name="currency-ngn" size={20} color={Color.white} />
+                    <MaterialCommunityIcons name="currency-ngn" size={20} color={Color.white}/>
                     {authCtx.showAmount === 'show'  ? authCtx.sumtot : <Text>******</Text>} 
                   </Text>
                   </View>
@@ -494,7 +470,7 @@ const WelcomeScreen = ({navigation}) => {
         </>
       }
 
-        <View style={{marginBottom:'20%'}}/>
+        <View style={{marginBottom:'20%', marginTop:'5%'}}/>
 
       </ScrollView>
     </SafeAreaView>

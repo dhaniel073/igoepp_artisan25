@@ -6,6 +6,7 @@ import { AuthContext } from '../utils/AuthContext'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { ViewSubCategory } from '../utils/AuthRoute'
 import SubmitButton from '../Components/Ui/SubmitButton'
+import Input from '../Components/Ui/Input'
 
 const ViewRequestWithId = ({navigation, route}) => {
     const authCtx = useContext(AuthContext)
@@ -30,12 +31,12 @@ const ViewRequestWithId = ({navigation, route}) => {
         try {
             setIsLoading(true)
             const response = await ViewSubCategory(authCtx.subCatId, authCtx.token)
-            console.log(response)
+            // console.log(response)
             setPreassessmentAmt(response.preassessment_amount)
             setIsLoading(false)
         } catch (error) {
             setIsLoading(true)
-            console.log(error)
+            // console.log(error)
             setIsLoading(false)
         }
     }
@@ -83,7 +84,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Customer Name
             </Text>
-            <TextInput
+            <Input
                 style={[styles.input]}
                 value={customerName}
                 editable={false}
@@ -95,7 +96,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Help Category Name
             </Text>
-            <TextInput
+            <Input
                 style={[styles.input]}
                 value={name}
                 editable={false}
@@ -106,7 +107,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Customer address
             </Text>
-            <TextInput
+            <Input
                 style={[styles.input]}
                 value={address}
                 editable={false}
@@ -118,7 +119,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Date for Service
             </Text>
-            <TextInput
+            <Input
                 style={[styles.input]}
                 value={date}
                 editable={false}
@@ -129,7 +130,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Instruction To Helper 
             </Text>
-            <TextInput
+            <Input
 
                 style={[styles.input]}
                 value={instruction}
@@ -144,7 +145,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                Size of Help
             </Text>
-            <TextInput
+            <Input
 
                 style={[styles.input]}
                 value={size}
@@ -157,7 +158,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Help Interverals
             </Text>
-            <TextInput
+            <Input
 
                 style={[styles.input]}
                 value={frequency}
@@ -169,7 +170,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Request Type
             </Text>
-            <TextInput
+            <Input
                 style={[styles.input]}
                 value={preassessment === "N" ? "Normal Request" : "Preassessment Request"}
                 editable={false}

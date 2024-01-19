@@ -219,7 +219,7 @@ const Internet = ({route, navigation}) => {
           setischecking(true)
           setCode('')
           setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
-          console.log(error.response)
+          // console.log(error.response)
           Alert.alert("Error", error.response.data.message+ " " + "Try again", [
             {
               text: "Ok",
@@ -235,7 +235,7 @@ const Internet = ({route, navigation}) => {
     const commissionget = async (id) => {
        try {
          const response = await HelperBillerCommission(id, authCtx.token)
-         console.log(response)
+        //  console.log(response)
          setcommissonvalue(response)
        } catch (error) {
          return;

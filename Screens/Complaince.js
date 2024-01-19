@@ -8,9 +8,11 @@ import Input from '../Components/Ui/Input'
 import SubmitButton from '../Components/Ui/SubmitButton'
 import GoBack from '../Components/Ui/GoBack'
 import { Image } from 'expo-image'
-import { GuarantorsUpload, HelperBankDetails, HelperUploadAddressProof, HelperUploadIdCard, HelperUrl, UpLoad } from '../utils/AuthRoute'
+import { GetBanks, GuarantorsUpload, HelperBankDetails, HelperUploadAddressProof, HelperUploadIdCard, HelperUrl, UpLoad } from '../utils/AuthRoute'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import * as ImagePicker from 'expo-image-picker'
+import axios from 'axios'
+import { Dropdown } from 'react-native-element-dropdown'
 
 const data = [
   { label: "Driver's License.", value: "Driver's License." },
@@ -50,9 +52,15 @@ const Complaince = ({navigation}) => {
   const [isInvalidaccountname, setIsInvalidAccountName] = useState(false)
 
   const [guarantorstatus, setGuarantorStatus] = useState('')
+  const [banks, setbanks] = useState([])
   const authCtx = useContext(AuthContext)
 
+  const [bankselect, setbankselect] = useState([])
+  const [bankfocus, setBankfocus] = useState(false)
+  const [isbankvalid, setisbankvalid] = useState(false)
 
+
+  // console.log(authCtx.Id)
 
   useEffect(() => {
     const unsuscribe = navigation.addListener('focus', async() => {
@@ -61,39 +69,64 @@ const Complaince = ({navigation}) => {
         const response = await HelperUrl(authCtx.Id, authCtx.token)
         setFetchedInfo(response)
         console.log(response)
-        // setGuarantorStatus(response.guarantor_status)
+        setGuarantorStatus(response.guarantor_status)
         setisloading(false)
       } catch (error) {
         setisloading(true)
-          // console.log(error)
-          Alert.alert("Sorry", "An error occured try again later", [
-            {
-              text:"Ok",
-              onPress: () => navigation.goBack()
-            }
-          ])
-          setisloading(false)
-          return;
+        console.log(error.response)
+        // console.log("useEffect")
+        Alert.alert("Sorry", "An error occured try again later", [
+          {
+            text:"Ok",
+            onPress: () => navigation.goBack()
+          }
+        ])
+        setisloading(false)
+        return;
       }
     })
     return unsuscribe
   }, [])
 
+  useEffect(() => {
+    var config = {
+    method: 'get',
+    url: "https://phixotech.com/igoepp/public/api/general/getBanks"
+    }
+    axios(config)
+    .then(function (response) {
+    // console.log(response.data)
+      var count = Object.keys(response.data).length
+      let categoryarray = []
+      for (var i = 0; i < count; i++){
+      categoryarray.push({
+        label: response.data[i].bank_name,
+        value: response.data[i].description,
+        })
+      }
+      setbanks(categoryarray)
+     })
+     .catch(function (error) {
+         return;
+     })
+  }, [])
+
+
   const Customer = async() => {
     try {
-        setisloading(true)
-        const response = await HelperUrl(authCtx.Id, authCtx.token)
-        // setGuarantorStatus(response.guarantor_status)
-        authCtx.helperPicture(response.photo)
-        setFetchedInfo(response)
-        setisloading(false)
-        setGuarantorName(null)
-        setGuarantorEmail(null)
-        setAccountNumber(null)
-        setAccountName(null)
+      setisloading(true)
+      const response = await HelperUrl(authCtx.Id, authCtx.token)
+      // setGuarantorStatus(response.guarantor_status)
+      authCtx.helperPicture(response.photo)
+      setFetchedInfo(response)
+      setisloading(false)
+      setGuarantorName(null)
+      setGuarantorEmail(null)
+      setAccountNumber(null)
+      setAccountName(null)
     } catch (error) {
       setisloading(true)
-    //   console.log(error)
+      // console.log(error)
         Alert.alert("Sorry", "An error occured try again later", [
         {
             text:"Ok",
@@ -482,15 +515,19 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
   const accountdetailshandler = async () => {
     const accountNameCheck = accountName === null || accountName === undefined || accountName.length === 0
     const accountnumberCheck = accountnumber === null || accountnumber === undefined || accountnumber.length === 0
+    const bankcheck = bankselect === null || bankselect === undefined || bankselect.length === 0
 
-    setIsInvalidAccountName(accountNameCheck)
-    setIsInvalidAccountNumber(accountnumberCheck)
-
-    if(!accountNameCheck && !accountnumberCheck){
+   
+    if(accountNameCheck || accountnumberCheck || bankcheck){
+      console.log(bankcheck)
+      setIsInvalidAccountName(accountNameCheck)
+      setIsInvalidAccountNumber(accountnumberCheck)
+      setisbankvalid(bankcheck)
+    }else{
       try {
         toggleAccountModal()
         setisloading(true)
-        const response = await HelperBankDetails(accountnumber, accountName, authCtx.Id, authCtx.token) 
+        const response = await HelperBankDetails(accountnumber, accountName,bankselect, authCtx.Id, authCtx.token) 
         // console.log(response)
         Alert.alert('Success', "Bank Account Details's Uploaded Successfully", [
           {
@@ -498,14 +535,17 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
             onPress: () => {Customer()}
           }
         ])
+        setAccountName(null)
+        setAccountNumber(null)
+        setbankselect(null)
         setisloading(false)
       } catch (error) {
         setisloading(true)
           // console.log(error.response.data)
         Alert.alert("Sorry", "An error occured try again later", [
           {
-              text:"Ok",
-              onPress: () => navigation.goBack()
+            text:"Ok",
+            onPress: () => navigation.goBack()
           }
         ])
         setisloading(false)
@@ -782,7 +822,7 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
       <Modal isVisible={isAccountModalVisble}>
         <SafeAreaView style={styles.centeredView}>
 
-        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => toggleAccountModal()}>
+        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleAccountModal(), setAccountName(null), setIsInvalidAccountName(), setIsInvalidAccountNumber(), setbankselect(null), setisbankvalid(false), setAccountNumber('')]}>
           <MaterialIcons name="cancel" size={30} color="white" />
         </TouchableOpacity>
         <View style={styles.modalView} showsVerticalScrollIndicator={false}>
@@ -792,17 +832,43 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
           </Text>
           <View style={{ marginBottom:10}}/>  
 
-            <Text style={styles.label}>Account Name 
-            {fetchedInfo.accountname === null ? " (No account added)" : `(${fetchedInfo.accountname})`}
+            <Text style={styles.label}>Account Name: {fetchedInfo.accountname === null ? " (No account added)" : `(${fetchedInfo.accountname})`}
             </Text>
             <Input onFocus={() => setIsInvalidAccountName()} placeholder={"Enter Account Holder's Name"} value={accountName} style={[isInvalidaccountname && styles.inputInvalid]} onUpdateValue={updateInputValueHandlerAccount.bind(this, 'accountname')} autoCapitalize='words'/>
 
-            <Text style={styles.label}>Bank Name</Text>
+            <View style={{ borderBottomColor: Color.dimgray_100, borderBottomWidth:1}}>
+              <Text style={styles.label}>Bank: {fetchedInfo.bank === null ? " (No bank added)" : `(${fetchedInfo.bank})`}</Text>
+              <Dropdown
+                style={[styles.dropdown, bankfocus && { borderColor: 'blue' }, isbankvalid ? styles.inputInvalid : null]}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                inputSearchStyle={styles.inputSearchStyle}
+                iconStyle={styles.iconStyle}
+                data={banks}
+                search
+                maxHeight={300}
+                labelField="label"
+                valueField="value"
+                placeholder={!bankfocus ? 'Select Bank' : '...'}
+                searchPlaceholder="Search..."
+                value={bankselect}
+                onFocus={() =>[ setBankfocus(true), setisbankvalid(false)]}
+                onBlur={() => setBankfocus(false)}
+                onChange={item => {
+                    setbankselect(item.value);
+                    setBankfocus(false);
+                }}
+              />
+                <View style={{ marginBottom:10 }}/>
+            </View>
+                <View style={{ marginBottom:10 }}/>
+
+            {/* <Text style={styles.label}>Bank Name</Text>
             <Input editable={false} style={{backgroundColor: Color.gray6, color: Color.dimgray_200}}  value={"Parallex Bank"} autoCapitalize='none'/>
+             */}
 
-
-            <Text style={styles.label}>Account Number 
-              {fetchedInfo.account === null ? "" : `(${fetchedInfo.account})`}
+           
+            <Text style={styles.label}>Account Number: {fetchedInfo.account === null ? "" : `(${fetchedInfo.account})`}
             </Text>
             <Input onFocus={() => setIsInvalidAccountNumber()} placeholder={"Enter Account Number"} maxLength={10} keyboardType="numeric" style={[isInvalidaccountnumber && styles.inputInvalid]}  value={accountnumber} onUpdateValue={updateInputValueHandlerAccount.bind(this, 'accountnumber')} autoCapitalize='none'/>
           
@@ -816,7 +882,7 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
 
                 <TouchableOpacity style={styles.cancelbtn} onPress={accountdetailshandler}>
                     <Text style={styles.canceltext}>
-                      {fetchedInfo.accountname && fetchedInfo.account === null  ? "Submit" : "Update"}
+                      {fetchedInfo.accountname !== null  ?  "Update" : "Submit"}
                       {/* Submit */}
                     </Text>
                 </TouchableOpacity>
@@ -837,6 +903,25 @@ export default Complaince
 const styles = StyleSheet.create({
   inputInvalid: {
     backgroundColor: Color.error100,
+  },
+  dropdown: {
+    height: 50,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginTop: 10
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  }, 
+  placeholderStyle: {
+    fontSize: 16,
   },
   panelBottomTitle: {
     fontSize: 12,

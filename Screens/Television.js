@@ -98,7 +98,7 @@ const Television = ({navigation, route}) => {
 
   useEffect(() => {
     setisLoading(true)
-    const url = `https://phixotech.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
+    const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
     const response = axios.get(url, {
         headers:{
             Accept:'application/json',
@@ -126,7 +126,7 @@ const Television = ({navigation, route}) => {
   const getBouquets = (value) => {
     // console.log(authId, id)
     
-    const url = `https://phixotech.com/igoepp/public/api/auth/billpayment/getAllBouquetByBillerID/${authId}/${value}`
+    const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBouquetByBillerID/${authId}/${value}`
     const response = axios.get(url, {
         headers:{
             Accept:'application/json',
@@ -170,7 +170,7 @@ const Television = ({navigation, route}) => {
     try {
       setisLoading(true)
       const response = await ValidateTv(authCtx.Id, id, smartcard, authCtx.token)
-      console.log(response)
+      // console.log(response)
       if(response.data.status === "Success"){
         if(id === "DSTVR" || id === "GOTVR"){
         setRef(response.data.requestID)
@@ -192,7 +192,7 @@ const Television = ({navigation, route}) => {
       }
       setisLoading(false)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
       setisLoading(true)
       Alert.alert("Sorry", "An error occured try again later", [
         {
@@ -309,7 +309,7 @@ const Television = ({navigation, route}) => {
         setischecking(true)
         setCode('')
         setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
-        console.log(error.response)
+        // console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
           {
             text: "Ok",
@@ -328,7 +328,7 @@ const Television = ({navigation, route}) => {
     // }
      try {
       const response = await HelperBillerCommission(id, authCtx.token)
-      console.log(response)
+      // console.log(response)
       setcommissonvalue(response)
      } catch (error) {
        return;
@@ -352,7 +352,7 @@ const Television = ({navigation, route}) => {
     return <LoadingOverlay message={"..."}/>
   }
 
-  console.log(id)
+  // console.log(id)
 
 
   return (

@@ -25,12 +25,18 @@ const Biometric = ({navigation}) => {
         try {
           setisloading(true)
           const response = await HelperUrl(authCtx.Id, authCtx.token)
-          console.log(response)
+          // console.log(response)
           setCheck(response.biometric_setup)
           setisloading(false)
         } catch (error) {
           setisloading(true)
-          console.log(error.response.data)
+          // console.log(error.response.data)
+          Alert.alert("Sorry", "An error occured try again later", [
+            {
+              text:"Ok",
+              onPress: () => navigation.goBack()
+            }
+          ])
           setisloading(false)
         }
       })
@@ -40,7 +46,7 @@ const Biometric = ({navigation}) => {
     useEffect(() => {
       (async () => {
       const compatible = await LocalAuthentication.hasHardwareAsync();
-      console.log(compatible)
+      // console.log(compatible)
       setIsBiometricSupported(compatible)
     })
     }, [])
@@ -60,8 +66,9 @@ const Biometric = ({navigation}) => {
             onPress: () => navigation.goBack()
           }
         ]) 
-        console.log(response)
+        // console.log(response)
       } catch (error) {
+        // console.log(error.response)
         Alert.alert("Error", "An error occured",[
           {
             text: 'Ok',
@@ -74,7 +81,7 @@ const Biometric = ({navigation}) => {
     const DisEnabled = async () => {
       try {
         const response = await DisableBiometric(authCtx.Id, authCtx.token)
-        console.log(response)
+        // console.log(response)
         setBiometric(previousState => !previousState)
         Alert.alert("Successful", "Bimoetric disabled sucessfully",[
           {
@@ -83,7 +90,7 @@ const Biometric = ({navigation}) => {
           }
         ]) 
       } catch (error) {
-        console.log(error.response)
+        // console.log(error.response)
         Alert.alert("Error", "An error occured",[
           {
             text: 'Ok',
@@ -93,7 +100,7 @@ const Biometric = ({navigation}) => {
       }
     }
 
-    console.log(biometric)
+    // console.log(biometric)
 
   
     function onAuthenticate1 (){

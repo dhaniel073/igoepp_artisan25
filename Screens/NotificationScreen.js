@@ -16,20 +16,20 @@ const NotificationScreen = ({navigation}) => {
   const [data, setdata] = useState([])
   const [ismodalvisible, setismodalvisible] = useState(false)
   const [notificationbyidmessage, setnotificationbyidmessage] = useState([])
-  const maxCharacters = 150;
+  const maxCharacters = 140;
 
   useEffect(() => {
     const unsuscribe = navigation.addListener('focus', async () => {
       try {
         setisloading(true)
         const response = await Notification(authCtx.userid, authCtx.token)
-        console.log(response)
+        // console.log(response)
         setdata(response)
         setisloading(false)
       } catch (error) {
         setisloading(true)
         setisloading(false)
-        console.log(error)
+        // console.log(error)
       }
     })
     return unsuscribe;
@@ -40,7 +40,7 @@ const NotificationScreen = ({navigation}) => {
       const response = await Notification(authCtx.userid, authCtx.token)
       setdata(response)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
     }
   }
 
@@ -48,12 +48,12 @@ const NotificationScreen = ({navigation}) => {
     try {
       setischecking(true)
       const response = await NotificationById(id, authCtx.token)
-      console.log(response)
+      // console.log(response)
       setnotificationbyidmessage(response.data)
       setischecking(false)
     } catch (error) {
       setischecking(true)
-      console.log(error)
+      // console.log(error)
       setischecking(false)
       return;
       
@@ -95,7 +95,7 @@ const NotificationScreen = ({navigation}) => {
              <TouchableOpacity style={styles.pressable} onPress={() => [toggleModal(), checknotid(item.id)]}>
                <Text style={item.status === 'U' ? styles.unread : styles.read}>{item.message.slice(0, maxCharacters)+ "...."}</Text>
    
-               <Text style={{position: 'absolute', justifyContent:'flex-end', fontSize:11, alignSelf:'flex-end', top:'130%', right: 15,}}>
+               <Text style={{position: 'absolute', justifyContent:'flex-end', fontSize:11, alignSelf:'flex-end', top:8, right: 15,}}>
                  Tap to view
                </Text>
              </TouchableOpacity>

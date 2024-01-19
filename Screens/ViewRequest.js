@@ -35,7 +35,7 @@ const ViewRequest = ({navigation}) => {
       try {
         setIsFetching(true)
         const response = await SubRequest(authCtx.subCatId , authCtx.token)
-        console.log(response)
+        // console.log(response)
         setCategory(response)
         setIsFetching(false)
       } catch (error) {
@@ -98,7 +98,7 @@ const ViewRequest = ({navigation}) => {
     try {
       setRefresh(true)
       const response = await SubRequest(authCtx.subCatId, authCtx.token)
-      console.log(response)
+      // console.log(response)
       setCategory(response)
       setRefresh(false)
     } catch (error) {
@@ -117,7 +117,7 @@ const ViewRequest = ({navigation}) => {
     try {
       setIsLoading(true)
       const response = await ShowRequestWithId(id, authCtx.token)
-      console.log(response)
+      // console.log(response)
       setRequest(response)
       setIsLoading(false)
     } catch (error) {
@@ -153,7 +153,7 @@ const ViewRequest = ({navigation}) => {
     try {
         setIsFetching(true)
         const response = await NegotiatePrice(bidId, amount, state, authCtx.token)
-        console.log(response)
+        // console.log(response)
         if(response.message === "success"){
             Alert.alert('Success', "Success", [
               {
@@ -183,7 +183,6 @@ const ViewRequest = ({navigation}) => {
     <SafeAreaView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.viewrequesttxt}> Request</Text>
-
 
       {category.length !== 0 ? 
       
@@ -281,7 +280,11 @@ const ViewRequest = ({navigation}) => {
             <View style={styles.modalView}>
               <Text style={styles.modalText}>Details</Text>
 
-                {isLoading ? <LoadingOverlay/> : 
+                {isLoading ? 
+                <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
+                  <LoadingOverlay/>  
+              </View>
+                : 
                 <FlatList
                   data={request}
                   keyExtractor={(item) => item.id}
@@ -289,7 +292,7 @@ const ViewRequest = ({navigation}) => {
                     <View>
                        {
                           Platform.OS === 'android' ?
-                            <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.1,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
+                            <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.07,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
                           :
                           <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.05,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
                         }
@@ -298,11 +301,11 @@ const ViewRequest = ({navigation}) => {
                         <Text style={{fontFamily:'poppinsRegular', fontSize:11}}>Price : </Text>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:11}}>{item.agreed_price === null ? '0.00' : item.agreed_price}</Text>
                       </View>
-
+                    {/* 
                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:11}}>Category Name :</Text>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:11}}>{item.cat_name}</Text>
-                      </View>
+                      </View> */}
 
                       <View style={{justifyContent:'space-between', flexDirection:'row',  alignItems:'center', }}>
                         <Text style={{marginRight: 20, marginBottom:5, fontSize:11}}>Description :</Text>

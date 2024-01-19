@@ -27,12 +27,13 @@ async function login(email, password){
 }
 
 //handdyman signup endpoint
-async function signup(lastname, firstname, email, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude, identification_type,identification_num, referral_code){
+async function signup(lastname, firstname, email, dob, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude, identification_type,identification_num, referral_code){
     const url = 'https://igoeppms.com/igoepp/public/api/helper/store'
     const response = await axios.post(url, {
         "last_name": lastname,
         "first_name": firstname,
         "email": email,
+        "dob": dob,
         "phone": phone,
         "category": category,
         "subcategory": subcategory,
@@ -40,6 +41,7 @@ async function signup(lastname, firstname, email, phone, category, subcategory, 
         "sex": sex,
         "Country": country,
         "State": state,
+        "nationality": country,
         "lga": lga,
         "address": address,
         "address_lat": latitude,
@@ -54,6 +56,7 @@ async function signup(lastname, firstname, email, phone, category, subcategory, 
 
 //view helper by helper id endpoint
 async function helperurl(id, token){
+    // const url = `https://igoeppms.com/igoepp/public/api/auth/helper/${id}`
     const url = `https://igoeppms.com/igoepp/public/api/auth/helper/${id}`
     const response = await axios.get(url, {
         headers:{
@@ -111,7 +114,7 @@ async function updatewallet(amount, id, token){
 
 //get single customer endpoint
 async function getcustomer(Id, token){
-    const url = `https://igoeppms.com/igoepp/public/api/auth/customer/${Id}`
+    const url = `https://igoeppms.com/igoepp/public/api/auth/customerfew/${Id}`
     const response = axios.get(url, {
         headers:{
             Accept:'application/json',
@@ -299,11 +302,15 @@ async function category(){
 }
 
 //view subcategory endpoint
-async function subcategory(categoryId){
-    const url = `https://igoeppms.com/igoepp/public/api/showsubcategorybycatid/${categoryId}`
+async function subcategory(categoryId,){
+    // const url = `https://igoeppms.com/igoepp/public/api/showsubcategorybycatid/${categoryId}`
+    // const url = `https://igoeppms.com/igoepp/public/api/auth/showsubcategorybycatid/${categoryId}`
+
+    const url = `https://igoeppms.com/igoepp/public/api/category/showsubcategory/${categoryId}`
     const response = await axios.get(url)
+
     // console.log(response.data.data)
-    const data = response.data.data
+    const data = response.data
     return data;
 }
 
@@ -465,13 +472,13 @@ async function helperuploadAddressproof(picture,id,token){
 }
 
 //helper update back details endpoint
-async function helperbankdetails(account, accountname, id, token){
+async function helperbankdetails(account, accountname, bank, id, token){
     const url = `https://igoeppms.com/igoepp/public/api/auth/helper/accountupdate`
     
     const response = await axios.post(url, {
         "account": account,
         "accountname": accountname,
-        "bank":"Parallex Bank",
+        "bank": bank,
         "helper_id": id
     }, {
         headers:{
@@ -1103,9 +1110,49 @@ async function viewcustomerratingonrequest (id, token){
     const data = response.data
     return data
   }
+
+  async function deleteaccount(id, token){
+    const url = `https://igoeppms.com/igoepp/public/api/auth/helper/deleteaccount`
+    const response = await axios.post(url,{
+      "helper_id": id,
+    }, {
+      headers:{
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    })
   
+    const data = response.data
+    return data
+  }
+  
+    async function getpaystackkey(){
+        const url = `https://igoeppms.com/igoepp/public/api/general/getPaystackKey`
+        const response = await axios.get(url,{
+        })
 
+        const data = response.data
+        return data
+    }
 
+    async function getbanks(){
+        const url = `https://phixotech.com/igoepp/public/api/general/getBanks`
+        const response = await axios.get(url,{
+        })
+        
+        const data = response.data
+        return data
+    }
+
+     
+
+export const GetPayStackKey = () => {
+return getpaystackkey()
+}
+
+export const GetBanks = () => {
+    return getbanks()
+    }
 
 //convert password
 export const ConvertPassword = (password) => {
@@ -1117,8 +1164,8 @@ export const LoginHandyman = (email, password) => {
 }
 
 //SignUp
-export const SignUpHandyman = (lastname, firstname, email, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude,identification_type,identification_num, referral_code) => {
-    return signup(lastname, firstname, email, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude,identification_type,identification_num, referral_code)
+export const SignUpHandyman = (lastname, firstname, email, dob, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude,identification_type,identification_num, referral_code) => {
+    return signup(lastname, firstname, email, dob, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude,identification_type,identification_num, referral_code)
 }
 
 //Forgot password
@@ -1278,8 +1325,8 @@ export const HelperUploadAddressProof = (picture, id, token) => {
 }
 
 //helper bank details
-export const HelperBankDetails = (account, accountname, id, token) => {
-    return helperbankdetails(account, accountname, id, token)
+export const HelperBankDetails = (account, accountname, bank, id, token) => {
+    return helperbankdetails(account, accountname, bank, id, token)
 }
 
 //helper billers
@@ -1428,4 +1475,8 @@ export const BiometricSetup = (id, fingerprinttoken, token) => {
 
   export const NotificationById = (id, token) => {
     return notificationbyid(id, token)
+  }
+
+  export const DeleteAccount = (id, token) => {
+    return deleteaccount(id, token)
   }

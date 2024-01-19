@@ -36,7 +36,7 @@ const UploadScreen = ({navigation, route}) => {
   const getproofid = async () => {
     try {
         const response = await GetHelperCompleteProofRequestId(request_id, authCtx.token)
-        console.log(response.data)
+        // console.log(response.data)
         setDetails(response.data)
         setId(response.data[0].id)
     } catch (error) {
@@ -106,7 +106,7 @@ const pickImage = async () => {
     try {
       setIsLoading(true)
       const response = await RequestImageProof(id, uploadUrl, authCtx.token)
-      console.log(response) 
+      // console.log(response) 
       setIsLoading(false)
       Alert.alert('Success', "Image proof uploaded sucessfully", [
         {
@@ -116,7 +116,7 @@ const pickImage = async () => {
       ])
     } catch (error) {
       setIsLoading(true)
-      console.log(error.response)
+      // console.log(error.response)
       Alert.alert('Error', "An error occured while uploading image proof", [
         {
           text: "Ok",

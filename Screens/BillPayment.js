@@ -8,7 +8,7 @@ import Modal from "react-native-modal";
 import axios from 'axios'
 import {Image} from 'expo-image'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import { Walletbal } from '../utils/AuthRoute'
+import { SubCategory, Walletbal } from '../utils/AuthRoute'
 import { AuthContext } from '../utils/AuthContext'
 import * as LocalAuthentication from 'expo-local-authentication'
 
@@ -23,6 +23,8 @@ const methodtype = [
 ]
 
 
+
+
 const BillPayment = ({navigation}) => {
 
   const [ismodalVisible, setModalVisible] = useState(false);
@@ -32,6 +34,8 @@ const BillPayment = ({navigation}) => {
   const [isLoading, setisLoading] = useState(false)
   const authCtx = useContext(AuthContext)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [subcatname, setSubCatName] = useState([])
+
 
 
   useEffect(() => {
@@ -53,6 +57,23 @@ const BillPayment = ({navigation}) => {
   useEffect(() => {
     Billers()
   }, [])
+
+  useEffect(() => {
+    navigation.addListener('focus', async () => {
+      return SubCatGet()
+    })
+  }, [subcatname])
+  const SubCatGet = async () => {
+    try {
+      const response = await SubCategory(authCtx.subCatId, authCtx.token)
+      console.log(response)
+      setSubCatName(response)
+    } catch (error) {
+      console.log(error.response.data)
+      return;
+      
+    }
+  }
 
   const Billers = async() => {
     try {
@@ -88,7 +109,7 @@ const BillPayment = ({navigation}) => {
   }
 
  const check = () => {
-  if(method === 'C'){
+  if(method === 'TF'){
     Alert.alert("", "Payment method not available")
   }else{
     navigation.navigate("AddToWallet") 

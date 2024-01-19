@@ -1,5 +1,5 @@
 import { Alert, Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import React, { useContext, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
 import  PaystackWebView, { Paystack }  from 'react-native-paystack-webview';
 import GoBack from '../Components/Ui/GoBack';
@@ -7,7 +7,7 @@ import Input from '../Components/Ui/Input';
 import SubmitButton from '../Components/Ui/SubmitButton';
 import {MaterialCommunityIcons} from '@expo/vector-icons'
 import { AuthContext } from '../utils/AuthContext';
-import { UpdateWallet } from '../utils/AuthRoute';
+import { GetPayStackKey, UpdateWallet } from '../utils/AuthRoute';
 import LoadingOverlay from '../Components/Ui/LoadingOverlay';
 
 
@@ -21,6 +21,25 @@ const AddToWallet = ({navigation}) => {
   const [isInvalid, setIsInvalid] = useState(false)
   const authCtx = useContext(AuthContext)
   const [isloading, setisloading] = useState(false)
+  const [paystackKey, setpaystackKey] = useState('')
+
+
+  useEffect(() => {
+    const unsuscribe = navigation.addListener('focus', async () => {
+      try {
+        setisloading(true)
+        const response = await GetPayStackKey()
+        console.log(response)
+        setpaystackKey(response.toString())
+        setisloading(false)
+      } catch (error) {
+        setisloading(true)
+        console.log(error)
+        setisloading(false)
+      }
+    })
+    return unsuscribe;
+  }, [])
 
   const check = () => {
     setIsInvalid(true) 
@@ -95,7 +114,7 @@ const AddToWallet = ({navigation}) => {
       </SafeAreaView>
 
       <Paystack
-        paystackKey="pk_test_229cbd7654c78526259b0ce604b03b96c34c4bde"
+        paystackKey={paystackKey}
         billingEmail={authCtx.email}
         amount={amount}
         onCancel={(error) =>{

@@ -21,7 +21,7 @@ const NotificationSetup = ({navigation}) => {
       try {
         setisloading(true)
         const response = await ViewAlertSetup(authCtx.Id, authCtx.token)
-        console.log(response.data)
+        // console.log(response.data)
         setnotalert(response.data)
         setisloading(false)
       } catch (error) {

@@ -18,7 +18,7 @@ import OTPFieldInput from '../Components/Ui/OTPFieldInput'
 
 export const StyledButton = styled.TouchableOpacity`
   padding: 15px;
-  background-color: ${Color.darkolivegreen_100};
+  background-color: ${Color.new_color};
   justify-content: center;
   align-items: center;
   border-radius: 5px;
@@ -171,14 +171,14 @@ const Education = ({route, navigation}) => {
       try {
         setischecking(true)
         const response = await ValidatePin(authCtx.Id, code, authCtx.token, commissonvalue)
-        console.log(response)
+        // console.log(response)
         setCode('')
         validate()
       } catch (error) {
         setischecking(true)
         setCode('')
         setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
-        console.log(error.response)
+        // console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
           {
             text: "Ok",
@@ -194,7 +194,7 @@ const Education = ({route, navigation}) => {
   const commissionget = async (id) => {
      try {
        const response = await HelperBillerCommission(id, authCtx.token)
-       console.log(response)
+      //  console.log(response)
        setcommissonvalue(response)
      } catch (error) {
        return;
@@ -224,13 +224,14 @@ const Education = ({route, navigation}) => {
       setisLoading(false)
   }catch(error) {
       setisLoading(true)
-      Alert.alert("Error", "An error occured while making the purchase pease try agin later", [
+      Alert.alert("Error", "An error occured while making the purchase please try again later", [
         {
           text:"Ok",
           onPress: () => navigation.goBack()
         }
       ])
       // console.log(error.response.data)
+      console.log(error.response)
       setisLoading(false)
       return;
 

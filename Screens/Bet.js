@@ -89,7 +89,7 @@ const Bet = ({route, navigation}) => {
       // Save or share the captured image
       downloadImage(uri);
     } catch (error) {
-      console.error('Error capturing image:', error.message);
+      // console.error('Error capturing image:', error.message);
     }
   };
 
@@ -101,7 +101,7 @@ const Bet = ({route, navigation}) => {
         UTI: 'public.png',
       });
     } catch (error) {
-      console.error('Error sharing image:', error.message);
+      // console.error('Error sharing image:', error.message);
     }
   };
 
@@ -134,7 +134,7 @@ const Bet = ({route, navigation}) => {
         { cancelable: false }
       );
     } catch (error) {
-      console.error('Error saving or sharing image:', error.message);
+      // console.error('Error saving or sharing image:', error.message);
     }
   };
 
@@ -165,25 +165,25 @@ const Bet = ({route, navigation}) => {
   useEffect(() => {
     const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
     const response = axios.get(url, {
-        headers:{
-          Accept:'application/json',
-          Authorization: `Bearer ${authCtx.token}`
-        }
+      headers:{
+        Accept:'application/json',
+        Authorization: `Bearer ${authCtx.token}`
+      }
     }).then((res) => {
-        // console.log(res.data)
-        var count = Object.keys(res.data).length;
-        let catarray = []
-        for (var i = 0; i < count; i++){
-            catarray.push({
-                label: res.data[i].name,
-                value: res.data[i].id,
-            })
-            // setCityCode(response.data.data[i].lga_code)
-        }
-        setcategory(catarray)
+      // console.log(res.data)
+      var count = Object.keys(res.data).length;
+      let catarray = []
+      for (var i = 0; i < count; i++){
+          catarray.push({
+              label: res.data[i].name,
+              value: res.data[i].id,
+          })
+          // setCityCode(response.data.data[i].lga_code)
+      }
+      setcategory(catarray)
     }).catch((error) => {
-        // console.log(error)
-        return;
+      // console.log(error)
+      return;
     })
   }, [])
 
@@ -223,8 +223,8 @@ const Bet = ({route, navigation}) => {
       }else{
         Alert.alert("Error", response.data, [
           {
-              text:'Ok',
-              onPress: () => {}
+            text:'Ok',
+            onPress: () => {}
           }
         ])
       }
@@ -234,8 +234,8 @@ const Bet = ({route, navigation}) => {
         setisloading(true)
         Alert.alert("Error", `An Error occured while verifying account try again later`, [
           {
-              text:'Ok',
-              onPress: () => navigation.goBack()
+            text:'Ok',
+            onPress: () => navigation.goBack()
           }
         ])
         setisloading(false)
@@ -274,7 +274,7 @@ const Bet = ({route, navigation}) => {
           setischecking(true)
           setCode('')
           setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
-          console.log(error.response)
+          // console.log(error.response)
           Alert.alert("Error", error.response.data.message+ " " + "Try again", [
             {
               text: "Ok",
@@ -304,7 +304,7 @@ const Bet = ({route, navigation}) => {
       try {
         setisloading(true)
         const response = await BetPay(ref, amount, authCtx.token, commissonvalue)
-        console.log(commissonvalue)
+        // console.log(commissonvalue)
         if(response.data.message === "failed" || "Failed" && response.data.description === "Insufficient wallet balance"){
           Alert.alert("Failed", response.data.description, [
             {
@@ -320,7 +320,7 @@ const Bet = ({route, navigation}) => {
         setisloading(false)
     } catch (error) {
       setisloading(true)
-        console.log(error.response.data)
+        // console.log(error.response.data)
         Alert.alert("Sorry", "An error occured try again later", [
           {  
             text:"Ok",

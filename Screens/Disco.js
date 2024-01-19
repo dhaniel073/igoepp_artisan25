@@ -18,7 +18,7 @@ import OTPFieldInput from '../Components/Ui/OTPFieldInput'
 
 const StyledButton = styled.TouchableOpacity`
   padding: 15px;
-  background-color: ${Color.darkolivegreen_100};
+  background-color: ${Color.new_color};
   justify-content: center;
   align-items: center;
   border-radius: 5px;
@@ -72,7 +72,7 @@ const Disco = ({navigation, route}) => {
     try {
       setisLoading(true)
       const response = await HelperUrl(authCtx.Id, authCtx.token)
-      console.log(response)
+      // console.log(response)
       setpincheckifempty(response.transaction_pin_setup)
       setisLoading(false)
     } catch (error) {
@@ -204,7 +204,7 @@ const Disco = ({navigation, route}) => {
         setischecking(true)
         setCode('')
         setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
-        console.log(error.response)
+        // console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
           {
             text: "Ok",
@@ -220,7 +220,7 @@ const Disco = ({navigation, route}) => {
   const commissionget = async (id) => {
     try {
       const response = await HelperBillerCommission(id, authCtx.token)
-      console.log(response)
+      // console.log(response)
       setcommissonvalue(response)
     } catch (error) {
       return;

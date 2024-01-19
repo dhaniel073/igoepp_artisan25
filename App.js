@@ -47,7 +47,9 @@ import * as Device from 'expo-device';
 import PasswordReset from './Screens/PasswordReset';
 import NotificationScreen from './Screens/NotificationScreen';
 import FeedBack from './Screens/FeedBack';
-
+import NetInfo from "@react-native-community/netinfo"
+import RNRestart from 'react-native-restart'
+import FirstDisplayScreen from './Screens/FirstDisplayScreen';
 
 
 Notification.setNotificationHandler({
@@ -121,6 +123,20 @@ export default function App() {
   
     return token;
   }
+
+  const unsuscribe = NetInfo.addEventListener((state) => {
+    if(state.isConnected === false){
+      Alert.alert("No Internet Connection", "Please check your internet connection and try again!", [{
+        text: "Reload App",
+        onPress: () => RNRestart.restart()
+      }])
+    }else if(state.isConnected === true){
+    }
+  })
+
+  useEffect(() => {
+    unsuscribe()
+  })
 
 
   const [fontloaded] =  useFonts({
@@ -268,6 +284,13 @@ export default function App() {
         contentStyle:{backgroundColor: "#fff"}
       }}
       >
+        <Stack.Screen
+          name='FirstDisplayScreen'
+          component={FirstDisplayScreen}
+          options={{
+            headerShown: false
+          }} 
+        />
 
         <Stack.Screen
         name='Login'
@@ -336,6 +359,7 @@ export default function App() {
             // Prompt the user to reauthenticate
             // You can navigate to a login screen or show a modal for reauthentication
             // console.log('Reauthentication required');
+            Alert.alert("Session Timeout", "Session has expired")
             authCtx.logout()
           }
         }

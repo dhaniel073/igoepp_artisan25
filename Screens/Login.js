@@ -7,7 +7,7 @@ import * as Device from 'expo-device'
 import { ConvertPassword, LoginHandyman, LoginWithBiometric } from '../utils/AuthRoute'
 import SubmitButton from '../Components/Ui/SubmitButton'
 import Flat from '../Components/Ui/Flat'
-import { Color } from '../Components/Ui/GlobalStyle'
+import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import { AuthContext } from '../utils/AuthContext'
 import Input from '../Components/Ui/Input'
 import LoadingOverlay from '../Components/Ui/LoadingOverlay'
@@ -54,12 +54,12 @@ const Login = ({navigation}) => {
       try {
         setIsloading(true)
         const response = await ConvertPassword(enteredPassword)
-        console.log(response)
+        // console.log(response)
         const password = response
         loginhandler(password)
       } catch (error) {
         setIsloading(true)
-        console.log(error.response)
+        // console.log(error.response)
         Alert.alert("Error", "An error occured")
         setIsloading(false)
       }
@@ -88,7 +88,7 @@ const Login = ({navigation}) => {
       } catch (error) {
         setIsloading(true)
         Alert.alert('Login Failed', error.response.data.message)
-        console.log(error.response)
+        // console.log(error.response)
         setIsloading(false)
       }
     }
@@ -104,7 +104,7 @@ const Login = ({navigation}) => {
           BiometricSignUp()
         }else if(result.error === 'not_enrolled'){
           Alert.alert("", result.error)
-          console.log(result)
+          // console.log(result)
         }else{
           Alert.alert("Error", "Try again later")
         }
@@ -115,7 +115,7 @@ const Login = ({navigation}) => {
       try {
         setIsloading(true)
         const response = await LoginWithBiometric(log)
-        console.log(response.data)
+        // console.log(response.data)
         authCtx.authenticated(response.data.access_token)  
         authCtx.helperId(response.data.helper_id)
         authCtx.helperEmail(response.data.email)
@@ -135,7 +135,7 @@ const Login = ({navigation}) => {
         setIsloading(true)
         Alert.alert('Login Failed', error.response.data.message)
         setIsloading(false)   
-        console.log(error.response)     
+        // console.log(error.response)     
       }
     }
 
@@ -149,7 +149,8 @@ const Login = ({navigation}) => {
   return (
     <SafeAreaView>
       <ScrollView>
-        <View style={{justifyContent:'center', flex:1, marginTop:'40%', marginHorizontal:20}}>
+        {/* <View style={{justifyContent:'center', flex:1, marginTop:'40%', marginHorizontal:20}}> */}
+        <View style={{justifyContent:'center', flex:1, marginTop:marginStyle.marginTp + 100, marginHorizontal:20}}>
         <Image style={{ width:100, height:100, alignSelf:'center'}} source={require("../assets/igoepp_transparent2.png")}   placeholder={'blurhash'} contentFit="contain"/>
         <Text style={styles.Title}>Login</Text>
        

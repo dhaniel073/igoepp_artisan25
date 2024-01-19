@@ -67,7 +67,7 @@ useLayoutEffect(() => {
         const descArr = stateArray.sort().reverse();
         setMessages(descArr)
       } catch (error) {
-        console.log(error.response)
+        // console.log(error.response)
         Alert.alert("Error", "An error occured while fetching messages", [
           {
             text:'Ok',
@@ -102,7 +102,7 @@ const SendMessage = (text) => {
   }).then((res) => {
       // console.log(res.data)
   }).catch((error) => {
-      console.log(error.response.data)
+      // console.log(error.response.data)
       return;
   })
 }

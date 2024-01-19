@@ -39,7 +39,7 @@ const AcceptedRequest = ({navigation}) => {
       try {
         setIsLoading(true)
         const response = await RequestByHelperid(authCtx.Id , authCtx.token)
-        console.log(response)
+        // console.log(response)
         setRequest(response)
         var count = Object.keys(response).length;
         let cityArray = []
@@ -253,7 +253,7 @@ const AcceptedRequest = ({navigation}) => {
 
   //   for(const it of item){
   //     try {
-  //       const response = await axios.get(`https://phixotech.com/igoepp/public/api/auth/hrequest/helperhelpchatcountunread/${it.label}`, {
+  //       const response = await axios.get(`https://igoeppms.com/igoepp/public/api/auth/hrequest/helperhelpchatcountunread/${it.label}`, {
   //         headers:{
   //           Accept: 'application/json',
   //           Authorization: `Bearer ${authCtx.token}`

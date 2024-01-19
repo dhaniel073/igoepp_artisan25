@@ -39,7 +39,7 @@ const Availability = ({navigation}) => {
           // setNotIsAvailable(false)
         }else if(response.available === 'N'){
           setavail(response.available)
-          // console.log(response)
+          console.log(response)
           // setNotIsAvailable(true)
           // authCtx.helperavailable(response.available)
         }else{
@@ -47,11 +47,11 @@ const Availability = ({navigation}) => {
         }
         setIsLoading(false)
       } catch (error) {
-        // console.log(error)
+        console.log(error)
           Alert.alert("Sorry", "An error occured try again later", [
             {
               text:"Ok",
-              onPress: () => navigation.goBack()
+              onPress: () => {}
             }
           ])
           return;

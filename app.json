@@ -2,7 +2,7 @@
   "expo": {
     "name": "IgoeppArt",
     "slug": "igoepp_artisan",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon1.png",
     "userInterfaceStyle": "light",
@@ -23,9 +23,11 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Igoepp Customer uses Face Id and Touch ID to verify the user's identity and protect sensitive data"
-      }
+      },
+      "bundleIdentifier": "igoepp"
     },
     "android": {
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon1.png",
         "backgroundColor": "#ffffff"

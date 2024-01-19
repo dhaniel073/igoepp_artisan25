@@ -153,7 +153,7 @@ return (
             <View style={{flexDirection:'row', justifyContent:'center'}}>
                 <Text  style={{ color: '#777777', fontFamily:'poppinsRegular' }}>Customer's Rating: </Text>
                 <View style={{flexDirection:'row'}}>
-                <Text style={{ color: '#777777', fontFamily:'poppinsRegular' }}> {route?.params?.rating === undefined || route?.params?.rating === null ?  "No Rating" : route?.params?.rating }</Text><Image contentFit='contain' style={{  width: 20, height: 20, top:2}} source={require("../assets/group-723.png")}/>
+                <Text style={{ color: '#777777', fontFamily:'poppinsRegular' }}> {route?.params?.rating === undefined || route?.params?.rating === null ?  "No Rating" : route?.params?.rating }</Text><Image contentFit='contain' style={{  width: 18, height: 18}} source={require("../assets/group-723.png")}/>
                 </View>
             </View>
        {/* <ScrollView style={{padding: 10, marginTop:'10%'}}> */}
