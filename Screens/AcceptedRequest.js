@@ -1,24 +1,24 @@
-import { FlatList, RefreshControl, StyleSheet, Text, SafeAreaView, TouchableOpacity, View, TextInput, Alert, Dimensions, Platform } from 'react-native'
+import { FlatList, RefreshControl, StyleSheet, Text, SafeAreaView, TouchableOpacity, View, TextInput, Alert, Dimensions} from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
 import Modal from 'react-native-modal'
 import {Ionicons, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
 import { Image, ImageBackground } from 'expo-image'
-import { AuthContext } from '../utils/AuthContext'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import { EndService, HelperCompleteProof, Request, RequestByHelperid, ShowRequestWithId, StartService } from '../utils/AuthRoute'
+import { EndService, HelperCompleteProof, Request, RequestByHelperid, ShowAcceptedRequestByHelperid, ShowRequestWithId, StartService } from '../utils/AuthRoute'
 import axios from 'axios'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
 
 
 
-const WIDTH = Dimensions.get('window').width
-const HEIGHT = Dimensions.get('window').height
-
-
-
-const AcceptedRequest = ({navigation}) => {
-  const [request, setRequest] = useState('')
+const AcceptedRequest = ({navigation, route}) => {
+  const [request, setRequest] = useState([])
   const authCtx = useContext(AuthContext)
   const [refresh, setRefresh] = useState(false)
   const [isModalEndServiceVisible, setIsModalEndServiceVisible] = useState(false)
@@ -38,28 +38,20 @@ const AcceptedRequest = ({navigation}) => {
       // do something
       try {
         setIsLoading(true)
-        const response = await RequestByHelperid(authCtx.Id , authCtx.token)
-        // console.log(response)
+        const response = await ShowAcceptedRequestByHelperid(authCtx.Id , authCtx.token)
         setRequest(response)
-        var count = Object.keys(response).length;
-        let cityArray = []
-        for (var i = 0; i < count; i++){
-        cityArray.push({
-            label: response[i].id,
-        })
-      }
-        setCustomerId(cityArray)
-        // fetchDataForItem(cityArray);
-       
-      setIsLoading(false)
-    } catch (error) {
-      // console.log(error)
-      Alert.alert("Sorry", "An error occured try again later", [
-        {
+        console.log(response)
+        setIsLoading(false)
+      } catch (error) {
+        setIsLoading(true)
+        Alert.alert("Sorry", `An error occured try again later`, [
+          {
             text:"Ok",
             onPress: () => navigation.goBack()
           }
         ])
+          console.log(error)
+        setIsLoading(false)
         return;
       }
     });
@@ -71,23 +63,15 @@ const AcceptedRequest = ({navigation}) => {
   const pull = async () => {
     try {
       setIsLoading(true)
-      const response = await RequestByHelperid(authCtx.Id , authCtx.token)
+      const response = await ShowAcceptedRequestByHelperid(authCtx.Id , authCtx.token)
       setRequest(response)
-      var count = Object.keys(response).length;
-      let cityArray = []
-      for (var i = 0; i < count; i++){
-      cityArray.push({
-          label: response[i].customer_id,
-      })
-    }
-    setCustomerId(cityArray)
       setIsLoading(false)
     } catch (error) {
       // console.log(error)
       Alert.alert("Sorry", "An error occured try again later", [
         {
           text:"Ok",
-          onPress: () => navigation.goBack()
+          onPress: () => {}
         }
       ])
       return;
@@ -133,7 +117,7 @@ const AcceptedRequest = ({navigation}) => {
 
   const refreshme = async () => {
     setIsLoading(true)
-    const response = await Request(authCtx.catId, authCtx.token)
+    const response = await ShowAcceptedRequestByHelperid(authCtx.Id, authCtx.token)
     // console.log(response)
     setRequest(response)
     setIsLoading(false)
@@ -177,11 +161,11 @@ const AcceptedRequest = ({navigation}) => {
         }
       ])
     } catch (error) {
-      // console.log(error.response.data)
-      Alert.alert("Sorry", "An error occured try again later", [
+      console.log(error.response.data)
+      Alert.alert("Sorry", error.response.data.message, [
         {
           text:"Ok",
-          onPress: () => navigation.goBack()
+          onPress: () => refreshme()
         }
       ])
       return;
@@ -248,35 +232,6 @@ const AcceptedRequest = ({navigation}) => {
 
   const AssignedHelper = authCtx.Id.toLocaleString()
 
-  // const fetchDataForItem = async (item) => {
-  //   let cityArray = []
-
-  //   for(const it of item){
-  //     try {
-  //       const response = await axios.get(`https://igoeppms.com/igoepp/public/api/auth/hrequest/helperhelpchatcountunread/${it.label}`, {
-  //         headers:{
-  //           Accept: 'application/json',
-  //           Authorization: `Bearer ${authCtx.token}`
-  //         }
-  //       });
-  //       cityArray.push(response.data)
-  //     } catch (error) {
-  //       console.log(error.response);
-  //        // Propagate the error
-  //     }
-  //   }
-
-  //   setItems(cityArray)
-
-  // };
-
-  // const fetchAllDataSequentially = async () => {
-   
-  // };
-
-  // fetchAllDataSequentially()
-
-  // console.log(items)
 
   if(isLoading){
     return <LoadingOverlay message={"..."}/>
@@ -286,7 +241,7 @@ const AcceptedRequest = ({navigation}) => {
   return (
     <View style={{marginTop:marginStyle.marginTp, marginHorizontal:10, flex:1}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <Text style={styles.acceptedtxt}>AcceptedRequest</Text>
+      <Text style={styles.acceptedtxt}>Accepted Request</Text>
 
       <>
       {request.length ===  0 ? <NoAcceptedRequest/> :
@@ -389,7 +344,7 @@ const AcceptedRequest = ({navigation}) => {
 
                : item.customer_statisfy === null ? 
                <>
-               <Text style={[styles.completeservicetext, {position:'absolute', top:-50, left:'68%',  fontSize:10} ]}>Satisfaction Pending</Text>
+               <Text style={[styles.completeservicetext, {position:'absolute', top:-50, left:'65%',  fontSize:10} ]}>Satisfaction Pending</Text>
                
                <TouchableOpacity style={styles.cancelbtn} onPress={() =>
                 navigation.navigate("UploadScreen", {

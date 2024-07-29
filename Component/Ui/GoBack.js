@@ -12,6 +12,7 @@ const GoBack = ({onPress, children}) => {
   )
 }
 
+
 export default GoBack
 
 const styles = StyleSheet.create({})

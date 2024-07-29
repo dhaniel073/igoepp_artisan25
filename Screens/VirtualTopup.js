@@ -1,24 +1,30 @@
-import { Alert, Keyboard, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import axios from 'axios'
+import { SafeAreaView, ScrollView, StyleSheet, Text, Alert, TouchableOpacity, View, TextInput, Pressable, Keyboard } from 'react-native'
+import React, {useEffect, useState, useContext} from 'react'
 import { Dropdown } from 'react-native-element-dropdown'
-import { AuthContext } from '../utils/AuthContext'
+import {Platform} from 'react-native';
 import { Image, ImageBackground } from 'expo-image'
 import Modal from 'react-native-modal'
-import { HelperBillerCommission, HelperSelf, HelperThirdParty, HelperUrl, HelperVtuAirtime, HelperVtuData, ValidatePin } from '../utils/AuthRoute'
-import {MaterialIcons, Entypo, MaterialCommunityIcons} from '@expo/vector-icons'
-import Input from '../Components/Ui/Input'
-import SubmitButton from '../Components/Ui/SubmitButton'
+import {MaterialCommunityIcons, MaterialIcons, Entypo, AntDesign} from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
+import axios from 'axios'
+import { useRef } from 'react'
 import styled from 'styled-components'
-import OTPFieldInput from '../Components/Ui/OTPFieldInput'
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import { HelperBillerCommission, HelperSelf, HelperThirdParty, HelperUrl, HelperVtuAirtime, HelperVtuData, ValidatePin } from '../utils/AuthRoute'
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
 
-const StyledButton = styled.TouchableOpacity`
+  const StyledButton = styled.TouchableOpacity`
   padding: 15px;
-  background-color: ${Color.darkolivegreen_100};
+  background-color: ${Color.new_color};
   justify-content: center;
   align-items: center;
   border-radius: 5px;
@@ -34,8 +40,6 @@ export const ButtonText = styled.Text`
 `;
 
 
-
-
 const data = [
   { label: 'Self', value: 'self' },
   { label: 'Third Party', value: 'thirdparty' },
@@ -43,18 +47,13 @@ const data = [
 
 
 
-const VirtualTopup = ({navigation, route}) => {
+const VirtualTopUp = ({navigation, route}) => {
   const [category, setcategory] = useState([])
   const [isloading, setisloading] = useState(false)
-  const [ischecking, setischecking] = useState(false)
   const [id, setid] = useState('')
   const [isFocus, setisFocus] = useState(false)
   const [isSelfFocus, setIsSelfFocus] = useState(false)
-  
-  const [code, setCode] = useState('')
-  const [pinReady, setPinReady] = useState(false)
-  const MAX_CODE_LENGTH = 4;
-
+    
     const [requestId, setRequestId] = useState()
     const [bosquet, setBosquet] = useState([])
     const [bosquetData, setBosquetData] = useState()
@@ -67,19 +66,26 @@ const VirtualTopup = ({navigation, route}) => {
     const [ref, setRef] = useState()
     const [amount, setAmount] = useState()
     const [isModalVisble, setModalVisible] = useState(false)
+    const [ischecking, setischecking] = useState(false)
+    const [pinerrormessage, setPinerrorMessage] = useState('')
+    const [commissonvalue, setcommissonvalue] = useState()
+
+    const [responseMessage, setresponseMessage] = useState()
+    
+    const [code, setCode] = useState('')
+    const [pinReady, setPinReady] = useState(false)
+    const MAX_CODE_LENGTH = 4;
 
 
     const maindate = new Date() 
     const date = maindate.toLocaleDateString()
     const time = maindate.toLocaleTimeString()
 
-    const [pinT, setpinT] = useState()
-    const [pinvalid, setpinvalid] = useState(false)
-    const [pincheckifempty, setpincheckifempty] = useState([])
-    const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
-    const [pinerrormessage, setPinerrorMessage] = useState('')
-    const [commissonvalue, setcommissonvalue] = useState()
-      
+    
+  const [pinT, setpinT] = useState()
+  const [pinvalid, setpinvalid] = useState(false)
+  const [pincheckifempty, setpincheckifempty] = useState([])
+  const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
     
     // const phone = self === "self" && authCtx.phone 
     const DATACHECK = id.includes('DATA')
@@ -91,28 +97,84 @@ const VirtualTopup = ({navigation, route}) => {
     let reqId;
 
     // console.log(authCtx.phone)
-  
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', async () => {
-      try {
-        setisloading(true)
-        const response = await HelperUrl(authCtx.Id, authCtx.token)
-        setpincheckifempty(response.transaction_pin_setup)
-        setisloading(false)
-      } catch (error) {
-        setisloading(true)
-        Alert.alert('Error', "An error occured try again later", [
-          {
-            text:"Ok",
-            onPress: () => navigation.goBack()
-          }
-        ])
-        setisloading(false)
-        // return;
+
+    useEffect(() => {
+      const unsubscribe = navigation.addListener('focus', async () => {
+        try {
+          setisloading(true)
+          const response = await HelperUrl(authCtx.Id, authCtx.token)
+          setpincheckifempty(response.transaction_pin_setup)
+          setisloading(false)
+        } catch (error) {
+          setisloading(true)
+          setisloading(false)
+          return;
+        }
+      })
+      return unsubscribe;
+    }, [])
+
+  const viewRef = useRef();
+
+  const captureAndShare = async () => {
+    try {
+      // Capture the screenshot
+      const uri = await captureRef(viewRef, {
+        format: 'png',
+        quality: 1,
+      });
+
+      // Share the screenshot
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error('Error capturing and sharing screenshot:', error);
+    }
+  };
+
+  const captureAndSaveScreen = async () => {
+    try {
+      // Capture the screen
+      const uri = await captureRef(viewRef, {
+        format: 'png',
+        quality: 1.0,
+      });
+
+      // Get permission to access media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access media library is required!');
+        return;
       }
-    })
-    return unsubscribe;
-  }, [])
+
+      // Define the custom file name
+      const fileName = `receipt_${new Date().getTime()}.png`;
+      const downloadDir = FileSystem.documentDirectory + 'Download/';
+      const fileUri = downloadDir + fileName;
+
+      // Ensure the download directory exists
+      await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
+
+      // Move the captured image to the download directory with the custom name
+      await FileSystem.moveAsync({
+        from: uri,
+        to: fileUri,
+      });
+
+      // Save the file to the device's download folder
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      const album = await MediaLibrary.getAlbumAsync('Download');
+      if (album == null) {
+        await MediaLibrary.createAlbumAsync('Download', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      }
+
+      Alert.alert('Receipt saved successfully!');
+    } catch (error) {
+      console.error('Failed to capture and save screen:', error);
+      Alert.alert('Failed to save receipt!');
+    }
+  };
 
   useEffect(() => {
     setisloading(true)
@@ -142,12 +204,12 @@ const VirtualTopup = ({navigation, route}) => {
 
   const updatevalue = (inputType, enteredValue) => {
     switch(inputType){
-      case 'phonevalidation':
-        setPhoneValidation(enteredValue);
-        break;
-      case 'amount':
-        setAmount(enteredValue);
-        break;
+        case 'phonevalidation':
+            setPhoneValidation(enteredValue);
+            break;
+        case 'amount':
+            setAmount(enteredValue);
+            break;
     }
 }
 
@@ -156,26 +218,26 @@ const getBouquets = (value) => {
     
     const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBouquetByBillerID/${authId}/${value}`
     const response = axios.get(url, {
-        headers:{
-            Accept:'application/json',
-            Authorization: `Bearer ${authCtx.token}`
-        }
+      headers:{
+        Accept:'application/json',
+        Authorization: `Bearer ${authCtx.token}`
+      }
     }).then((res) => {
-        // console.log(res.data.data.bouquets)
-        var count = Object.keys(res.data.data.bouquets).length;
-        let catarray = []
-        for (var i = 0; i < count; i++){
-            catarray.push({
-                label: res.data.data.bouquets[i].name,
-                value: res.data.data.bouquets[i].code,
-                price: res.data.data.bouquets[i].price
-            })
-            // setCityCode(response.data.data[i].lga_code)
-        }
-        setBosquet(catarray)
+      // console.log(res.data.data.bouquets)
+      var count = Object.keys(res.data.data.bouquets).length;
+      let catarray = []
+      for (var i = 0; i < count; i++){
+        catarray.push({
+          label: res.data.data.bouquets[i].name,
+          value: res.data.data.bouquets[i].code,
+          price: res.data.data.bouquets[i].price
+        })
+        // setCityCode(response.data.data[i].lga_code)
+      }
+      setBosquet(catarray)
     }).catch((error) => {
-        // console.log(error.response)
-        return;
+      // console.log(error.response)
+      return;
     })
   }
   const toggleModal = () => {
@@ -185,38 +247,40 @@ const getBouquets = (value) => {
   const TopupAirtime = () => {
     if(self === 'self'){
         // alert(self + " self")
-        if(AIRTIMECHECK){
-            if(amountCheck && authCtx.phone){
-                // alert(amount + " " + authCtx.phone + " " + self)
-                mobilevalidationSelf()
-            }else{
-                Alert.alert("Error", "invalid details")
-            }
-        }else if(DATACHECK){
-            if(bosquetData){
-                mobilevalidationSelf()
-                // alert("DATA" + " "+ bosquetData + " " +self)
-            }else{
-
-            }
+      if(AIRTIMECHECK){
+        if(amountCheck && authCtx.phone){
+          // alert(amount + " " + authCtx.phone + " " + self)
+          mobilevalidationSelf()
+        }else{
+          Alert.alert("Error", "invalid details")
         }
+      }else if(DATACHECK){
+        if(bosquetData){
+          mobilevalidationSelf()
+          // alert("DATA" + " "+ bosquetData + " " +self)
+        }else{
+
+        }
+      }
     }else{
-        if(AIRTIMECHECK){
-          if(amountCheck && phonecheck){
-              mobilevalidationThirdparty()
-          }else{
-              Alert.alert("Error", "invalid details")
-          }
-        }else if(DATACHECK){
-          if(bosquetData && phonecheck){
-              mobilevalidationThirdparty()
-          }else{
-              Alert.alert("Error", "invalid details")
-          }
+      if(AIRTIMECHECK){
+        if(amountCheck && phonecheck){
+          mobilevalidationThirdparty()
+        }else{
+          Alert.alert("Error", "invalid details")
+        }
+      }else if(DATACHECK){
+        if(bosquetData && phonecheck){
+          mobilevalidationThirdparty()
+        }else{
+          Alert.alert("Error", "invalid details")
         }
       }
     }
+  }
 
+    // console.log(requestId)
+    
     const mobilevalidationThirdparty = async () => {
       try {
         setisloading(true)
@@ -276,44 +340,44 @@ const getBouquets = (value) => {
 
     const mobilevalidationSelf = async () => {
       try {
-          setisloading(true)
-          const response = await HelperSelf(authCtx.Id, authCtx.token)
-          // console.log(response)
-          setRequestId(response.requestID)
-          if(response.status === "Success"){
-              if(DATACHECK){
-                  Alert.alert("Confirm Purchase", `Confirm Data Topup for ${authCtx.phone}`, [
-                    {
-                      text: "Cancel",
-                      onPress: () => {}
-                    },
-                    {
-                      text:'Confirm',
-                      onPress: () => toggleModal1()
-                    }
-                  ])
-              }else{
-                  if(AIRTIMECHECK){
-                    Alert.alert("Confirm Purchase", `Confirm Airtime Purchase for ${authCtx.phone}`, [
-                      {
-                        text: "Cancel",
-                        onPress: () => []
-                      },
-                      {
-                        text:'Confirm',
-                        onPress: () => toggleModal1()
-                      }
-                    ])
-                  }
+        setisloading(true)
+        const response = await HelperSelf(authCtx.Id, authCtx.token)
+        // console.log(response)
+        setRequestId(response.requestID)
+        if(response.status === "Success"){
+          if(DATACHECK){
+            Alert.alert("Confirm Purchase", `Confirm Data Topup for ${authCtx.phone}`, [
+              {
+                text: "Cancel",
+                onPress: () => {}
+              },
+              {
+                text:'Confirm',
+                onPress: () => toggleModal1()
               }
-              setisloading(false)
+            ])
           }else{
-              Alert.alert("Error", response, [
+            if(AIRTIMECHECK){
+              Alert.alert("Confirm Purchase", `Confirm Airtime Purchase for ${authCtx.phone}`, [
                 {
-                  text:"Ok",
-                  onPress: () => {}
+                  text: "Cancel",
+                  onPress: () => []
+                },
+                {
+                  text:'Confirm',
+                  onPress: () => toggleModal1()
                 }
               ])
+            }
+          }
+          setisloading(false)
+          }else{
+            Alert.alert("Error", response, [
+              {
+                text:"Ok",
+                onPress: () => {}
+              }
+            ])
           }
           setisloading(false)
       } catch (error) {
@@ -328,31 +392,21 @@ const getBouquets = (value) => {
           setisloading(false)
 
       }
-  }
-
-  const commissionget = async (id) => {
-     try {
-       const response = await HelperBillerCommission(id, authCtx.token)
-      //  console.log(response)
-       setcommissonvalue(response)
-     } catch (error) {
-       return;
-     }
    }
 
-  let refT = useRef(0);
+   let refT = useRef(0);
   
-  function handleClick() {
-    refT.current = refT.current + 1;
-    // alert('You clicked ' + ref.current + ' times!');
-  }
+   function handleClick() {
+     refT.current = refT.current + 1;
+     // alert('You clicked ' + ref.current + ' times!');
+   }
+ 
+   const toggleModal1 = () => {
+     setisSetpinModalVisible(!isSetpinModalVisible)
+   }
+   
 
-  const toggleModal1 = () => {
-    setisSetpinModalVisible(!isSetpinModalVisible)
-  }
-  
-
-  const pinValidateCheck = async () => {
+   const pinValidateCheck = async () => {
     if(refT.current > 3){
       Alert.alert("", "To many attempt, try again later", [
         {
@@ -371,10 +425,11 @@ const getBouquets = (value) => {
         }else{
           airtimetopup()
         }
+        setischecking(false)
       } catch (error) {
         setischecking(true)
         setCode('')
-        setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " attempts remaining"))
+        setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
         // console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
           {
@@ -388,6 +443,17 @@ const getBouquets = (value) => {
     }
   }
 
+  const commissionget = async (id) => {
+     try {
+       const response = await HelperBillerCommission(id, authCtx.token)
+       console.log(response)
+       setcommissonvalue(response)
+     } catch (error) {
+       return;
+     }
+   }
+
+
   
   const airtimetopup = async () => {
     toggleModal1()
@@ -397,33 +463,44 @@ const getBouquets = (value) => {
         // console.log(response)
 
         if(response.message === "failed" || "Failed" && response.description === "Insufficient wallet balance"){
-          Alert.alert("Failed", response.description, [
-            {
-              text:"Ok",
-              onPress:() => navigation.goBack()
-            }
-          ])
+            Alert.alert("Failed", response.description, [
+              {
+                text:"Ok",
+                onPress:() => navigation.goBack()
+              }
+            ])
           }else{
-            schedulePushNotification(response)
+            // schedulePushNotification(response)
+            setRef(response.requestID)
+            setresponseMessage(response.message)
             toggleModal()
           }
         setisloading(false)
     } catch (error) {
-        setisloading(true)
-        Alert.alert("Error", "An error occured please try again later", [
-            {
-              text:'Ok',
-              onPress: () => navigation.goBack()
-            }
-          ])
-          setisloading(false)
-        // console.log(error.response)
+      console.log(error.response.data)
+      setisloading(true)
+      if(error.response.data.message === "Insufficient Balance"){
+        Alert.alert("Sorry", error.response.data.message, [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+        ])
+      }else{
+        Alert.alert("Sorry", "An error occured", [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+        ])
+      }
+      setisloading(false)
+      return;
     }
   }
 
 const datatoptup = async() => {
-  toggleModal1()
-    // setRef()
+    toggleModal1()
     // console.log(requestID, id, bosquetPrice, bosquetData, authCtx.token)
     try {
       setisloading(true)
@@ -431,27 +508,39 @@ const datatoptup = async() => {
         // console.log(response)
 
         if(response.message === "failed" || "Failed" && response.description === "Insufficient wallet balance"){
-          Alert.alert("Failed", response.description, [
-            {
-              text:"Ok",
-              onPress:() => navigation.goBack()
-            }
-          ])
+            Alert.alert("Failed", response.description, [
+              {
+                text:"Ok",
+                onPress:() => navigation.goBack()
+              }
+            ])
           }else{
-            schedulePushNotification(response)
+            // schedulePushNotification(response)
+            setresponseMessage(response.message)
+            setRef(response.requestID)
             toggleModal()
         }
         setisloading(false)
     } catch (error) {
-        setisloading(true)
-        // console.log(error.response)
-        Alert.alert("Error", "An error occured please try again later", [
-            {
-              text:'Ok',
-              onPress: () => navigation.goBack()
-            }
+      console.log(error.response.data)
+      setisloading(true)
+      if(error.response.data.message === "Insufficient Balance"){
+        Alert.alert("Sorry", error.response.data.message, [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
         ])
-        setisloading(false)   
+      }else{
+        Alert.alert("Sorry", "An error occured", [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+        ])
+      }
+      setisloading(false)
+      return;  
     }
   }
 
@@ -459,7 +548,7 @@ const datatoptup = async() => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: `${id} Purchase 🔔`,
-        body: `${id} ${response.message}.\nAmount: ${DATACHECK ? bosquetPrice : amount} \nPhone Number ${self === "self" ? authCtx.phone : phoneValidation} \nReference: ${response.requestID} \nDate: ${date} ${time}`,
+        body: `${id} ${responseMessage}.\nAmount: ${DATACHECK ? bosquetPrice : amount} \nPhone Number ${self === "self" ? authCtx.phone : phoneValidation} \nReference: ${ref} \nDate: ${date} ${time}`,
         data: { data: 'goes here' },
       },
       trigger: { seconds: 10 },
@@ -470,24 +559,23 @@ const datatoptup = async() => {
   if(isloading){
     return <LoadingOverlay message={"..."}/>
   }
-
   return (
     <ScrollView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <Text style={styles.internettxt}>Virtual Top-up</Text>
+      <Text style={styles.virtualtopuptxt}>Virtual Top Up</Text>
 
+      
       {
-        pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
+        pincheckifempty === "N" ?  Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
           {
             text: "Ok",
-            onPress: () =>  navigation.navigate('TransactionPin')
+            onPress: () => navigation.navigate('TransactionPin')
           },
           {
             text: "Cancel",
             onPress: () => navigation.goBack()
           }
         ]) 
-
         :
 
         <>
@@ -549,12 +637,14 @@ const datatoptup = async() => {
                 onFocus={() => setIsSelfFocus(true)}
                 onBlur={() => setIsSelfFocus(false)}
                 onChange={item => {
-                  setSelf(item.value);
-                  setIsSelfFocus(false);
+                    setSelf(item.value);
+                    setIsSelfFocus(false);
+                    
+                    
                 }}
                 />
             <View style={{ marginBottom:30}}/>
-              </>
+                </>
             }
 
             {DATACHECK && 
@@ -610,62 +700,11 @@ const datatoptup = async() => {
               </View>
             }
           </View>
-      </>
-    }
+          </>
 
-        <Modal isVisible={isSetpinModalVisible} animationInTiming={500}>
-        <SafeAreaView style={styles.centeredView}>
-        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal1(), setpinT()]}>
-          <MaterialIcons name="cancel" size={30} color="white" />
-        </TouchableOpacity>
-          <View style={[styles.modalView, {width: DIMENSION.WIDTH * 0.7}]}>
-            {
-              ischecking ? 
-              <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
-                <LoadingOverlay/>  
-              </View>
+        }
 
-              :
-              <>
-            <View>
-            <Text style={[styles.modalText, {fontSize:14}]}>Enter Transaction Pin</Text>
-
-            <SafeAreaView style={{justifyContent:'center', alignItems:'center', marginHorizontal:40}}>
-              <TextInput
-                keyboardType={"numeric"}
-                maxLength={4}
-                style={{fontSize:25, textAlign:'center',width:150, margin:5, borderBottomWidth:1, padding:5}}
-                onChangeText={setpinT}
-                value={pinT}
-                isInvalid={pinvalid}
-                onFocus={() => [setpinvalid(false), setPinerrorMessage('')]}
-                secureTextEntry
-              />
-              {
-                pinvalid &&
-                <Text style={{fontSize:11, textAlign:'center', color:Color.tomato}}>Pin must be 4 characters</Text>
-              }
-              {
-                pinerrormessage.length !== 0 && <Text  style={{fontSize:11, textAlign:'center', color:Color.tomato}}>{pinerrormessage}</Text>
-              }
-            </SafeAreaView>
-            <View style={{marginBottom:'5%'}}/>
-            </View>
-
-            <View style={{flexDirection:'row', justifyContent:'center'}}>
-              <TouchableOpacity style={styles.cancelbtn} onPress={() => pinT === null || pinT === undefined || pinT === "" || pinT.length < 4  ? setpinvalid(true) : [handleClick(), pinValidateCheck()]}>
-                <Text style={{textAlign:'center', color:Color.white, fontFamily: 'poppinsRegular'}}>Continue</Text>
-              </TouchableOpacity>
-            </View>             
-              {/* </View> */}
-              </>
-            }
-            
-          </View>
-          </SafeAreaView>
-        </Modal>
-
-        <Modal isVisible={isSetpinModalVisible}>
+          <Modal isVisible={isSetpinModalVisible}>
             <Pressable  onPress={Keyboard.dismiss} style={styles.centeredView}>
             <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal1(), setCode('')]}>
                 <MaterialIcons name="cancel" size={30} color="white" />
@@ -677,6 +716,7 @@ const datatoptup = async() => {
                 <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
                     <LoadingOverlay/>  
                 </View>
+
                 :
               <>
             <View style={{marginTop: '13%'}}/>
@@ -694,7 +734,7 @@ const datatoptup = async() => {
             <StyledButton disabled={!pinReady} 
             onPress={() => [handleClick(), pinValidateCheck()]}
             style={{
-                backgroundColor: !pinReady ? Color.gray_100 : Color.new_color
+                backgroundColor: !pinReady ? Color.grey : Color.new_color
             }}>
                 <ButtonText
                 style={{
@@ -709,13 +749,14 @@ const datatoptup = async() => {
         </Modal>
 
 
+
             <Modal isVisible={isModalVisble}>
             <SafeAreaView style={styles.centeredView}>
 
-            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), navigation.goBack()]}>
+            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack()]}>
               <MaterialIcons name="cancel" size={30} color="white" />
             </TouchableOpacity>
-            <View style={styles.modalView}>
+            <View style={styles.modalView} ref={viewRef}>
             <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.1,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
               <Text style={styles.modalText}>Reciept</Text>
                 {/* <Text style={{fontFamily:'poppinsRegular'}}>------------------------------</Text> */}
@@ -726,7 +767,7 @@ const datatoptup = async() => {
                    <View style={{borderBottomWidth:0.5, marginTop:5}}/>
                 }
                 
-                  <View style={{marginBottom:10, marginTop:25}}>
+                  <View style={{marginBottom:25, marginTop:25}}>
                       
                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Phone Number</Text>
@@ -758,12 +799,16 @@ const datatoptup = async() => {
 
                        <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
                         
-                          <TouchableOpacity style={{}} onPress={() => {}}>
-                                <Text><Entypo name="forward" size={24} color="black" /></Text>
+                          <TouchableOpacity style={{}} onPress={() => captureAndShare()}>
+                                <Text><Entypo name="forward" size={24} color={Color.new_color} /></Text>
                           </TouchableOpacity>
 
-                          <TouchableOpacity style={{}} onPress={() => [toggleModal(),  navigation.goBack()]}>
-                              <Text style={styles.viewtext}>Close</Text>
+                          <TouchableOpacity onPress={() => captureAndSaveScreen()}>
+                            <AntDesign name="download" size={24} color={Color.new_color} />
+                          </TouchableOpacity>
+
+                          <TouchableOpacity style={{}} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack()]}>
+                              <Text style={{}}>Close</Text>
                           </TouchableOpacity>
                         </View>
                     </View>              
@@ -774,22 +819,25 @@ const datatoptup = async() => {
   )
 }
 
-export default VirtualTopup
+export default VirtualTopUp
 
 const styles = StyleSheet.create({
-  cancelbtn: {
-    backgroundColor: Color.new_color,
-    borderRadius: 3,
+  virtualtopuptxt:{
+    fontSize: 16,
+    color: Color.new_color,
+    fontFamily: 'poppinsSemiBold',
+    left: 10,
+    marginTop:10,
+    marginBottom:15,
+  },
+  cancel:{
+    backgroundColor:Color.new_color,
+    borderColor: Color.new_color,
+    borderWidth: 1,
     justifyContent:'center',
+    borderRadius: 3,
     width: DIMENSION.WIDTH * 0.36,
     padding: 5
-  },
-  centeredView: {
-    flex: 1,
-    // backgroundColor: Color.light_black,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // marginTop: 22,
   },
   modalView1: {
     backgroundColor: 'white',
@@ -798,6 +846,13 @@ const styles = StyleSheet.create({
     // flex:1,
     alignItems:'center',
     height: DIMENSION.HEIGHT * 0.4
+  },
+  centeredView: {
+    flex: 1,
+    // backgroundColor: Color.light_black,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // marginTop: 22,
   },
   modalView: {
     margin: 20,

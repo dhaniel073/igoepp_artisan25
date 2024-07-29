@@ -1,24 +1,32 @@
-import { Platform, SafeAreaView, ScrollView, StyleSheet,TouchableOpacity, Text, View, Alert, TextInput, Keyboard, Pressable } from 'react-native'
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
-import axios from 'axios'
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, TextInput, Pressable, Keyboard } from 'react-native'
+import React, {useState, useContext, useEffect, useRef} from 'react'
 import { Dropdown } from 'react-native-element-dropdown'
-import { AuthContext } from '../utils/AuthContext'
 import { Image, ImageBackground } from 'expo-image'
-import Input from '../Components/Ui/Input'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import { HelperBillerCommission, HelperUrl, TvPayment, TvRenewalPay, ValidatePin, ValidateTv } from '../utils/AuthRoute'
+import {MaterialIcons, MaterialCommunityIcons, Entypo, AntDesign} from '@expo/vector-icons'
 import Modal from 'react-native-modal'
-import {Entypo, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
+import { HelperBillerCommission, HelperUrl, TvPayment, TvRenewalPay, ValidatePin, ValidateTv } from '../utils/AuthRoute'
+import axios from 'axios'
 import * as Notifications from 'expo-notifications'
 import styled from 'styled-components'
-import OTPFieldInput from '../Components/Ui/OTPFieldInput'
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import {Border, Color, DIMENSION, FontSize, marginStyle} from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
+
+
+
 
 const StyledButton = styled.TouchableOpacity`
   padding: 15px;
-  background-color: ${Color.darkolivegreen_100};
+  background-color: ${Color.new_color};
   justify-content: center;
   align-items: center;
   border-radius: 5px;
@@ -34,7 +42,7 @@ export const ButtonText = styled.Text`
 `;
 
 
-const Television = ({navigation, route}) => {
+const Television = ({route, navigation}) => {
   const [category, setcategory] = useState([])
   const [isLoading, setisLoading] = useState(false)
   const [isFocus, setisFocus] = useState()
@@ -53,24 +61,88 @@ const Television = ({navigation, route}) => {
   const [code, setCode] = useState('')
   const [pinReady, setPinReady] = useState(false)
   const MAX_CODE_LENGTH = 4;
-  
+
   const maindate = new Date() 
   const date = maindate.toDateString()
   const time = maindate.toLocaleTimeString()
-  const [commissonvalue, setcommissonvalue] = useState()
-  
+
+  const [responseId, setresponseId] = useState()
+  const [responseMessage, setresponseMessage] = useState()
+
   const [pinT, setpinT] = useState()
   const [pinvalid, setpinvalid] = useState(false)
   const [pincheckifempty, setpincheckifempty] = useState([])
   const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
   const [pinerrormessage, setPinerrorMessage] = useState('')
   const [ischecking, setischecking] = useState(false)
+  const [commissonvalue, setcommissonvalue] = useState()
 
 
   const authCtx = useContext(AuthContext)
   const authId = route?.params?.id
 
-  
+  const viewRef = useRef();
+
+  const captureAndShare = async () => {
+    try {
+      // Capture the screenshot
+      const uri = await captureRef(viewRef, {
+        format: 'png',
+        quality: 1,
+      });
+
+      // Share the screenshot
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error('Error capturing and sharing screenshot:', error);
+    }
+  };
+
+  const captureAndSaveScreen = async () => {
+    try {
+      // Capture the screen
+      const uri = await captureRef(viewRef, {
+        format: 'png',
+        quality: 1.0,
+      });
+
+      // Get permission to access media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access media library is required!');
+        return;
+      }
+
+      // Define the custom file name
+      const fileName = `receipt_${new Date().getTime()}.png`;
+      const downloadDir = FileSystem.documentDirectory + 'Download/';
+      const fileUri = downloadDir + fileName;
+
+      // Ensure the download directory exists
+      await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
+
+      // Move the captured image to the download directory with the custom name
+      await FileSystem.moveAsync({
+        from: uri,
+        to: fileUri,
+      });
+
+      // Save the file to the device's download folder
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      const album = await MediaLibrary.getAlbumAsync('Download');
+      if (album == null) {
+        await MediaLibrary.createAlbumAsync('Download', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      }
+
+      Alert.alert('Receipt saved successfully!');
+    } catch (error) {
+      console.error('Failed to capture and save screen:', error);
+      Alert.alert('Failed to save receipt!');
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
       try {
@@ -93,9 +165,6 @@ const Television = ({navigation, route}) => {
     return unsubscribe;
   }, [])
 
-
- 
-
   useEffect(() => {
     setisLoading(true)
     const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
@@ -110,7 +179,7 @@ const Television = ({navigation, route}) => {
         let catarray = []
         for (var i = 0; i < count; i++){
             catarray.push({
-                label: res.data[i].name === "SHOMAX" ? null : res.data[i].name,
+                label: res.data[i].name,
                 value: res.data[i].id,
             })
             // setCityCode(response.data.data[i].lga_code)
@@ -133,19 +202,19 @@ const Television = ({navigation, route}) => {
             Authorization: `Bearer ${authCtx.token}`
         }
     }).then((res) => {
-        var count = Object.keys(res.data.data.bouquets).length;
-        let catarray = []
-        for (var i = 0; i < count; i++){
-            catarray.push({
-                label: res.data.data.bouquets[i].name,
-                value: res.data.data.bouquets[i].code,
-                price: res.data.data.bouquets[i].price
-            })
-        }
-        setBouquet(catarray)
+      var count = Object.keys(res.data.data.bouquets).length;
+      let catarray = []
+      for (var i = 0; i < count; i++){
+        catarray.push({
+          label: res.data.data.bouquets[i].name,
+          value: res.data.data.bouquets[i].code,
+          price: res.data.data.bouquets[i].price
+        })
+      }
+      setBouquet(catarray)
     }).catch((error) => {
-        // console.log(error.response.data)
-        return;
+      // console.log(error.response.data)
+      return;
     })
   }
 
@@ -173,14 +242,22 @@ const Television = ({navigation, route}) => {
       // console.log(response)
       if(response.data.status === "Success"){
         if(id === "DSTVR" || id === "GOTVR"){
-        setRef(response.data.requestID)
-        setUserName(response.data.customerName)
-        setRPrice(response.data.dueAmount)
-        toggleConfirmModal()
+          if(Platform.OS === 'ios'){
+            return navigation.navigate('TelevisionIos', {data: response.data, id: id, smartcard: smartcard, price:price, commissonvalue: commissonvalue, bouquetData: bouquetData })
+          }else{
+            setRef(response.data.requestID)
+            setUserName(response.data.customerName)
+            setRPrice(response.data.dueAmount)
+            toggleConfirmModal()
+          }
         }else{
-        setRef(response.data.requestID)
-        setUserName(response.data.customerName)
-        toggleConfirmModal()
+          if(Platform.OS === 'ios'){
+            return navigation.navigate('TelevisionIos', {data: response.data, id: id, smartcard: smartcard, price: price, commissonvalue: commissonvalue, bouquetData: bouquetData})
+          }else{
+            setRef(response.data.requestID)
+            setUserName(response.data.customerName)
+            toggleConfirmModal()
+          }
         }
       }else{
         Alert.alert("Failed", response.data, [
@@ -206,6 +283,9 @@ const Television = ({navigation, route}) => {
     }
   }
 
+
+  // console.log(ref)
+
   const tvRenewalPayment = async (data) => {
     toggleModal1()
     try {
@@ -221,26 +301,43 @@ const Television = ({navigation, route}) => {
             }
           ])
         }else{
-          schedulePushNotification(response)
           setRef(response.data.requestID)
           setRPrice(response.data.dueAmount)
+          setresponseMessage(response.data.message)
           toggleModal()
         }
       setisLoading(false)
     } catch (error) {
       setisLoading(true)
-      Alert.alert("Sorry", "An error occured try again later", [
-        {
+      if(error.response.data.message === "Insufficient Balance"){
+        Alert.alert("Sorry", error.response.data.message, [
+          {
             text:"Ok",
-            onPress: () => navigation.goBack()
-        }
-    ])
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+      ])}else{
+        Alert.alert("Sorry", "An error occured try again later", [
+          {
+              text:"Ok",
+              onPress: () => navigation.goBack()
+          }
+        ])
+      }
       // console.log(error.response.data)
       setisLoading(false)
       return;
     }
   }
 
+  const commissionget = async (id) => {
+    try {
+      const response = await HelperBillerCommission(id, authCtx.token)
+      console.log(response)
+      setcommissonvalue(response)
+    } catch (error) {
+      return;
+    }
+  }
   const tvPayment = async () => {
     toggleModal1()
     try {
@@ -256,7 +353,8 @@ const Television = ({navigation, route}) => {
             }
           ])
         }else{
-          schedulePushNotification(response)
+          // schedulePushNotification(response)
+          setresponseMessage(response.data.message)
           setRef(response.data.requestID)
           toggleModal()
         }
@@ -264,12 +362,20 @@ const Television = ({navigation, route}) => {
     } catch (error) {
       setisLoading(true)
       // console.log(error)
-      Alert.alert("Error", "An error occured please try again later", [
-        {
-          text:'Ok',
-          onPress: () => navigation.goBack()
-        }
-      ])
+      if(error.response.data.message === "Insufficient Balance"){
+        Alert.alert("Sorry", error.response.data.message, [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+      ])}else{
+        Alert.alert("Sorry", "An error occured try again later", [
+          {
+              text:"Ok",
+              onPress: () => navigation.goBack()
+          }
+        ])
+      }
       setisLoading(false)
       return;
     }
@@ -305,10 +411,11 @@ const Television = ({navigation, route}) => {
         }else{
           tvPayment()
         }
+        setischecking(false)
       } catch (error) {
         setischecking(true)
         setCode('')
-        setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
+        setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + ` trial${3-refT.current > 1 ? 's' : ""} remaining`))
         // console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
           {
@@ -322,25 +429,12 @@ const Television = ({navigation, route}) => {
     }
   }
 
-  const commissionget = async (id) => {
-    // if(id === "SHOWMAX"){
-    //   Alert.alert("SH")
-    // }
-     try {
-      const response = await HelperBillerCommission(id, authCtx.token)
-      // console.log(response)
-      setcommissonvalue(response)
-     } catch (error) {
-       return;
-     }
-   }
-
   
   async function schedulePushNotification(response) {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: `${id === "DSTVR" ? "Dstv Renewal" : id === "GOTVR" ? "Gotv Renewal" : id} Subscription 🔔`,
-        body: `${id === "DSTVR" ? "Dstv Renewal" : id === "GOTVR" ? "Gotv Renewal" : id + "Subscription"}  ${response.data.message}\nAmount: ${id === "DSTVR" || id === "GOTVR" ? rprice : price}\nSmartCard Number: ${smartcard}\nRef: ${response.data.requestID}\nDate: ${date} ${time}`,
+        body: `${id === "DSTVR" ? "Dstv Renewal" : id === "GOTVR" ? "Gotv Renewal" : id + "Subscription"}  ${responseMessage}\nAmount: ${id === "DSTVR" || id === "GOTVR" ? rprice : price}\nSmartCard Number: ${smartcard}\nRef: ${ref}\nDate: ${date} ${time}`,
         data: { data: 'goes here' },
       },
       trigger: { seconds: 10 },
@@ -352,15 +446,12 @@ const Television = ({navigation, route}) => {
     return <LoadingOverlay message={"..."}/>
   }
 
-  // console.log(id)
-
-
   return (
     <ScrollView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}} showsVerticalScrollIndicator={false}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <Text style={styles.tvtxt}>{route.params.name}</Text>
+      <Text style={styles.tvtxt}>Television</Text>
 
-      {
+    {
       pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
         {
           text: "Ok",
@@ -374,7 +465,7 @@ const Television = ({navigation, route}) => {
       :
       <>
 
-      <ImageBackground style={{flexDirection:'row', alignItems:'center', justifyContent:'space-evenly',}}>
+   <ImageBackground style={{flexDirection:'row', alignItems:'center', justifyContent:'space-evenly',}}>
         <Image contentFit='contain' source={require("../assets/dstv-logo.png")} style={[styles.image]}/>
         <Image source={require("../assets/GOtv.png")} style={styles.image}/>
         <Image contentFit='contain' source={require("../assets/showmax.png")} style={styles.image}/>
@@ -383,32 +474,31 @@ const Television = ({navigation, route}) => {
 
       <View style={{marginTop:10}}/>
       <View style={{marginHorizontal:10}}>
+        {/* <Text style={styles.label}>Select Distribution Company</Text> */}
 
-            {/* <Text style={styles.label}>Select Distribution Company</Text> */}
-
-            <Dropdown
-            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
-            placeholderStyle={styles.placeholderStyle}
-            selectedTextStyle={styles.selectedTextStyle}
-            inputSearchStyle={styles.inputSearchStyle}
-            iconStyle={styles.iconStyle}
-            data={category}
-            search
-            maxHeight={300}
-            labelField="label"
-            valueField="value"
-            placeholder={!isFocus ? 'Select Satellite Network' : '...'}
-            searchPlaceholder="Search..."
-            value={id}
-            onFocus={() => setisFocus(true)}
-            onBlur={() => setisFocus(false)}
-            onChange={item => {
-              setid(item.value);
-              setisFocus(false);
-              getBouquets(item.value)
-              commissionget(item.value)
-            }}
-            />
+      <Dropdown
+        style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        inputSearchStyle={styles.inputSearchStyle}
+        iconStyle={styles.iconStyle}
+        data={category}
+        search
+        maxHeight={300}
+        labelField="label"
+        valueField="value"
+        placeholder={!isFocus ? 'Select Satellite Network' : '...'}
+        searchPlaceholder="Search..."
+        value={id}
+        onFocus={() => setisFocus(true)}
+        onBlur={() => setisFocus(false)}
+        onChange={item => {
+          setid(item.value);
+          setisFocus(false);
+          getBouquets(item.value)
+          commissionget(item.value)
+        }}
+      />
 
             {id === "DSTVR" || id === "GOTVR" ? "" : 
               <>
@@ -471,61 +561,59 @@ const Television = ({navigation, route}) => {
               : null
             }
         </View>
-      </>
-    }
+        </>
+      }
 
           <Modal isVisible={isCompleteModalVisble}>
             <SafeAreaView style={styles.centeredView}>
-
             <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleConfirmModal(), navigation.goBack()]}>
               <MaterialIcons name="cancel" size={30} color="white" />
             </TouchableOpacity>
             <View style={styles.modalView}>
-              <Text style={styles.modalText}>Confirm Payment</Text>
-               
-                
+              <Text style={styles.modalText}>Confirm Payment</Text>  
                   <View style={{marginBottom:10, marginTop:25}}>
-                      
-                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>SmartCard Pin :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{smartcard}</Text>
-                      </View>
 
-                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Customer Name:</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{username}</Text>
-                      </View>
+                  <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>SmartCard Pin :</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{smartcard}</Text>
+                  </View>
+
+                  <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Customer Name:</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{username}</Text>
+                  </View>
 
 
-                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Amount :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{id === "DSTVR" || id === "GOTVR" ? rprice : price}</Text>
-                      </View>
+                    <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Amount :</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{id === "DSTVR" || id === "GOTVR" ? rprice : price}</Text>
+                  </View>
 
-                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Ref :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{ref}</Text>
-                      </View> 
+                  <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Ref :</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{ref}</Text>
+                  </View> 
 
-                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Date :</Text>
-                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{date} {time}</Text>
-                      </View>
+                  <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Date :</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{date} {time}</Text>
+                  </View>
 
-                       <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
-                        
-                          <TouchableOpacity style={styles.viewbtn} onPress={() => toggleConfirmModal()}>
-                                <Text style={styles.viewtext}>Back</Text>
-                          </TouchableOpacity>
+                    <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
+                    
+                      <TouchableOpacity style={styles.viewbtn} onPress={() => toggleConfirmModal()}>
+                            <Text style={styles.viewtext}>Back</Text>
+                      </TouchableOpacity>
 
-                          <TouchableOpacity style={styles.cancelbtn} onPress={() => [toggleConfirmModal(), toggleModal1()]}>
-                              <Text style={styles.canceltext}>Confirm</Text>
-                          </TouchableOpacity>
-                        </View>
-                    </View>              
+                      <TouchableOpacity style={styles.cancelbtn} onPress={() => [toggleConfirmModal(), toggleModal1()]}>
+                          <Text style={styles.canceltext}>Cofirm</Text>
+                      </TouchableOpacity>
+                    </View>
+                </View>              
             </View>
             </SafeAreaView>
           </Modal>
+
 
           <Modal isVisible={isSetpinModalVisible}>
             <Pressable  onPress={Keyboard.dismiss} style={styles.centeredView}>
@@ -539,6 +627,7 @@ const Television = ({navigation, route}) => {
                 <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
                     <LoadingOverlay/>  
                 </View>
+
                 :
               <>
             <View style={{marginTop: '13%'}}/>
@@ -556,7 +645,7 @@ const Television = ({navigation, route}) => {
             <StyledButton disabled={!pinReady} 
             onPress={() => [handleClick(), pinValidateCheck()]}
             style={{
-                backgroundColor: !pinReady ? Color.gray_100 : Color.new_color
+                backgroundColor: !pinReady ? Color.grey : Color.new_color
             }}>
                 <ButtonText
                 style={{
@@ -571,14 +660,13 @@ const Television = ({navigation, route}) => {
         </Modal>
 
 
-
         <Modal isVisible={isModalVisble}>
             <SafeAreaView style={styles.centeredView}>
 
-            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), navigation.goBack()]}>
+            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack()]}>
               <MaterialIcons name="cancel" size={30} color="white" />
             </TouchableOpacity>
-            <View style={styles.modalView}>
+            <View style={styles.modalView} ref={viewRef}>
             <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.1,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
               <Text style={styles.modalText}>Reciept</Text>
                 {
@@ -617,16 +705,20 @@ const Television = ({navigation, route}) => {
 
                        <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
                         
-                          <TouchableOpacity style={styles.sharebtn} onPress={() => navigation.goBack()}>
-                                <Text><Entypo name="forward" size={24} color="black" /></Text>
+                          <TouchableOpacity style={styles.sharebtn} onPress={() => captureAndShare()}>
+                            <Text><Entypo name="forward" size={24} color={Color.new_color} /></Text>
                           </TouchableOpacity>
 
-                          <TouchableOpacity style={styles.sharebtn} onPress={() => [toggleModal(), navigation.goBack()]}>
+                          <TouchableOpacity onPress={() => captureAndSaveScreen()}>
+                            <AntDesign name="download" size={24} color={Color.new_color} />
+                          </TouchableOpacity>
+
+                          <TouchableOpacity style={styles.sharebtn} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack()]}>
                               <Text>Close</Text>
                           </TouchableOpacity>
                         </View>
                     </View>              
-            </View>
+               </View>
             </SafeAreaView>
           </Modal>
     </ScrollView>
@@ -636,10 +728,15 @@ const Television = ({navigation, route}) => {
 export default Television
 
 const styles = StyleSheet.create({
+  receipt: {
+    width: 300,
+    height: 400,
+    backgroundColor: 'white',
+    borderColor: 'black',
+    borderWidth: 1,
+    padding: 10,
+  },
   sharebtn:{
-    // backgroundColor:Color.white,
-    // borderColor: Color.brown,
-    // borderWidth: 1,
     justifyContent:'center',
     alignItems:'center',
     borderRadius: 3,
@@ -704,8 +801,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     padding:10,
-    // marginTop: 10,
-    // paddingVertical:10
   },
   inputSearchStyle: {
     height: 40,
@@ -723,10 +818,8 @@ const styles = StyleSheet.create({
   },
   centeredView: {
     flex: 1,
-    // backgroundColor: Color.light_black,
     justifyContent: 'center',
     alignItems: 'center',
-    // marginTop: 22,
   },
   modalView: {
     margin: 20,
@@ -734,7 +827,6 @@ const styles = StyleSheet.create({
     width: DIMENSION.WIDTH  * 0.9,
     borderRadius: 20,
     padding: 25,
-    // alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -745,7 +837,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalText: {
-    // marginBottom: 15,
     textAlign: 'center',
     fontSize:18, 
     fontFamily:'poppinsRegular'

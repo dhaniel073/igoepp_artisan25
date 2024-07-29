@@ -1,19 +1,25 @@
-import { Alert, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Pressable, KeyboardAvoidingView, SafeAreaView, TextInput, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import { Dropdown } from 'react-native-element-dropdown'
 import { Image } from 'expo-image'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
-import Input from '../Components/Ui/Input'
-import SubmitButton from '../Components/Ui/SubmitButton'
 import * as Location from 'expo-location';
 import { ConvertPassword, SignUpHandyman } from '../utils/AuthRoute'
-import {AuthContext} from '../utils/AuthContext'
 import Modal from 'react-native-modal'
-import {MaterialIcons} from '@expo/vector-icons'
+import {MaterialIcons, FontAwesome} from '@expo/vector-icons'
 import { Base64 } from 'js-base64'
 import DateTimePicker from "@react-native-community/datetimepicker"
+import { Border, Color, DIMENSION, FontSize, marginStyle} from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
+
 
 
 const data = [
@@ -412,7 +418,7 @@ useEffect(() => {
        
       
         if(!firstnamecheck || !lastnamecheck || !emailIsValid || !enteredPhone || !enteredGender || !category || !subcategory || passwordIsValid ||
-         !passcheck || !country || !state || !city || !address || helpdatecheck
+         !passcheck || !country || !state || !city || !address || helpdatecheck || idtypecheck || idnumcheck
         ){
             const InvalidFirstName = !firstnamecheck
             const InvalidLastName = !lastnamecheck
@@ -453,7 +459,46 @@ useEffect(() => {
             Alert.alert('Invalid details', 'Please check the information provided.')
              
         }else{
-          toggleAcceptTermsModal()
+          // if(Platform.OS === 'ios'){
+          //   const addresstoUse = address + " " + city  + " " + state + " " + country
+          //   const geocodeLocation = await Location.geocodeAsync(addresstoUse);
+          //   const latitude = !address ? '' : geocodeLocation[0].latitude
+          //   const longitude = !address ? '' : geocodeLocation[0].longitude
+
+          //   try {
+          //     setIsLoading(true)
+          //     const response = await ConvertPassword(enteredPassword)
+          //     // console.log(response)
+          //     const password = response
+          //     navigation.navigate('TermsAndCondition', {
+          //       enteredEmail: enteredEmail, 
+          //       enteredPassword: enteredPassword,
+          //       enteredConfirmPassword:enteredConfirmPassword,
+          //       enteredPhone:enteredPhone,
+          //       address: address,
+          //       country: country,
+          //       state: state,
+          //       city: city,
+          //       helpdate: helpdate,
+          //       enteredGender: enteredGender,
+          //       category: category,
+          //       subcategory: subcategory,
+          //       idnum: idnum,
+          //       idtype: idtype,
+          //       enteredFirstname: enteredFirstname,
+          //       enteredLastName: enteredLastName, latitude: latitude, longitude: longitude,
+          //       convertedPassword: password
+          //     })
+          //     setIsLoading(false)
+          //   } catch (error) {
+          //     setIsLoading(true)
+          //     // console.log(error.response)
+          //     Alert.alert("Error", "An error occured")
+          //     setIsLoading(false)
+          //   }
+          // }else{
+            toggleAcceptTermsModal()
+          // }
         }
       // setIsLoading(false)
     }
@@ -498,7 +543,7 @@ useEffect(() => {
         authCtx.helperSubCatId(response.subcategory) 
         authCtx.helperPhone(response.phone)
         authCtx.helperPicture(response.photo)
-        authCtx.helperuserid(response.user_id)
+        authCtx.helperuserid(response.userid)
         authCtx.helperShowAmount('show')
         authCtx.helperlastLoginTimestamp(new Date().toString())
         authCtx.helpersumtot("0.00")
@@ -506,8 +551,14 @@ useEffect(() => {
       } catch (error) {
         setIsLoading(true)
         console.log(error.response)
-        const myObj = error.response.data.email[0];
-        Alert.alert('SignUp Failed', myObj)
+        // Alert("Error", "An error occured try again later", {
+        //     text: "Ok",
+        //     onPress: () => navigation.goBack()
+        // })
+        const myObj = error.response.data.email;
+        console.log(error.response)
+        console.log(myObj)
+        Alert.alert('SignUp Failed', myObj.toString())
         setIsLoading(false)
         return;
       }
@@ -517,6 +568,10 @@ useEffect(() => {
       return <LoadingOverlay message={"Creating User"}/>
     }
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
     <ScrollView style={{marginTop:55, marginHorizontal:18}} showsVerticalScrollIndicator={false}>
 
     <View style={{alignSelf:'center'}}>
@@ -552,6 +607,7 @@ useEffect(() => {
       </View>
     </View>
 
+
         {showdatePicker && (
           <DateTimePicker
             mode="date"
@@ -564,7 +620,7 @@ useEffect(() => {
         )}  
 
         {showdatePicker && Platform.OS === "ios" && (
-        <View style={{ flexDirection: "row", justifyContent: 'space-around' }}>
+        <View style={{ flexDirection: "row", justifyContent: 'space-around', marginTop:10 }}>
           <TouchableOpacity style={[styles.button1, styles.pickerButton, {backgroundColor: "#11182711"}]}
             onPress={toggleDatePicker}
           >
@@ -581,17 +637,21 @@ useEffect(() => {
         )}
 
       {!showdatePicker && (
-        <Pressable onPress={ () => [toggleDatePicker(), helpdateInvalid && sethelpdateInvalid(false)]}>
-
-          <Input
-            placeholder="Select Date of Birth"
+        <Pressable style={styles.action} onPress={ () => [toggleDatePicker(), helpdateInvalid && sethelpdateInvalid(false)]}>
+          <FontAwesome size={20} 
+              color={Color.gray_100} 
+              name="calendar"/>
+          <TextInput
+            placeholder={"Select Date of Birth"}
             value={helpdate}
             onChangeText={updateInputValueHandler.bind(this, 'date')}
             placeholderTextColor={"#11182744"}
             editable={false}
-            isInvalid={helpdateInvalid}
-            onFocus={() => sethelpdateInvalid(false)}
+            // isInvalid={helpdateInvalid}
+            // onFocus={() => sethelpdateInvalid(false)}
             onPressIn={toggleDatePicker}
+            style={[styles.textInput, 
+            ]}
           />
         </Pressable>
         )}
@@ -866,105 +926,144 @@ useEffect(() => {
     
     <Modal isVisible={isAcceptTermsModalBisible}>
 
-    <SafeAreaView style={styles.centeredView}>
+<SafeAreaView style={styles.centeredView}>
 
-    <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => toggleAcceptTermsModal()}>
-      <MaterialIcons name="cancel" size={30} color="white" />
-    </TouchableOpacity>
+<TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => toggleAcceptTermsModal()}>
+  <MaterialIcons name="cancel" size={30} color="white" />
+</TouchableOpacity>
 
-    <View style={styles.modalView}>
-    <Text style={styles.modalText}>Accept Terms and Condition</Text>
- 
-    <View style={{marginBottom:'2%'}}/>
-    <ScrollView showsVerticalScrollIndicator={false}>
-    <View style={{alignItems:'center'}}>
-      <Text style={{textAlign:'center'}}>Artisan SERVICE LEVEL AGREEMENT</Text> 
-    </View>
+<View style={styles.modalView}>
+<Text style={styles.modalText}>Accept Terms and Condition</Text>
 
-    <Text> A.	SERVICE LEVEL AGREEMENT(SLA)</Text>
+<View style={{marginBottom:'2%'}}/>
+<ScrollView showsVerticalScrollIndicator={false}>
+<View style={{alignItems:'center'}}>
+  <Text style={{textAlign:'center'}}>SUPPLIER SERVICE LEVEL AGREEMENT</Text> 
+</View>
 
-    <Text style={styles.textsty}> 
-    1.	Services to be Performed
-    I have agreed to work in the capacity of <Text  style={{fontFamily:'poppinsBold'}}> {enteredFirstname} { enteredLastName}</Text> as an Artisan 
-    </Text>
+<Text> A.	SERVICE LEVEL AGREEMENT(SLA)</Text>
 
-    <Text style={styles.textsty}>
-    2.	Payment
-    IGOEPP pays the artisan 36hrs after the customer has confirmed that the service has been executed satisfactory. IGOEPP would deduct 5% commission from the total amount collected from the customer.
-    </Text>
+<Text style={styles.textsty}> 
+  1.	Services to be Performed
+</Text>
+<Text style={styles.textsty2}>
+  I have agreed to work in the capacity of <Text style={{fontFamily:'poppinsBold'}}> {enteredFirstname} { enteredLastName}</Text> as an Artisan 
+</Text>
+  
 
-    <Text style={styles.textsty}>
-    3.	Expenses
-    Artisan is to ensure that all expenditure is considered in the bidding process with the customer. The customer can only buy replacement parts from IGOEPP designated suppliers.
-    </Text>
+<Text style={styles.textsty}>
+2.	Payment </Text>
+<Text style={styles.textsty2}>
+IGOEPP pays the artisan 36hrs after the customer has confirmed that the service has been executed satisfactory. IGOEPP would deduct 10% commission from the total amount collected from the customer.
+</Text>
 
-    <Text style={styles.textsty}>
-    4.	Materials for Work
-      All parts and materials that would be used to work for a customer must be purchased from IGOEPP designated suppliers by the customer in the IGOEPP Market Place on the APP. Artisan must not replace faulty parts or materials with personal materials or materials purchased from unauthorized supplier. IGOEPP Suppliers would deliver the part not the customer for the artisan to work with.
-    </Text>
+<Text style={styles.textsty}>
+3.	Expenses</Text>
+<Text style={styles.textsty2}>
+Artisan is to ensure that all expenditure is considered in the bidding process with the customer. The customer can only buy replacement parts from IGOEPP designated suppliers.
+</Text>
 
-    <Text style={styles.textsty}>
-    5.	Terminating the Agreement
-    With reasonable cause, either IGOEPP or Artisan may terminate the Agreement, effective immediately upon giving written notice.
-    Reasonable cause includes:
-    •	A material violation of this Agreement, or
-    •	Any act exposing the other party of liability to others for the personal injury or property damage.
-    OR
-    Either party may terminate this Agreement at any time by giving 30 days written notice to the other party of the intention to terminate. However, Artisan cannot terminate this agreement when there is a pending dispute with one of IGOEPP’s customers involving him.
-    </Text>
+<Text style={styles.textsty}>
+4.	Materials for Work </Text>
+<Text style={styles.textsty2}>
+All parts and materials that would be used to work for a customer must be purchased from IGOEPP designated suppliers by the customer in the IGOEPP Market Place on the APP. Artisan must not replace faulty parts or materials with personal materials or materials purchased from unauthorized supplier. IGOEPP Suppliers would deliver the part not the customer for the artisan to work with.
+</Text>
 
-    <Text style={styles.textsty}>
-    6.	Modifying the  Agreement
-    This Agreement may be modified on mutual consent of both parties. (Ratification can be done via oral, written, email or other digital agreement).
-    </Text>
+<Text style={styles.textsty}>
+5.	Terminating the Agreement</Text>
+<Text style={styles.textsty2}>
+With reasonable cause, either IGOEPP or Artisan may terminate the Agreement, effective immediately upon giving written notice.
+Reasonable cause includes:
+•	A material violation of this Agreement, or
+•	Any act exposing the other party of liability to others for the personal injury or property damage.
+OR
+Either party may terminate this Agreement at any time by giving 30 days written notice to the other party of the intention to terminate. However, Artisan cannot terminate this agreement when there is a pending dispute with one of IGOEPP’s customers involving him.
+</Text>
 
-    <Text style={styles.textsty}>
-    7.	Confidentiality
-    Artisans acknowledge that it will be necessary for IGOEPP to disclose certain confidential and proprietary information about the client to them in order for artisan to perform duties under this Agreement. Artisan acknowledges that disclosure to the third party or misuse of this proprietary or confidential information would irreparably harm the Client. Accordingly, Artisan will not disclose or use, either during or after the term of this Agreement, any proprietary or confidential information of the Client without the Client’s prior written permission except to the extent necessary to perform the agreed service on the Client’s behalf.
-    Upon termination of Artisan’s service to company or at Client’s request, Artisan shall deliver to client all materials in Artisan’s possession relating to Client’s business.
+<Text style={styles.textsty}>
+6.	Modifying the  Agreement </Text>
+<Text style={styles.textsty2}>
+This Agreement may be modified on mutual consent of both parties. (Ratification can be done via oral, written, email or other digital agreement).
+</Text>
 
-    Artisan acknowledges that any branch or threatened breach of this Agreement will result in irreparable harm to Client for which damages would be an adequate remedy. Therefore, Client shall be entitled to equitable relief, including an injunction, in the event of such breach or threatened breach of this Agreement. Such equitable relief shall be in addition to Client’s right’s and remedies otherwise available at law.
-    </Text>
+<Text style={styles.textsty}>
+7.	Confidentiality</Text>
+<Text style={styles.textsty2}>
+Artisans acknowledge that it will be necessary for IGOEPP to disclose certain confidential and proprietary information about the client to them in order for artisan to perform duties under this Agreement. Artisan acknowledges that disclosure to the third party or misuse of this proprietary or confidential information would irreparably harm the Client. Accordingly, Artisan will not disclose or use, either during or after the term of this Agreement, any proprietary or confidential information of the Client without the Client’s prior written permission except to the extent necessary to perform the agreed service on the Client’s behalf.
+Upon termination of Artisan’s service to company or at Client’s request, Artisan shall deliver to client all materials in Artisan’s possession relating to Client’s business.
 
-    <Text style={styles.textsty}>
-    8.	No Partnership
-      This Agreement does not create a partnership relationship. Artisan does not have authority to enter contracts on IGOEPP’s behalf.
-    </Text>
+Artisan acknowledges that any branch or threatened breach of this Agreement will result in irreparable harm to Client for which damages would be an adequate remedy. Therefore, Client shall be entitled to equitable relief, including an injunction, in the event of such breach or threatened breach of this Agreement. Such equitable relief shall be in addition to Client’s right’s and remedies otherwise available at law.
+</Text>
 
-    <View style={{flexDirection:'row', justifyContent:'center', flex:1, marginTop:10, paddingLeft:15 }}>
-    <View style={{marginTop:'1%'}}>
-      {data.map((item, key) => 
-        <View key={key} style={{flexDirection:'row', justifyContent:'center', }}>
-          <TouchableOpacity style={[styles.outer, ]} onPress={() => setavail(item.id)}>
-            {avail === item.id && <View style={styles.inner}/>} 
-          </TouchableOpacity>
-          <Text style={{marginTop:5}}> Accept</Text>
-      </View>
-      )}
-    </View>
-        <View style={{marginBottom:10}}/>
-    {
-      avail  && 
-        <SubmitButton style={{flex:1, marginLeft:10, marginHorizontal:20}} message={"Continue"} onPress={() => convertpasswordget()}/>
-    }
-    </View>
-      <View style={{marginBottom:20}}/>
+<Text style={styles.textsty}>
+8.	No Partnership</Text>
+<Text style={styles.textsty2}>
+This Agreement does not create a partnership relationship. Artisan does not have authority to enter contracts on IGOEPP’s behalf.
+</Text>
 
-    </ScrollView>
+<View style={{flexDirection:'row', justifyContent:'center', flex:1, marginTop:10, paddingLeft:15 }}>
+  
+<View style={{marginTop:'1%'}}>
+  {data.map((item, key) => 
+    <View key={key} style={{flexDirection:'row', justifyContent:'center', marginTop:5}}>
+      <TouchableOpacity style={[styles.outer, ]} onPress={() => setavail(item.id)}>
+        {avail === item.id && <View style={styles.inner}/>} 
+      </TouchableOpacity>
+      <Text style={{marginTop:5}}> Accept</Text>
+  </View>
+  )}
+</View>
+    <View style={{marginBottom:10}}/>
+{
+  avail  && 
+    <SubmitButton style={{flex:1, marginLeft:10, marginHorizontal:20}} message={"Continue"} onPress={() => convertpasswordget()}/>
+}
+</View>
+  <View style={{marginBottom:20}}/>
 
-      </View>
+</ScrollView>
+
+  </View>
 
 
-      </SafeAreaView>
-    </Modal>
+  </SafeAreaView>
+</Modal>
   
     </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
 export default SignUp
 
 const styles = StyleSheet.create({
+  textInput:{
+    flex: 1,
+    fontFamily: 'poppinsRegular',
+    marginTop: -12,
+    paddingLeft: 10,
+    fontSize: 15,
+    top: 8,
+  },
+  action:{
+    flexDirection: 'row',
+    marginTop: 20,
+    marginBottom: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: Color.gray_100,
+    paddingBottom: 5
+  },
+  container:{
+    flex:1,
+    marginTop:'12%',
+    marginBottom:'1%'
+  },
+  textsty:{
+    fontFamily:'poppinsBold'
+  },
+  textsty2:{
+    fontFamily:'poppinsRegular'
+  },
   outer:{
     width:25,
     height: 25,

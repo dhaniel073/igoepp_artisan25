@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React, {useRef, useState, useEffect} from 'react'
+import { Platform } from 'react-native'
 import styled from 'styled-components'
 import { Color } from './GlobalStyle'
 
@@ -10,8 +11,7 @@ export const HiddenTextInput = styled.TextInput`
     opacity: 0;
 `;
 
-
-// border-color: ${Color.darkolivegreen_100};
+// border-color: ${Color.new_color};
 //     border-width: 2px;
 //     border-radius: 5px;
 //     padding: 12px;
@@ -33,6 +33,7 @@ export const  OTPInputContainer = styled.Pressable`
 export const OTPInput = styled.View`
     border-color: ${Color.new_color};
     min-width: 15%;
+    mineight: ${Platform.OS==='ios' ? '20%' : '10%'};
     border-width: 2px;
     border-radius: 5px;
     padding: 12px;
@@ -45,7 +46,7 @@ export const OTPInputText = styled.Text`
 `;
 
 export const OTPInputFocused = styled(OTPInput)`
-    border-Color: ${Color.darkolivegreen_100};
+    border-Color: ${Color.new_color};
     background-color: ${Color.mintcream}
 `;
 

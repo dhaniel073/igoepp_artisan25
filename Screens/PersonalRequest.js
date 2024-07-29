@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, SafeAreaView, FlatList, RefreshControl, Touchab
 import React, { useContext, useState, useEffect } from 'react'
 import {Ionicons, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons'
 import Modal  from 'react-native-modal'
-import { BidRequestWithid, GetCustomer, NegotiatePrice, ShowRequestWithId, SubRequest } from '../utils/AuthRoute'
+import { BidRequestWithid, GetCustomer, GetPersonalRequest, NegotiatePrice, ShowRequestWithId, SubRequest } from '../utils/AuthRoute'
 import { Image } from 'expo-image'
 import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
 import Input from '../Component/Ui/Input'
@@ -14,11 +14,12 @@ import GoBack from '../Component/Ui/GoBack'
 import {Platform} from 'react-native';
 
 
+
 const HEIGHT = Dimensions.get('window').height
 const WIDTH = Dimensions.get('window').width
 
 
-const ViewRequest = ({navigation}) => {
+const PersonalRequest = ({navigation}) => {
 
   const [isBidModalVisble, setIsBidModalVisible] = useState(false)
   const [refresh, setRefresh] = useState(false)
@@ -28,7 +29,7 @@ const ViewRequest = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isModalVisble, setIsModalVisible] = useState(false)
   const [request, setRequest] = useState([])
-  const [bidinfo, setBidInfo] = useState("")
+  const [bidinfo, setBidInfo] = useState([])
 
 
 
@@ -38,14 +39,13 @@ const ViewRequest = ({navigation}) => {
     const unsubscribe = navigation.addListener('focus', async() => {
       try {
         setIsFetching(true)
-        const response = await SubRequest(authCtx.subCatId , authCtx.token)
-        // console.log(response)
+        const response = await GetPersonalRequest(authCtx.Id, authCtx.token)
+        console.log(response)
         setCategory(response)
         setIsFetching(false)
       } catch (error) {
-        console.log(error)
         setIsFetching(true)
-        Alert.alert("Sorry", "An error occured try again later", [
+        Alert.alert("Sorry", `An error occured try again later`, [
           {
               text:"Ok",
               onPress: () => navigation.goBack()
@@ -78,7 +78,7 @@ const ViewRequest = ({navigation}) => {
       setIsFetching(false)
     } catch (error) {
       setIsFetching(true)
-      Alert.alert("Sorry", "An error occured try again later", [
+      Alert.alert("Sorry", `An error occured try again later`, [
         {
             text:"Ok",
             onPress: () => navigation.goBack()
@@ -102,13 +102,13 @@ const ViewRequest = ({navigation}) => {
   const pull = async () => {
     try {
       setRefresh(true)
-      const response = await SubRequest(authCtx.subCatId, authCtx.token)
+      const response = await GetPersonalRequest(authCtx.Id, authCtx.token)
       // console.log(response)
       setCategory(response)
       setRefresh(false)
     } catch (error) {
       setRefresh(true)
-      Alert.alert("Sorry", "An error occured try again later", [
+      Alert.alert("Sorry", `An error occured try again later`, [
         {
             text:"Ok",
             onPress: () => navigation.goBack()
@@ -126,7 +126,7 @@ const ViewRequest = ({navigation}) => {
       setRequest(response)
       setIsLoading(false)
     } catch (error) {
-       Alert.alert("Sorry", "An error occured try again later", [
+       Alert.alert("Sorry", `An error occured try again later`, [
           {
               text:"Ok",
               onPress: () => navigation.goBack()
@@ -144,7 +144,7 @@ const ViewRequest = ({navigation}) => {
         setIsLoading(false)
     } catch (error) {
       setIsLoading(true)
-      Alert.alert("Error", "Error fetching Bid detail on request")
+      Alert.alert("Error", `Error fetching Bid detail on request`)
       setIsLoading(false)
         // return;
     }
@@ -170,15 +170,25 @@ const ViewRequest = ({navigation}) => {
         setIsFetching(false)
     } catch (error) {
       setIsFetching(true)
-        return Alert.alert('Error', error.response.data.message, [
-            {
-              text:'Ok',
-              onPress: () => navigation.navigate('ViewRequest')
-            }
-        ]);
+      Alert.alert('Error', error.response.data.message, [
+          {
+            text:'Ok',
+            onPress: () => navigation.navigate('Welcome')
+          }
+      ]);
+      setIsFetching(false)
     }
   } 
 
+  const NoServiceRequest = () => {
+    return (
+      <View style={{ justifyContent:'center', alignItems:'center', marginTop: '70%' }}>
+          <Text style={{ fontSize: FontSize.size_sm, color: Color.dimgray_100, fontFamily: 'poppinsSemiBold' }}>No Service Completed</Text>
+      </View>
+    )
+  }
+
+  console.log(category.length)
 
   if(isFetching){
     return <LoadingOverlay message={"..."}/>
@@ -186,13 +196,8 @@ const ViewRequest = ({navigation}) => {
 
   return (
     <SafeAreaView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}}>
-      <View style={{flexDirection:'row', justifyContent:'space-between'}}>
-        <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <TouchableOpacity onPress={() => navigation.navigate('PersonalRequest')}> 
-        <Text style={{fontSize:15, color:Color.new_color}}>Personal Request</Text>
-      </TouchableOpacity>
-      </View>
-      <Text style={styles.viewrequesttxt}> Request</Text>
+      <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
+      <Text style={styles.viewrequesttxt}>Personal Request</Text>
 
       {category.length !== 0 ? 
       
@@ -205,19 +210,11 @@ const ViewRequest = ({navigation}) => {
         refreshControl={
           <RefreshControl
             refreshing={refresh}
-            onRefresh={() => {pull()}}
+            onRefresh={() => pull()}
           />
         }
         renderItem={({item}) => (
           <>
-
-
-          <>
-
-          {item.help_status === 'N' || item.help_status === 'X' ?   
-
-          <>   
-
 
           <Text style={{marginLeft:10, fontFamily:'poppinsRegular', fontSize:14}}>{item.created_at}</Text>
           <View style={styles.pressable}>
@@ -231,46 +228,23 @@ const ViewRequest = ({navigation}) => {
                 {item.help_lga} {item.help_state} { item.help_country} </Text>
             </View>
 
-            {item.help_status === 'X' ? 
-              <View style={{position:'absolute', justifyContent:'flex-end',  alignSelf:'flex-end', right:10, top:20 }}>
-                <Text style={{color: Color.tomato}}>Cancelled</Text>            
-              </View>
-              : ""}
- 
-              {item.help_status === 'X' ? 
-              <View style={{justifyContent:'space-evenly', alignItems:'flex-end', alignSelf:'flex-start', flexDirection:'row',marginTop: 15, marginLeft:20, marginBottom:10}}>
-                <TouchableOpacity style={styles.cancelbtn} onPress={() => [toggleModal(), showRequest(item.id)]}>
-                  <Text style={styles.canceltext}>View Request</Text>
-              </TouchableOpacity>
-              </View>
-              : 
-              <>
-              <TouchableOpacity style={{position:'absolute', left:'87%', top:'15%'}} onPress={() => [toggleBidModal(), ShowBidinfo(item.id)]}>
-                  <Image contentFit='contain' style={{width: 35, height:35, borderRadius:20, borderColor: 'red', borderWidth: 1, marginRight:28}}  source={require("../assets/gavel_5741343.png")}/>
-                  
-              </TouchableOpacity>
+            <TouchableOpacity style={{position:'absolute', left:'87%', top:'15%'}} onPress={() => [toggleBidModal(), ShowBidinfo(item.id)]}>
+              <Image contentFit='contain' style={{width: 35, height:35, borderRadius:20, borderColor: 'red', borderWidth: 1, marginRight:28}}  source={require("../assets/gavel_5741343.png")}/>
+            </TouchableOpacity>
 
-              <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20, marginBottom:10}}>
-              <TouchableOpacity style={styles.viewbtn} onPress={() => [toggleModal(), showRequest(item.id)]}>
-                  <Text style={styles.viewtext}>View Request</Text>
-              </TouchableOpacity>
+            <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20, marginBottom:10}}>
+            <TouchableOpacity style={styles.viewbtn} onPress={() => [toggleModal(), showRequest(item.id)]}>
+              <Text style={styles.viewtext}>View Request</Text>
+            </TouchableOpacity>
 
-                
-              <TouchableOpacity style={styles.cancelbtn} onPress={() => customer(item.id, item.customer_id, item.cat_name, item.help_date, item.help_time, item.help_location, item.help_lga, item.help_state, item.help_country, item.help_desc, item.help_status, item.help_frequency, item.help_size, item.preassessment_flg,) }>
-                  <Text style={styles.canceltext}>Bid</Text>
-              </TouchableOpacity>
+              
+            <TouchableOpacity style={styles.cancelbtn} onPress={() => customer(item.id, item.customer_id, item.cat_name, item.help_date, item.help_time, item.help_location, item.help_lga, item.help_state, item.help_country, item.help_desc, item.help_status, item.help_frequency, item.help_size, item.preassessment_flg,) }>
+              <Text style={styles.canceltext}>Bid</Text>
+            </TouchableOpacity>
+
               </View>
-            </>
-            }
             </View>
           </>
-
-          : null
-            
-          } 
-          </>
-          </>
-
         )}  
       />
       </>
@@ -501,7 +475,7 @@ const ViewRequest = ({navigation}) => {
   )
 }
 
-export default ViewRequest
+export default PersonalRequest
 
 const styles = StyleSheet.create({
   viewrequesttxt:{

@@ -12,6 +12,7 @@ const SubmitButton = ({style, onPress, message}) => {
   )
 }
 
+
 export default SubmitButton
 
 const styles = StyleSheet.create({

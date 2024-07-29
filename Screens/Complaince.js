@@ -1,18 +1,23 @@
-import { Alert, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, KeyboardAvoidingView, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
 import Modal from 'react-native-modal'
-import {AuthContext} from "../utils/AuthContext"
 import {MaterialIcons, FontAwesome, Ionicons} from '@expo/vector-icons'
-import Input from '../Components/Ui/Input'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import GoBack from '../Components/Ui/GoBack'
 import { Image } from 'expo-image'
 import { GetBanks, GuarantorsUpload, HelperBankDetails, HelperUploadAddressProof, HelperUploadIdCard, HelperUrl, UpLoad } from '../utils/AuthRoute'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import * as ImagePicker from 'expo-image-picker'
 import axios from 'axios'
 import { Dropdown } from 'react-native-element-dropdown'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
+
 
 const data = [
   { label: "Driver's License.", value: "Driver's License." },
@@ -91,7 +96,7 @@ const Complaince = ({navigation}) => {
   useEffect(() => {
     var config = {
     method: 'get',
-    url: "https://phixotech.com/igoepp/public/api/general/getBanks"
+    url: "https://igoeppms.com/igoepp/public/api/general/getBanks"
     }
     axios(config)
     .then(function (response) {
@@ -487,17 +492,21 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
     if(guarantoremail && !gurantornamecheck){
       try {
           setisloading(true)
+          toggleGurantorModal()
           const response = await GuarantorsUpload(guarantorname, guarantoremail, authCtx.Id, authCtx.token)
           // console.log(response)
           Alert.alert('Success', "Gurantor Details's Uploaded Successfully", [
               {
-                  text: 'Ok',
-                  onPress: () => {Customer()}
+                text: 'Ok',
+                onPress: () => {Customer()}
               }
           ])
           setisloading(false)
       } catch (error) {
         setisloading(true)
+        setGuarantorName('')
+        setGuarantorEmail('')
+        toggleGurantorModal()
           // console.log(error.response.data)
         Alert.alert("Sorry", "An error occured try again later", [
           {
@@ -699,7 +708,7 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
 
             <View style={{alignItems:'center', justifyContent:'center'}}>
               <TouchableOpacity style={[styles.shadow,{borderWidth:1, padding:15, borderRadius:10, marginLeft:10, borderColor:Color.new_color}]} onPress={pickImage}>
-                <Ionicons name="ios-library-sharp" size={24} color={Color.new_color} />
+                <Ionicons name="library" size={24} color={Color.new_color} />
               </TouchableOpacity>
               <Text style={[styles.panelBottomTitle, {marginLeft:15, marginRight:10}]}> Libraries</Text>
             </View>
@@ -733,7 +742,7 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
 
             <View style={{alignItems:'center', justifyContent:'center'}}>
               <TouchableOpacity style={[styles.shadow,{borderWidth:1, padding:15, borderRadius:10, marginLeft:10, borderColor:Color.new_color}]} onPress={pickaddressImage}>
-                <Ionicons name="ios-library-sharp" size={24} color={Color.new_color} />
+                <Ionicons name="library" size={24} color={Color.new_color} />
               </TouchableOpacity>
               <Text style={[styles.panelBottomTitle, {marginLeft:15, marginRight:10}]}> Libraries</Text>
             </View>
@@ -768,7 +777,7 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
 
             <View style={{alignItems:'center', justifyContent:'center'}}>
               <TouchableOpacity style={[styles.shadow,{borderWidth:1, padding:15, borderRadius:10, marginLeft:10, borderColor:Color.new_color}]} onPress={pickidcardImage}>
-                <Ionicons name="ios-library-sharp" size={24} color={Color.new_color} />
+                <Ionicons name="library" size={24} color={Color.new_color} />
               </TouchableOpacity>
               <Text style={[styles.panelBottomTitle, {marginLeft:15, marginRight:10}]}> Libraries</Text>
             </View>
@@ -783,17 +792,17 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
 
   <Modal isVisible={isGurantorModalVisble}>
         <SafeAreaView style={styles.centeredView}>
-
-        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => toggleGurantorModal()}>
-          <MaterialIcons name="cancel" size={30} color="white" />
-        </TouchableOpacity>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.container}
+        >
 
         <View style={[styles.modalView]}>
           <Text style={styles.modalText}>Gurantor's Details</Text>
           <View style={{ marginBottom:10}}/>  
 
             <Text style={styles.label}>Name</Text>
-            <Input onFocus={() => setIsInvalidGuarantorName()} placeholder={"Enter Guarantor's Name"} value={guarantorname} style={[isInvalidguarantorname && styles.inputInvalid]} onUpdateValue={updateInputValueHandler.bind(this, 'guarantorname')} autoCapitalize='words'/>
+            <Input onFocus={() => setIsInvalidGuarantorName()} placeholder={"Enter Guarantor's Name"} value={guarantorname} style={[isInvalidguarantorname && styles.inputInvalid, {padding:0}]} onUpdateValue={updateInputValueHandler.bind(this, 'guarantorname')} autoCapitalize='words'/>
 
 
             <Text style={styles.label}>Email</Text>
@@ -814,17 +823,22 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
 
             <View style={{marginBottom:10}}/>
         </View>
-
+        </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
 
 
       <Modal isVisible={isAccountModalVisble}>
         <SafeAreaView style={styles.centeredView}>
-
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.container}
+        >
+{/* 
         <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleAccountModal(), setAccountName(null), setIsInvalidAccountName(), setIsInvalidAccountNumber(), setbankselect(null), setisbankvalid(false), setAccountNumber('')]}>
           <MaterialIcons name="cancel" size={30} color="white" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+
         <View style={styles.modalView} showsVerticalScrollIndicator={false}>
           <Text style={[styles.modalText, {fontSize:16}]}>
             {fetchedInfo.accountname && fetchedInfo.account !== "null" ? "Update Bank Account Details" : "Bank Account Details"}
@@ -890,7 +904,7 @@ const updateInputValueHandlerAccount = (inputType, enteredValue) => {
             <View style={{marginBottom:10}}/>
 
         </View>
-
+        </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
     

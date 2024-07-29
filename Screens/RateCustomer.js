@@ -1,13 +1,19 @@
 import { SafeAreaView, ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
-import { AuthContext } from '../utils/AuthContext'
 import { Image } from 'expo-image'
 import {MaterialIcons, Ionicons} from '@expo/vector-icons'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { CustomerRating, GetCustomer, ViewCustomerRatingonRequest } from '../utils/AuthRoute'
-import SubmitButton from '../Components/Ui/SubmitButton'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
+
+
+
 
 const RateCustomer = ({navigation, route}) => {
   const [defaultRating, setdefaultRating] = useState(2)
@@ -126,7 +132,7 @@ if(isloading){
 return (
   <ScrollView  showsVerticalScrollIndicator={false} style={{marginTop:marginStyle.marginTp, marginHorizontal:10}}>
     <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-    <Text style={styles.ratecustomertxt}>RateCustomer</Text>
+    <Text style={styles.ratecustomertxt}>Rate Customer</Text>
     <SafeAreaView style={styles.container}>
         <Image style={styles.profile} source={customerdetails.picture === null ? require("../assets/person-4.png")  : {uri: `https://igoeppms.com/igoepp/public/customers/${customerdetails.picture}`}}/>
             

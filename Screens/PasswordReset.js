@@ -1,16 +1,19 @@
-import { SafeAreaView, StyleSheet, Text, View, Alert } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View, Alert, TextInput } from 'react-native'
 import React from 'react'
 import { useContext } from 'react'
 import { useState } from 'react'
-import { AuthContext } from '../utils/AuthContext'
-import GoBack from '../Components/Ui/GoBack'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import Input from '../Components/Ui/Input'
 import { useRef } from 'react'
 import { ConvertPassword, HelperResetPassword, ValidateLogin } from '../utils/AuthRoute'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import { Base64 } from 'js-base64'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
+
+
 
 const PasswordReset = ({navigation}) => {
     const authCtx = useContext(AuthContext)
@@ -150,7 +153,7 @@ const PasswordReset = ({navigation}) => {
         <Text style={styles.requeststxt}>PasswordReset</Text>
 
         <View style={{marginHorizontal:10}}>
-        <Input value={authCtx.email} editable={false}/>
+        <TextInput value={authCtx.email} editable={false} style={styles.input}/>
         <Input 
           onUpdateValue={setoldpassword}
           value={oldpassword}
@@ -187,11 +190,20 @@ export default PasswordReset
 
 const styles = StyleSheet.create({
     requeststxt:{
-        fontSize: 18,
-        color: Color.darkolivegreen_100,
-        fontFamily: 'poppinsSemiBold',
-        left: 10,
-        marginTop:10,
-        marginBottom:15,
-      }, 
+      fontSize: 18,
+      color: Color.darkolivegreen_100,
+      fontFamily: 'poppinsSemiBold',
+      left: 10,
+      marginTop:10,
+      marginBottom:15,
+    }, 
+    input: {
+      paddingVertical: 10,
+      paddingHorizontal: 2,
+      borderBottomColor:  Color.gray_100,
+      borderBottomWidth: 2,
+      fontFamily: 'poppinsRegular',
+      fontSize: 14,
+      color: Color.gray_100
+  },
 })

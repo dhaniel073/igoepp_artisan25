@@ -1,14 +1,19 @@
 import { Alert, Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
 import  PaystackWebView, { Paystack }  from 'react-native-paystack-webview';
-import GoBack from '../Components/Ui/GoBack';
-import Input from '../Components/Ui/Input';
-import SubmitButton from '../Components/Ui/SubmitButton';
 import {MaterialCommunityIcons} from '@expo/vector-icons'
-import { AuthContext } from '../utils/AuthContext';
 import { GetPayStackKey, UpdateWallet } from '../utils/AuthRoute';
-import LoadingOverlay from '../Components/Ui/LoadingOverlay';
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
+
 
 
 const WIDTH = Dimensions.get('window').width
@@ -28,7 +33,7 @@ const AddToWallet = ({navigation}) => {
     const unsuscribe = navigation.addListener('focus', async () => {
       try {
         setisloading(true)
-        const response = await GetPayStackKey()
+        const response = await GetPayStackKey(authCtx.token)
         console.log(response)
         setpaystackKey(response.toString())
         setisloading(false)
@@ -82,7 +87,7 @@ const AddToWallet = ({navigation}) => {
   return (
     <ScrollView style={styles.container}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <Text style={styles.addtowalletpaymentxt}>AddToWallet</Text>
+      <Text style={styles.addtowalletpaymentxt}>Add To Wallet</Text>
 
       <SafeAreaView style={styles.maincontainer}>
         <View style={{alignSelf:'center'}}>
@@ -124,7 +129,6 @@ const AddToWallet = ({navigation}) => {
             SuccessHandler(res)
         }}
         ref={paystackWebViewRef}
-        
       />
 
       {/* <PaystackWebView

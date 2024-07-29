@@ -1,15 +1,18 @@
-import { StyleSheet, Text, TouchableOpacity, View , SafeAreaView, Platform, Alert, FlatList} from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View , SafeAreaView, Alert, FlatList} from 'react-native'
 import React, { useContext, useEffect, useState, useRef } from 'react'
-import { Border, Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
-import { AuthContext } from '../utils/AuthContext'
+import {Platform} from 'react-native';
 import * as ImagePicker from "expo-image-picker"
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { Image, ImageBackground } from 'expo-image'
-import SubmitButton from '../Components/Ui/SubmitButton'
 import {MaterialIcons, FontAwesome, Ionicons} from '@expo/vector-icons'
 import Modal from 'react-native-modal'
 import { GetHelperCompleteProofRequestId, RequestImageProof, UpLoad } from '../utils/AuthRoute'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
 
 
 const UploadScreen = ({navigation, route}) => {

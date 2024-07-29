@@ -1,13 +1,18 @@
 import { Button, FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useState, useRef } from 'react'
-import { Border, Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
 import { useEffect } from 'react';
 import { Notification, NotificationById } from '../utils/AuthRoute';
-import { AuthContext } from '../utils/AuthContext';
-import LoadingOverlay from '../Components/Ui/LoadingOverlay';
 import Modal from 'react-native-modal'
 import {MaterialIcons} from '@expo/vector-icons'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
+
 
 const NotificationScreen = ({navigation}) => {
   const authCtx = useContext(AuthContext)
@@ -16,7 +21,7 @@ const NotificationScreen = ({navigation}) => {
   const [data, setdata] = useState([])
   const [ismodalvisible, setismodalvisible] = useState(false)
   const [notificationbyidmessage, setnotificationbyidmessage] = useState([])
-  const maxCharacters = 140;
+  const maxCharacters = 120;
 
   useEffect(() => {
     const unsuscribe = navigation.addListener('focus', async () => {
@@ -91,6 +96,7 @@ const NotificationScreen = ({navigation}) => {
           <FlatList
            data={data}
            keyExtractor={(item) => item.id}
+           showsVerticalScrollIndicator={false}
            renderItem={({item}) => (
              <TouchableOpacity style={styles.pressable} onPress={() => [toggleModal(), checknotid(item.id)]}>
                <Text style={item.status === 'U' ? styles.unread : styles.read}>{item.message.slice(0, maxCharacters)+ "...."}</Text>

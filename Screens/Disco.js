@@ -1,20 +1,28 @@
-import { Alert, Platform, Pressable, Keyboard, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { TOKEN, marginStyle, Color, DIMENSION } from '../Components/Ui/GlobalStyle'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, SafeAreaView, Alert, TextInput, Pressable, Keyboard } from 'react-native'
+import React, { useContext, useEffect, useState, useRef } from 'react'
 import axios from 'axios'
-import GoBack from '../Components/Ui/GoBack'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import { Dropdown } from 'react-native-element-dropdown'
-import { AuthContext } from '../utils/AuthContext'
-import { DiscoPayment, HelperBillerCommission, HelperUrl, ValidateDisco, ValidatePin } from '../utils/AuthRoute'
-import Input from '../Components/Ui/Input'
-import {MaterialCommunityIcons, Entypo, MaterialIcons} from '@expo/vector-icons'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import Modal from 'react-native-modal'
 import { Image, ImageBackground } from 'expo-image'
+import { Dropdown } from 'react-native-element-dropdown'
+import {MaterialIcons, MaterialCommunityIcons, Entypo, AntDesign} from '@expo/vector-icons' 
 import * as Notifications from 'expo-notifications'
+import Modal from 'react-native-modal'
 import styled from 'styled-components'
-import OTPFieldInput from '../Components/Ui/OTPFieldInput'
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import { DiscoPayment, HelperBillerCommission, HelperUrl, ValidateDisco, ValidatePin } from '../utils/AuthRoute'
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
+
 
 const StyledButton = styled.TouchableOpacity`
   padding: 15px;
@@ -34,7 +42,7 @@ export const ButtonText = styled.Text`
 `;
 
 
-const Disco = ({navigation, route}) => {
+const Disco = ({route, navigation}) => {
   const [category, setcategory] = useState([])
   const [isLoading, setisLoading] = useState(false)
   const [isFocus, setisFocus] = useState(false)
@@ -49,10 +57,11 @@ const Disco = ({navigation, route}) => {
   const [ref, setRef] = useState()
   const [meterno, setMeterNo] = useState()
   const authId = route?.params?.id
-  
-  const [code, setCode] = useState('')
-  const [pinReady, setPinReady] = useState(false)
-  const MAX_CODE_LENGTH = 4;
+
+  const [commissonvalue, setcommissonvalue] = useState()
+  const [responseToken, setresponseToken] = useState()
+  const [responseId, setresponseId] = useState()
+  const [responseMessage, setresponseMessage] = useState()
 
   const [pinT, setpinT] = useState()
   const [pinvalid, setpinvalid] = useState(false)
@@ -60,12 +69,45 @@ const Disco = ({navigation, route}) => {
   const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
   const [pinerrormessage, setPinerrorMessage] = useState('')
   const [ischecking, setischecking] = useState(false)
-  const [commissonvalue, setcommissonvalue] = useState()
+
+  const [code, setCode] = useState('')
+  const [pinReady, setPinReady] = useState(false)
+  const MAX_CODE_LENGTH = 4;
 
   const maindate = new Date() 
   const date = maindate.toDateString()
   const time = maindate.toLocaleTimeString()
   const amountCheck = amount >= 1000
+
+  
+
+
+ 
+
+  useEffect(() => {
+    const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
+    const response = axios.get(url, {
+      headers:{
+        Accept:'application/json',
+        Authorization: `Bearer ${authCtx.token}`
+      }
+    }).then((res) => {
+      // console.log(res.data)dx
+      var count = Object.keys(res.data).length;
+      let catarray = []
+      for (var i = 0; i < count; i++){
+        catarray.push({
+          label: res.data[i].name,
+          value: res.data[i].id,
+        })
+        // setCityCode(response.data.data[i].lga_code)
+      }
+      setcategory(catarray)
+    }).catch((error) => {
+      // console.log(error)
+      return;
+      })
+  }, [])
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
@@ -77,6 +119,7 @@ const Disco = ({navigation, route}) => {
       setisLoading(false)
     } catch (error) {
       setisLoading(true)
+      // console.log(error)
       Alert.alert('Error', "An error occured try again later", [
         {
           text:"Ok",
@@ -90,34 +133,6 @@ const Disco = ({navigation, route}) => {
     return unsubscribe;
   }, [])
 
-
-  useEffect(() => {
-    setisLoading(true)
-    const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
-    const response = axios.get(url, {
-        headers:{
-            Accept:'application/json',
-            Authorization: `Bearer ${authCtx.token}`
-        }
-    }).then((res) => {
-        // console.log(res.data)dx
-        var count = Object.keys(res.data).length;
-        let catarray = []
-        for (var i = 0; i < count; i++){
-            catarray.push({
-                label: res.data[i].name,
-                value: res.data[i].id,
-            })
-            // setCityCode(response.data.data[i].lga_code)
-        }
-        setcategory(catarray)
-    }).catch((error) => {
-        // console.log(error)
-        return;
-      })
-      setisLoading(false)
-  }, [])
-
   const updatehandleValue = (inputType, enteredValue) => {
     switch (inputType) {
       case 'meterno':
@@ -126,10 +141,80 @@ const Disco = ({navigation, route}) => {
       case 'amount':
         setAmount(enteredValue)
         break;
-    
     }
   }
 
+  const commissionget = async (id) => {
+    try {
+      const response = await HelperBillerCommission(id, authCtx.token)
+      console.log(response)
+      setcommissonvalue(response)
+    } catch (error) {
+      return;
+    }
+  }
+
+  const viewRef = useRef();
+
+  const captureAndShare = async () => {
+    try {
+      // Capture the screenshot
+      const uri = await captureRef(viewRef, {
+        format: 'png',
+        quality: 1,
+      });
+
+      // Share the screenshot
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error('Error capturing and sharing screenshot:', error);
+    }
+  };
+
+  const captureAndSaveScreen = async () => {
+    try {
+      // Capture the screen
+      const uri = await captureRef(viewRef, {
+        format: 'png',
+        quality: 1.0,
+      });
+
+      // Get permission to access media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access media library is required!');
+        return;
+      }
+
+      // Define the custom file name
+      const fileName = `receipt_${new Date().getTime()}.png`;
+      const downloadDir = FileSystem.documentDirectory + 'Download/';
+      const fileUri = downloadDir + fileName;
+
+      // Ensure the download directory exists
+      await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
+
+      // Move the captured image to the download directory with the custom name
+      await FileSystem.moveAsync({
+        from: uri,
+        to: fileUri,
+      });
+
+      // Save the file to the device's download folder
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      const album = await MediaLibrary.getAlbumAsync('Download');
+      if (album == null) {
+        await MediaLibrary.createAlbumAsync('Download', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      }
+
+      Alert.alert('Receipt saved successfully!');
+    } catch (error) {
+      console.error('Failed to capture and save screen:', error);
+      Alert.alert('Failed to save receipt!');
+    }
+  };
   
   const toggleConfirmModal =  () => {
     setIsConfirmModalVisible(!isConfirmModalVisble)
@@ -146,10 +231,14 @@ const Disco = ({navigation, route}) => {
       const response = await ValidateDisco(authCtx.Id, id, meterno, authCtx.token)
       // console.log(response.data)
       if(response.data.status === 'Success'){
-        setRef(response.data.requestID)
-        setUserAddress(response.data.customerAddress)
-        setUserName(response.data.customerName)
-        toggleConfirmModal()
+        if(Platform.OS === 'ios'){
+            return  navigation.navigate('DiscoIos', {data: response.data, meterno: meterno, id: id, amount: amount, commissonvalue: commissonvalue, id:id })
+        }else{
+          setRef(response.data.requestID)
+          setUserAddress(response.data.customerAddress)
+          setUserName(response.data.customerName)
+          toggleConfirmModal()
+        }
       }else{
         Alert.alert("Error", "An error occured while validating meter no. Please  check your meter no and try again later", [
           {
@@ -173,6 +262,8 @@ const Disco = ({navigation, route}) => {
     }
   }
 
+
+
   let refT = useRef(0);
   
   function handleClick() {
@@ -185,7 +276,6 @@ const Disco = ({navigation, route}) => {
   }
   
   const pinValidateCheck = async () => {
-   
     if(refT.current > 3){
       Alert.alert("", "To many attempt, try again later", [
         {
@@ -200,10 +290,11 @@ const Disco = ({navigation, route}) => {
         // console.log(response)
         setCode('')
         makePayment()
+        setischecking(false)
       } catch (error) {
         setischecking(true)
         setCode('')
-        setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
+        setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + ` trial${3-refT.current > 1 ? 's' : ""} remaining`))
         // console.log(error.response)
         Alert.alert("Error", error.response.data.message+ " " + "Try again", [
           {
@@ -214,16 +305,6 @@ const Disco = ({navigation, route}) => {
         setischecking(false)
 
       }
-    }
-  }
-
-  const commissionget = async (id) => {
-    try {
-      const response = await HelperBillerCommission(id, authCtx.token)
-      // console.log(response)
-      setcommissonvalue(response)
-    } catch (error) {
-      return;
     }
   }
 
@@ -242,32 +323,44 @@ const Disco = ({navigation, route}) => {
           ])
         }else{
           // console.log(response)
-          schedulePushNotification(response)
+          setresponseToken(response.token)
+          setresponseId(response.requestID)
+          setresponseMessage(response.message)
           setToken(response.token)
-          // setRef(response.requestID)
           toggleModal()
         }
        
         setisLoading(false)
     } catch (error) {
-      // console.log(error.response.data)
+      console.log(error)
       setisLoading(true)
-      Alert.alert("Sorry", "An error occured try again later", [
-        {
-          text:"Ok",
-          onPress: () => navigation.goBack()
-        }
-      ])
+      if(error.response.data.message === "Insufficient Balance"){
+        Alert.alert("Sorry", error.response.data.message, [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+        ])
+      }else{
+        Alert.alert("Sorry", "An error occured", [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+        ])
+      }
       setisLoading(false)
       return;
     }
   }
 
+  // console.log(responseId, responseToken, responseMessage)
+
   async function schedulePushNotification(response) {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: `Electricity Bill 🔔`,
-        body: `${response.message}.\nElectricity Token:${response.token}\nRef:${response.requestID}\nAmount:${amount}\nDate: ${date} ${time}`,
+        body: `${responseMessage}.\nElectricity Token:${responseToken}\nRef:${responseId}\nAmount:${amount}\nDate: ${date} ${time}`,
         data: { data: 'goes here' },
       },
       trigger: { seconds: 10 },
@@ -279,12 +372,12 @@ const Disco = ({navigation, route}) => {
     return <LoadingOverlay message={"..."}/>
   }
   return (
-    <ScrollView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}} showsVerticalScrollIndicator={false}>
+    <ScrollView style={{marginTop: marginStyle.marginTp, marginHorizontal:10}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.discotxt}>Disco</Text>
 
       {
-        pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
+        pincheckifempty === "N" ?  Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
           {
             text: "Ok",
             onPress: () => navigation.navigate('TransactionPin')
@@ -434,7 +527,7 @@ const Disco = ({navigation, route}) => {
             </View>
             </SafeAreaView>
           </Modal>
-        
+
           <Modal isVisible={isSetpinModalVisible}>
             <Pressable  onPress={Keyboard.dismiss} style={styles.centeredView}>
             <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal1(), setCode('')]}>
@@ -447,6 +540,7 @@ const Disco = ({navigation, route}) => {
                 <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
                     <LoadingOverlay/>  
                 </View>
+
                 :
               <>
             <View style={{marginTop: '13%'}}/>
@@ -464,7 +558,7 @@ const Disco = ({navigation, route}) => {
             <StyledButton disabled={!pinReady} 
             onPress={() => [handleClick(), pinValidateCheck()]}
             style={{
-                backgroundColor: !pinReady ? Color.gray_100 : Color.new_color
+                backgroundColor: !pinReady ? Color.grey : Color.new_color
             }}>
                 <ButtonText
                 style={{
@@ -481,10 +575,10 @@ const Disco = ({navigation, route}) => {
         <Modal isVisible={isModalVisble}>
             <SafeAreaView style={styles.centeredView}>
 
-            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), navigation.goBack()]}>
+            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack()]}>
               <MaterialIcons name="cancel" size={30} color="white" />
             </TouchableOpacity>
-            <View style={styles.modalView}>
+            <View style={styles.modalView} ref={viewRef}>
             <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.141,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
               <Text style={styles.modalText}>Reciept</Text>
                 {/* <Text style={{fontFamily:'poppinsRegular'}}>-------------------------------------------</Text> */}
@@ -539,6 +633,47 @@ const Disco = ({navigation, route}) => {
                         <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{token}</Text>
                       </View> 
 
+                      {/* <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Bonus Token:</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}></Text>
+                      </View> 
+
+                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Bonus Unit :</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}></Text>
+                      </View> 
+
+                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Units Purchased :</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}></Text>
+                      </View> 
+
+                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Vat :</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}></Text>
+                      </View> 
+
+                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Units Purchased :</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}></Text>
+                      </View> 
+
+
+                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Kct1:</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}></Text>
+                      </View> 
+
+                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Kct2:</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}></Text>
+                      </View> 
+
+                      <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Arrears Remaining :</Text>
+                        <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}></Text>
+                      </View>  */}
+
                       <View style={{justifyContent:'space-between', flexDirection:'row'}}>
                         <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Date :</Text>
                         <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{date} {time}</Text>
@@ -558,11 +693,15 @@ const Disco = ({navigation, route}) => {
                         */}
                         <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
                         
-                        <TouchableOpacity style={styles.sharebtn} onPress={() => {}}>
-                              <Text><Entypo name="forward" size={24} color="black" /></Text>
+                        <TouchableOpacity style={styles.sharebtn} onPress={() =>  captureAndShare()}>
+                              <Entypo name="forward" size={24} color={Color.new_color}/>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.sharebtn} onPress={() => [toggleModal(), navigation.goBack()]}>
+                        <TouchableOpacity onPress={() => captureAndSaveScreen()}>
+                          <AntDesign name="download" size={24} color={Color.new_color} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.sharebtn} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack()]}>
                             <Text>Close</Text>
                         </TouchableOpacity>
                       </View>
@@ -581,6 +720,14 @@ const Disco = ({navigation, route}) => {
 export default Disco
 
 const styles = StyleSheet.create({
+  receipt: {
+    width: 300,
+    height: 400,
+    backgroundColor: 'white',
+    borderColor: 'black',
+    borderWidth: 1,
+    padding: 10,
+  },
   image:{
     width: 60,
     height: 60,
@@ -663,24 +810,7 @@ const styles = StyleSheet.create({
   placeholderStyle: {
     fontSize: 12,
   },
-  dropdown: {
-    maxHeight: 70,
-    borderColor: 'gray',
-    borderWidth: 0.5,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    padding:8,
-    // marginTop: 10,
-    // paddingVertical:10
-  },
-  inputSearchStyle: {
-    height: 40,
-    fontSize: 16,
-  },
-  iconStyle: {
-    width: 20,
-    height: 20,
-  }, 
+ 
   centeredView: {
     flex: 1,
     // backgroundColor: Color.light_black,

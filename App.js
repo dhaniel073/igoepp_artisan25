@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, AppState, Platform, StyleSheet, Text, View } from 'react-native';
+import { Alert, AppState, StyleSheet, Text, View } from 'react-native';
+import {Platform} from 'react-native';
 import {useFonts} from 'expo-font'
-import LoadingOverlay from './Components/Ui/LoadingOverlay';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Welcome from './Screens/Welcome';
@@ -38,7 +38,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {FontAwesome5, Ionicons} from '@expo/vector-icons'
-import { Color } from './Components/Ui/GlobalStyle';
 import * as Notification from 'expo-notifications'
 import { BiometricSetup } from './utils/AuthRoute';
 import TransactionPin from './Screens/TransactionPin';
@@ -50,13 +49,19 @@ import FeedBack from './Screens/FeedBack';
 import NetInfo from "@react-native-community/netinfo"
 import RNRestart from 'react-native-restart'
 import FirstDisplayScreen from './Screens/FirstDisplayScreen';
+import TelevisionIos from './Screens/TelevisionIos';
+import DiscoIos from './Screens/DiscoIos';
+import PersonalRequest from './Screens/PersonalRequest';
+import TermsAndCondition from './Screens/TermsAndCondition';
+import LoadingOverlay from './Component/Ui/LoadingOverlay';
+import { Color } from './Component/Ui/GlobalStyle';
 
 
 Notification.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
   }),
 });
 
@@ -66,64 +71,13 @@ const Tabs = createBottomTabNavigator()
 
 
 
+
 export default function App() {
-  const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
-
-    notificationListener.current = Notification.addNotificationReceivedListener(notification => {
-      setNotification(notification);
-    });
-
-    responseListener.current = Notification.addNotificationResponseReceivedListener(response => {
-      // console.log(response);
-    });
-
-    return () => {
-      Notification.removeNotificationSubscription(notificationListener.current);
-      Notification.removeNotificationSubscription(responseListener.current);
-    };
-  }, []);
-
-  async function registerForPushNotificationsAsync() {
-    let token;
   
-    if (Platform.OS === 'android') {
-      await Notification.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notification.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
-    }
-  
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notification.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notification.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') {
-        alert('Failed to get push token for push notification!');
-        return;
-      }
-
-      // Learn more about projectId:
-      // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
-      token = (await Notification.getExpoPushTokenAsync({ projectId: '0e18ffeb-cbc7-439c-8348-da5e8ba93af1' })).data;
-      // console.log(token);
-    } else {
-      // alert('Must use physical device for Push Notifications');
-    }
-  
-    return token;
-  }
-
   const unsuscribe = NetInfo.addEventListener((state) => {
     if(state.isConnected === false){
       Alert.alert("No Internet Connection", "Please check your internet connection and try again!", [{
@@ -150,41 +104,7 @@ export default function App() {
     'interRegular': require("./assets/Fonts/Inter-Regular.ttf"),
   })
 
-
-  useEffect(() => {
-    const getPermissions = async () => {
-      let {status} = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted'){
-        Alert.alert('Location', 'Please grant location Permissions')
-        return;
-      }else{
-        const currentlocation = await Location.geocodeAsync('')
-      }
-    };
-    getPermissions();
-  }, [])
-
-  useEffect(() => {
-      const permissionget = async () => {
-        let {status} = await Notification.requestPermissionsAsync();
-
-        if (Platform.OS === 'android') {
-          await Notification.setNotificationChannelAsync('default', {
-            name: 'default',
-            importance: Notification.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#FF231F7C',
-          });
-        }
-      }
-      permissionget()
-  }, [])
-
-
-
   
-
-
   if(!fontloaded){
     return <LoadingOverlay message={'...'}/>
   }
@@ -308,6 +228,14 @@ export default function App() {
         }}
         />
 
+      <Stack.Screen
+        name='TermsAndCondition'
+        component={TermsAndCondition}
+        options={{
+          headerShown: false
+        }}
+      />
+
 
         <Stack.Screen
         name='ForgotPassword'
@@ -342,23 +270,12 @@ export default function App() {
         if(authCtx.lastLoginTimestamp === null || undefined || ""){
           return 
         }else{
-          // console.log(storedTimestamp + " storedtime")
-          // console.log(lastLoginTimestamp + " lastlogintime")
-          // console.log(currentTimestamp + " current time")
-
           const timeDifferenceInMinutes = Math.floor(
             (currentTimestamp - lastLoginTimestamp) / (1000 * 60)
           );
-
-          // console.log(timeDifferenceInMinutes + " difference")
-      
-          // Adjust the threshold based on your requirements (e.g., 30 minutes)
           const authenticationThresholdInMinutes = 10;
       
           if (timeDifferenceInMinutes > authenticationThresholdInMinutes) {
-            // Prompt the user to reauthenticate
-            // You can navigate to a login screen or show a modal for reauthentication
-            // console.log('Reauthentication required');
             Alert.alert("Session Timeout", "Session has expired")
             authCtx.logout()
           }
@@ -398,13 +315,13 @@ export default function App() {
           }}
         />
         
-        {/* <Stack.Screen
-        name='ViewRequest'
-        component={ViewRequest}
+        <Stack.Screen
+        name='PersonalRequest'
+        component={PersonalRequest}
         options={{
           headerShown: false
         }}
-      /> */}
+      />
 
       <Stack.Screen
         name='UploadScreen'
@@ -417,6 +334,14 @@ export default function App() {
       <Stack.Screen
         name='Television'
         component={Television}
+        options={{
+          headerShown: false
+        }}
+      />
+
+      <Stack.Screen
+        name='TelevisionIos'
+        component={TelevisionIos}
         options={{
           headerShown: false
         }}
@@ -513,7 +438,15 @@ export default function App() {
         options={{
           headerShown: false
         }}
-      />
+      /> 
+
+    <Stack.Screen
+      name='DiscoIos'
+      component={DiscoIos}
+      options={{
+        headerShown: false
+      }}
+    />
 
       <Stack.Screen
         name='Details'

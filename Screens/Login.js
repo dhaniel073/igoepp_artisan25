@@ -1,17 +1,21 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, Alert, Platform, Modal } from 'react-native'
+import { StyleSheet, Text, View, SafeAreaView, KeyboardAvoidingView, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native'
 import React, { useContext, useState } from 'react'
 import { Image } from 'expo-image'
 import {Ionicons} from '@expo/vector-icons'
 import * as LocalAuthentication from 'expo-local-authentication'
 import * as Device from 'expo-device'
 import { ConvertPassword, LoginHandyman, LoginWithBiometric } from '../utils/AuthRoute'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import Flat from '../Components/Ui/Flat'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
 import { AuthContext } from '../utils/AuthContext'
-import Input from '../Components/Ui/Input'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import { Base64 } from 'js-base64'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
+
   
 
 const Login = ({navigation}) => {
@@ -21,7 +25,7 @@ const Login = ({navigation}) => {
     const [passwordIsInvalid, setPasswordIsInvalid] = useState(true)
     const [isloading, setIsloading] = useState(false)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
-    const log = Device.osInternalBuildId
+    // const log = .osInternalBuildId
     const authCtx = useContext(AuthContext)
     const timestamp = new Date();
 
@@ -82,13 +86,13 @@ const Login = ({navigation}) => {
         authCtx.helperSubCatId(response.subcategory)
         authCtx.helperCatId(response.category)
         authCtx.helperShowAmount('show')
-        authCtx.helperuserid(response.user_id)
+        authCtx.helperuserid(response.userid)
         authCtx.helperlastLoginTimestamp(new Date().toString())
         setIsloading(false)
       } catch (error) {
         setIsloading(true)
         Alert.alert('Login Failed', error.response.data.message)
-        // console.log(error.response)
+        console.log(error.response)
         setIsloading(false)
       }
     }
@@ -112,9 +116,10 @@ const Login = ({navigation}) => {
     }
 
     const BiometricSignUp = async () => {
+      console.log(authCtx.uuid)
       try {
         setIsloading(true)
-        const response = await LoginWithBiometric(log)
+        const response = await LoginWithBiometric(authCtx.uuid)
         // console.log(response.data)
         authCtx.authenticated(response.data.access_token)  
         authCtx.helperId(response.data.helper_id)
@@ -127,7 +132,7 @@ const Login = ({navigation}) => {
         authCtx.helperSubCatId(response.data.subcategory)
         authCtx.helperCatId(response.data.category)
         authCtx.helperShowAmount('show')
-        authCtx.helperuserid(response.data.user_id)
+        authCtx.helperuserid(response.data.userid)
         authCtx.helpersumtot("0.00")
         authCtx.helperlastLoginTimestamp(new Date().toString())
         setIsloading(false)
@@ -135,7 +140,7 @@ const Login = ({navigation}) => {
         setIsloading(true)
         Alert.alert('Login Failed', error.response.data.message)
         setIsloading(false)   
-        // console.log(error.response)     
+        console.log(error.response)     
       }
     }
 
@@ -147,9 +152,16 @@ const Login = ({navigation}) => {
     
 
   return (
-    <SafeAreaView>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+      >
+      {
+        Platform.OS === 'ios' && 
+        <View style={{justifyContent:'center', flex:1, marginTop:'10%', marginHorizontal:20}}/>
+      }
+      
       <ScrollView>
-        {/* <View style={{justifyContent:'center', flex:1, marginTop:'40%', marginHorizontal:20}}> */}
         <View style={{justifyContent:'center', flex:1, marginTop:marginStyle.marginTp + 100, marginHorizontal:20}}>
         <Image style={{ width:100, height:100, alignSelf:'center'}} source={require("../assets/igoepp_transparent2.png")}   placeholder={'blurhash'} contentFit="contain"/>
         <Text style={styles.Title}>Login</Text>
@@ -188,7 +200,7 @@ const Login = ({navigation}) => {
             Platform.OS === 'android' ? 
             <Ionicons name="finger-print" size={35} color={Color.new_color} />
             :
-            <Image source={require("../assets/faceid.jpg")} style={{width:50, height:50}} contentFit='cover'/>
+            <Image source={require("../assets/face_id.png")} style={{width:50, height:50}} contentFit='cover'/>
 
           }
         </TouchableOpacity>
@@ -213,7 +225,7 @@ const Login = ({navigation}) => {
 
       
     
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   )
 }
 

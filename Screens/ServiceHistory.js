@@ -1,18 +1,27 @@
-import { FlatList, StyleSheet, TouchableOpacity, Text, View, SafeAreaView, Dimensions, Platform } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
-import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
+import { FlatList, StyleSheet, TouchableOpacity, Text, View, SafeAreaView, Dimensions,  Alert } from 'react-native'
+import React, { useContext, useEffect, useState, useRef } from 'react'
 import { Image, ImageBackground } from 'expo-image'
-import { AuthContext } from '../utils/AuthContext'
-import { RequestByHelperid, ShowRequestWithId } from '../utils/AuthRoute'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
+import { RequestByHelperid, RequestCompletedRequestByHelperId, ShowRequestWithId } from '../utils/AuthRoute'
 import Modal from 'react-native-modal'
-import {MaterialIcons} from '@expo/vector-icons'
+import {MaterialIcons, Entypo, AntDesign} from '@expo/vector-icons'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import * as Sharing from 'expo-sharing';
+import { captureRef } from 'react-native-view-shot';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import {Platform} from 'react-native';
+
+
 
 
 const WIDTH = Dimensions.get('window').width
 const HEIGHT = Dimensions.get('window').height
-
 
 
 const ServiceHistory = ({navigation}) => {
@@ -29,7 +38,7 @@ const ServiceHistory = ({navigation}) => {
       // do something
       try {
         setIsLoading(true)
-        const response = await RequestByHelperid(authCtx.Id , authCtx.token)
+        const response = await RequestCompletedRequestByHelperId(authCtx.Id , authCtx.token)
         setRequest(response)
         setIsLoading(false)
       } catch (error) {
@@ -39,6 +48,68 @@ const ServiceHistory = ({navigation}) => {
     });
     return unsubscribe;
   }, [navigation]);
+
+  const viewRef = useRef();
+
+    const captureAndShare = async () => {
+      try {
+        // Capture the screenshot
+        const uri = await captureRef(viewRef, {
+          format: 'png',
+          quality: 1,
+        });
+  
+        // Share the screenshot
+        await Sharing.shareAsync(uri);
+      } catch (error) {
+        console.error('Error capturing and sharing screenshot:', error);
+      }
+    };
+
+    const captureAndSaveScreen = async () => {
+      try {
+        // Capture the screen
+        const uri = await captureRef(viewRef, {
+          format: 'png',
+          quality: 1.0,
+        });
+  
+        // Get permission to access media library
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission to access media library is required!');
+          return;
+        }
+  
+        // Define the custom file name
+        const fileName = `receipt_${new Date().getTime()}.png`;
+        const downloadDir = FileSystem.documentDirectory + 'Download/';
+        const fileUri = downloadDir + fileName;
+  
+        // Ensure the download directory exists
+        await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
+  
+        // Move the captured image to the download directory with the custom name
+        await FileSystem.moveAsync({
+          from: uri,
+          to: fileUri,
+        });
+  
+        // Save the file to the device's download folder
+        const asset = await MediaLibrary.createAssetAsync(fileUri);
+        const album = await MediaLibrary.getAlbumAsync('Download');
+        if (album == null) {
+          await MediaLibrary.createAlbumAsync('Download', asset, false);
+        } else {
+          await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+        }
+
+        Alert.alert('Receipt saved successfully!');
+      } catch (error) {
+        console.error('Failed to capture and save screen:', error);
+        Alert.alert('Failed to save receipt!');
+      }
+    };
 
     const ViewDetails = async (id) => {
       try {
@@ -126,7 +197,7 @@ const ServiceHistory = ({navigation}) => {
             <MaterialIcons name="cancel" size={30} color="white" />
           </TouchableOpacity>
 
-            <View style={styles.modalView}>
+            <View style={styles.modalView}  ref={viewRef}>
               <Text style={styles.modalText}>Details</Text>
 
                 {isdetailsLoading ? <LoadingOverlay/> : 
@@ -238,6 +309,18 @@ const ServiceHistory = ({navigation}) => {
                         <Text style={{fontFamily:'poppinsRegular', fontSize :11 }}>Time :</Text>
                         <Text  style={{fontFamily:'poppinsRegular', fontSize :11 }}> {item.help_time}</Text>
                         </View>
+
+                        <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
+                        
+                        <TouchableOpacity style={styles.sharebtn} onPress={() =>  captureAndShare()}>
+                              <Entypo name="forward" size={24} color={Color.new_color}/>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => captureAndSaveScreen()}>
+                          <AntDesign name="download" size={24} color={Color.new_color} />
+                        </TouchableOpacity>
+                      </View>
+
 
                     </View>
                   )}    

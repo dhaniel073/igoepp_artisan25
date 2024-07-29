@@ -1,12 +1,15 @@
-import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useState } from 'react'
-import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
-import { AuthContext } from '../utils/AuthContext'
-import GoBack from '../Components/Ui/GoBack'
 import {MaterialCommunityIcons} from '@expo/vector-icons'
-import SubmitButton from '../Components/Ui/SubmitButton'
 import { NegotiatePrice } from '../utils/AuthRoute'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
 
 
 const data = [

@@ -1,14 +1,21 @@
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import React, { useEffect, useContext, useState, useCallback, useLayoutEffect } from 'react'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
-import { AuthContext } from '../utils/AuthContext'
-import { CustomersUrl, GetCustomer } from '../utils/AuthRoute'
+import { GetCustomer } from '../utils/AuthRoute'
 import { Bubble, GiftedChat, Send } from 'react-native-gifted-chat'
 import axios from 'axios'
-import {MaterialCommunityIcons, Ionicons} from '@expo/vector-icons'
+import {MaterialCommunityIcons, FontAwesome5, Ionicons} from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import GoBack from '../Components/Ui/GoBack'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
+
 
 const Chat = ({navigation, route}) => {
   const [messages, setMessages] = useState([])
@@ -25,6 +32,7 @@ const Chat = ({navigation, route}) => {
     try {
         setIsLoading(true)
         const response = await GetCustomer(customerid, authCtx.token)
+        // console.log(response)
         setCustomer(response.data.data)
         setIsLoading(false)
     } catch (error) {

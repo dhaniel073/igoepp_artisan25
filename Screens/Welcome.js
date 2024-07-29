@@ -1,17 +1,23 @@
-import { Alert, AppState, Dimensions, FlatList, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, AppState, Dimensions, FlatList, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
+import {Platform} from 'react-native';
 import { Image, ImageBackground } from 'expo-image'
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
-import { Border, Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle';
 import Swiper from 'react-native-swiper'
-import { AuthContext } from '../utils/AuthContext';
 import * as LocalAuthentication from 'expo-local-authentication'
-import { HelperUrl, NotificationUnread, RequestByHelperid, RequestSumTotal, SliderImage, SubCategory, TrendingService, ViewSubCategory } from '../utils/AuthRoute';
-import LoadingOverlay from '../Components/Ui/LoadingOverlay';
+import { GetNews, HelperUrl, NotificationUnread, RequestByHelperid, RequestSumTotal, SliderImage, SubCategory, TrendingService, ViewSubCategory } from '../utils/AuthRoute';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications'
 import axios from 'axios';
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+
 
 
 const WIDTH = Dimensions.get('window').width
@@ -50,6 +56,7 @@ const WelcomeScreen = ({navigation}) => {
   const [sliimage, setsliimage] = useState([])
   const [request, setRequest] = useState([])
   const [notificationnumber, setnotificationnumber] = useState('')
+  const [thenews, setNews] = useState()
 
   useEffect(() => {
     const unsuscribe = async () => {
@@ -105,6 +112,7 @@ const WelcomeScreen = ({navigation}) => {
       TrendsArray()
       HelperGet()
       Slider()
+      // news()
       // checkLastLoginTimestamp()
     }, [])
 
@@ -173,7 +181,7 @@ const WelcomeScreen = ({navigation}) => {
       }
     }
 
-    async function  Sumtotal(){
+    async function Sumtotal(){
       try {
         const response = await RequestSumTotal(authCtx.Id , authCtx.token)
         setsumtot(response)
@@ -218,6 +226,17 @@ const WelcomeScreen = ({navigation}) => {
           // console.log(response.data)
           // console.log(response)
           setSubCatName(response.data.data)
+        } catch (error) {
+          // console.log(error)
+          // console.log(error)
+        }
+      }
+
+      const news = async () => {
+        try {
+          const response = await GetNews(authCtx.token)
+          console.log(response)
+          setNews(response.data.data)
         } catch (error) {
           // console.log(error)
           // console.log(error)
@@ -384,14 +403,14 @@ const WelcomeScreen = ({navigation}) => {
 
                 <TouchableOpacity style={styles.makepayment}  onPress={() => navigation.navigate('BillPayment')}>
                   <Image contentFit='contain' source={require("../assets/makepay.png")} style={{width:40, height: 40,  }} transition={1000}/>
-                  <Text style={{ color: Color.steelblue, marginTop:5, fontSize:10,}}>Bill Payment</Text>
+                  <Text style={{ color: Color.steelblue, marginTop:5, fontSize:13,}}>Bill Payment</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.viewrequest, {paddingLeft:8}]} onPress={() => navigation.navigate('ViewRequest')}>
                   {/* <Image contentFit='contain' source={require('../assets/vectors/service.png')} style={{width:50, height: 50, marginTop:50, alignSelf:'flex-end', marginRight:30}} transition={1000}/> */}
                   <Image contentFit='contain' source={require("../assets/group-753.png")} style={{width:50, height: 50, left:7 , marginTop: 55, marginBottom: 25 }} transition={1000}/>
                   <View style={{ justifyContent:'flex-end', alignItems:'flex-end', marginTop: 50}}>
-                    <Text style={{color: Color.blueviolet, alignSelf:'baseline', fontSize:10,}}> View  Request</Text>
+                    <Text style={{color: Color.blueviolet, alignSelf:'baseline', fontSize:13,}}> View Request</Text>
                   </View>
                   <View style={{marginBottom:'30%'}}/>
                 </TouchableOpacity>
@@ -403,14 +422,14 @@ const WelcomeScreen = ({navigation}) => {
                   {/* <Image contentFit='contain' source={require('../assets/vectors/service.png')} style={{width:50, height: 50, marginTop:50, alignSelf:'flex-end', marginRight:30}} transition={1000}/> */}
                   <Image contentFit='contain' source={require("../assets/service.png")} style={{width:50, height: 50,  marginTop: 55, marginBottom: 25, alignSelf:'flex-end', marginRight:30 }} transition={1000}/>
                   <View style={{ justifyContent:'flex-end', alignItems:'flex-end', marginTop: 50}}>
-                    <Text style={{textAlign:'right', paddingRight:10, color:'#fff', fontFamily: 'poppinsRegular', fontSize:10,}}>Service History</Text>
+                    <Text style={{textAlign:'right', paddingRight:10, color:'#fff', fontFamily: 'poppinsRegular', fontSize:13,}}>Service History</Text>
                   </View>
                   <View style={{marginBottom:'30%'}}/>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.acceptedrequest}  onPress={() => navigation.navigate('AcceptedRequest')}>
                   <Image contentFit='contain' source={require('../assets/vector14.png')} style={{width:37,  height: 37, marginLeft:10, marginBottom:5  }} transition={1000}/>
-                  <Text style={{color:'#fff', fontFamily: 'poppinsRegular', fontSize: 10}}>Accepted Request</Text>
+                  <Text style={{color:'#fff', fontFamily: 'poppinsRegular', fontSize: 13}}>Accepted Request</Text>
                 </TouchableOpacity>
 
               </View>
@@ -418,11 +437,16 @@ const WelcomeScreen = ({navigation}) => {
              
 
               <View style={{marginRight:10, marginTop:5}}>
+                <TouchableOpacity style={styles.personalrequest}  onPress={() => navigation.navigate('PersonalRequest')}>
+                <Image contentFit='contain' source={require("../assets/group-753.png")} style={{width:40, height: 40, left:7 , marginBottom: 10 }} transition={1000}/>
+                  <Text style={{ color: Color.blueviolet, alignSelf:'baseline', fontSize:13,}}>Personal Request</Text>
+                </TouchableOpacity>
+              
               
                 <TouchableOpacity style={[styles.availability, {paddingLeft:8}]} onPress={() => navigation.navigate('Availability')}>
                   <Image contentFit='contain' source={require("../assets/group13.png")} style={{width:50, height: 50,  marginTop: 55, marginBottom: 25, alignSelf:'flex-start', marginLeft:10 }} transition={1000}/>
                   <View style={{ justifyContent:'flex-start', alignItems:'flex-start', marginTop: 50}}>
-                    <Text style={{textAlign:'left', color:Color.steelblue, fontFamily: 'poppinsRegular', fontSize:10}}>Availability</Text>
+                    <Text style={{textAlign:'left', color:Color.steelblue, fontFamily: 'poppinsRegular', fontSize:13}}>Availability</Text>
 
                   </View>
                   <View style={{marginBottom:'30%'}}/>
@@ -445,7 +469,7 @@ const WelcomeScreen = ({navigation}) => {
             trend.map((item, key) => {
               return(
                 <View key={key} style={[styles.shadowProps, {flexDirection:'row', borderWidth:1, borderColor:Color.new_color, height:HEIGHT*0.1, alignSelf:'center', borderRadius:10,  width:WIDTH*0.8, margin:10, padding:10, marginLeft:20}]}>
-                  <View style={{padding:10, borderColor:Color.new_color, borderWidth:1, borderRadius:10, top:10, left:-25, position:'absolute', backgroundColor:'white'}}>
+                  <View style={{padding:10, borderColor:Color.new_color, borderWidth:1, borderRadius:10, top: Platform.OS === 'ios' ? 15 : 10, left:-25, position:'absolute', backgroundColor:'white'}}>
                     <Text><Entypo name="tools" size={30} color={Color.new_color} /></Text>
                   </View>
 
@@ -470,7 +494,47 @@ const WelcomeScreen = ({navigation}) => {
         </>
       }
 
-        <View style={{marginBottom:'20%', marginTop:'5%'}}/>
+      {/* got news */}
+
+      {/* {
+        <>
+        <View style={{marginTop:10, marginBottom:20}}>
+          <Text style={{fontSize:15, marginLeft:10, fontFamily:'poppinsSemiBold'}}>News</Text>
+          {
+            thenews.map((item, key) => {
+              return(
+                <View key={key} style={[styles.shadowProps, {flexDirection:'row', borderWidth:1, borderColor:Color.new_color, height:HEIGHT*0.1, alignSelf:'center', borderRadius:10,  width:WIDTH*0.8, margin:10, padding:10, marginLeft:20}]}>
+                  <View style={{padding:10, borderColor:Color.new_color, borderWidth:1, borderRadius:10, top: Platform.OS === 'ios' ? 15 : 10, left:-25, position:'absolute', backgroundColor:'white'}}>
+                    <Text><Entypo name="tools" size={30} color={Color.new_color} /></Text>
+                  </View>
+
+                  <View style={{marginLeft:30,  flex:1, justifyContent:'center'}}>
+                      
+                      <View>
+                        <Text style={{fontFamily:'poppinsSemiBold', fontSize:13}}>{item.sub_category}</Text>
+                      </View>
+
+                      <View style={{flexDirection:'row',justifyContent:'space-between'}}>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Min Price: {item.min_agreed_price.toLocaleString()}</Text>
+                        <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Max Price: {item.max_agreed_price.toLocaleString()}</Text>
+                    </View>
+                  </View>
+                </View>
+              )
+            })
+          }
+         
+        </View>
+        </>
+      } */}
+
+
+        {
+          Platform.OS === 'android' ?
+          <View style={{marginBottom:'20%', marginTop:'5%'}}/>
+          : 
+          <View style={{marginBottom:'30%', marginTop:'5%'}}/>
+        }
 
       </ScrollView>
     </SafeAreaView>
@@ -564,12 +628,13 @@ const styles = StyleSheet.create({
     width: WIDTH * 0.4,
     marginBottom:10,
   },
-  viewrequest:{
+  personalrequest:{
     backgroundColor: Color.mediumpurple,
-    maxHeight: HEIGHT * 0.3,
+    height: HEIGHT * 0.12,
     borderRadius: Border.br_3xs,
     width: WIDTH * 0.4,
-    marginBottom:10
+    marginBottom: 10,
+    padding:10
   },
   searchhistory:{
     backgroundColor: Color.lightcoral,
@@ -581,26 +646,9 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     height: HEIGHT * 0.18,
-    // width: "100%",
-    shadowOpacity: 1,
-    elevation: 4,
-    shadowRadius: 2,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowColor: "black",
   },
   wrapper1: {
     height: HEIGHT * 0.14,
-    shadowOpacity: 1,
-    elevation: 4,
-    shadowRadius: 2,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowColor: "black",
     alignItems:'center',
     justifyContent:'center'
   },

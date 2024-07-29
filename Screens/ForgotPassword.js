@@ -1,12 +1,17 @@
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native'
 import React, { useState } from 'react'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import { Image } from 'expo-image'
-import Input from '../Components/Ui/Input'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import Flat from '../Components/Ui/Flat'
 import { ForgotHelperPassword } from '../utils/AuthRoute'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
 
 const ForgotPassword = ({navigation}) => {
     
@@ -53,6 +58,10 @@ const ForgotPassword = ({navigation}) => {
 
   return (
     <ScrollView style={styles.authContent} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+      > 
       <Image style={{ width:100, height:100, alignSelf:'center'}} source={require("../assets/igoepp_transparent2.png")}   placeholder={'blurhash'} contentFit="contain"/>
 
       <Text style={styles.Title}>Forgot Password</Text>
@@ -72,6 +81,7 @@ const ForgotPassword = ({navigation}) => {
           Login Instead
         </Flat>
       </View>
+      </KeyboardAvoidingView>
     </ScrollView>
   )
 }
@@ -81,7 +91,7 @@ export default ForgotPassword
 const styles = StyleSheet.create({
   authContent: {
     flex: 1,
-    marginTop: 130,
+    marginTop: Platform.OS === 'ios' ? '50%' : 130,
     marginHorizontal: 10,
     padding: 16,
     borderRadius: 8,

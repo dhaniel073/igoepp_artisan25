@@ -2,7 +2,16 @@ import { StyleSheet, View, Text, SafeAreaView, Button, Pressable,TouchableOpacit
 import {Image} from "expo-image"
 import { StatusBar } from "expo-status-bar";
 import Swiper from "react-native-swiper";
-import { Color } from "../Components/Ui/GlobalStyle";
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
 
 
 const width = Dimensions.get('window').width

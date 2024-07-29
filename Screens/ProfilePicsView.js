@@ -1,11 +1,18 @@
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import {AntDesign} from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import { HelperUrl } from '../utils/AuthRoute'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
 import { AuthContext } from '../utils/AuthContext'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
+
+
 
 const ProfilePicsView = ({navigation, route}) => {
   const authCtx = useContext(AuthContext)

@@ -2,7 +2,7 @@
   "expo": {
     "name": "IgoeppArt",
     "slug": "igoepp_artisan",
-    "version": "1.0.1",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon1.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     "updates": {
       "checkAutomatically": "ON_ERROR_RECOVERY",
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/0e18ffeb-cbc7-439c-8348-da5e8ba93af1"
+      "url": "https://u.expo.dev/e8a1e2a3-7c71-4a4e-9e7b-60ca9cecf323"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -22,12 +22,19 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Igoepp Customer uses Face Id and Touch ID to verify the user's identity and protect sensitive data"
-      },
-      "bundleIdentifier": "igoepp"
+        "NSFaceIDUsageDescription": "IgoeppArt uses Face Id and Touch ID to verify the user's identity and protect sensitive data",
+        "NSPhotoLibraryAddUsageDescription": "IgoeppArt needs access to your photo library to save receipts.",
+        "photosPermission": "Allow IgoeppArt to access your photos.",
+        "savePhotosPermission": "Allow IgoeppArt to save photos.",
+        "isAccessMediaLocationEnabled": true,
+        "cameraPermission": "Allow IgoeppArt to access your camera",
+        "microphonePermission": "Allow IgoeppArt to access your microphone",
+        "locationAlwaysAndWhenInUsePermission": "Allow IgoeppArt use your location.",
+        "recordAudioAndroid": true
+      }
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 7,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon1.png",
         "backgroundColor": "#ffffff"
@@ -37,13 +44,16 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "0e18ffeb-cbc7-439c-8348-da5e8ba93af1"
-      }
-    },
     "runtimeVersion": {
       "policy": "appVersion"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1dbed5a3-1ecc-494c-8a2f-39744f503db3"
+      }
     }
   }
 }

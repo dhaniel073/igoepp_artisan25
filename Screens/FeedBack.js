@@ -1,13 +1,18 @@
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useContext, useState } from 'react'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle';
-import SubmitButton from '../Components/Ui/SubmitButton';
-import GoBack from '../Components/Ui/GoBack';
 import { Dropdown } from 'react-native-element-dropdown';
-import { AuthContext } from '../utils/AuthContext';
 import { SendFeedBack } from '../utils/AuthRoute';
 import {MaterialIcons} from '@expo/vector-icons'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay';
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
 
 
 

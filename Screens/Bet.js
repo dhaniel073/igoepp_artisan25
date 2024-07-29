@@ -1,27 +1,29 @@
-import { Platform, Pressable, Keyboard, SafeAreaView, ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert, TextInput, Share, PermissionsAndroid} from 'react-native'
+import { Pressable,SafeAreaView, ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert, TextInput, Keyboard } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Image, ImageBackground } from 'expo-image'
 import { Dropdown } from 'react-native-element-dropdown'
 import Modal from 'react-native-modal'
 import {MaterialIcons, MaterialCommunityIcons, Entypo} from '@expo/vector-icons'
 import axios from 'axios'
-import { BetPay, HelperBillerCommission, HelperUrl, ValidateBet, ValidatePin } from '../utils/AuthRoute'
-import { AuthContext } from '../utils/AuthContext'
-import GoBack from '../Components/Ui/GoBack'
-import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import Input from '../Components/Ui/Input'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import * as Notification from 'expo-notifications'
 import styled from 'styled-components'
-import OTPFieldInput from '../Components/Ui/OTPFieldInput'
-import { captureRef } from 'react-native-view-shot'
-import * as MediaLibrary from 'expo-media-library';
+import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
+import { BetPay, HelperBillerCommission, HelperUrl, ValidateBet, ValidatePin } from '../utils/AuthRoute'
 import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 
-
-export const StyledButton = styled.TouchableOpacity`
+const StyledButton = styled.TouchableOpacity`
   padding: 15px;
   background-color: ${Color.new_color};
   justify-content: center;
@@ -38,9 +40,6 @@ export const ButtonText = styled.Text`
   font-family: poppinsRegular
 `;
 
-
-
-
 const Bet = ({route, navigation}) => {
   const [category, setcategory] = useState([])
   const [isFocus, setisFocus] = useState(false)
@@ -52,93 +51,25 @@ const Bet = ({route, navigation}) => {
   const [ismodalvisible, setismodalvisible] = useState(false)
   const authId = route?.params?.id
   const [ref, setRef] = useState()
-  
+  const [commissonvalue, setcommissonvalue] = useState()
+
   const [pinT, setpinT] = useState()
   const [pinvalid, setpinvalid] = useState(false)
   const [pincheckifempty, setpincheckifempty] = useState([])
   const [isSetpinModalVisible, setisSetpinModalVisible] = useState(false)
   const [pinerrormessage, setPinerrorMessage] = useState('')
   const [ischecking, setischecking] = useState(false)
-  
+
   const [code, setCode] = useState('')
   const [pinReady, setPinReady] = useState(false)
   const MAX_CODE_LENGTH = 4;
-  const [commissonvalue, setcommissonvalue] = useState()
+
 
   const maindate = new Date() 
   const date = maindate.toDateString()
   const time = maindate.toLocaleTimeString()
 
   const amountCheck = amount >= 100
-
-  const viewRef = useRef(0);
-
-  // console.log(viewRef)
-
-  const sharedummyimage = async () => {
-
-  }
-  
-  const handleShareClick = async () => {
-    try {
-      const uri = await captureRef(viewRef.current, {
-        format: 'png',
-        quality: 1.0,
-      });
-
-      // Save or share the captured image
-      downloadImage(uri);
-    } catch (error) {
-      // console.error('Error capturing image:', error.message);
-    }
-  };
-
-  const shareImage = async (uri) => {
-    try {
-      await Sharing.shareAsync(uri, {
-        mimeType: 'image/png',
-        dialogTitle: 'Share Image',
-        UTI: 'public.png',
-      });
-    } catch (error) {
-      // console.error('Error sharing image:', error.message);
-    }
-  };
-
-  const downloadImage = async (uri) => {
-    try {
-      // Example: Saving the image using expo-file-system
-      // You can replace this with your preferred method of saving or sharing
-      const fileUri = `${FileSystem.documentDirectory}captured_image.png`;
-
-      await FileSystem.copyAsync({
-        from: uri,
-        to: fileUri,
-      });
-
-      // Show an alert with options to Save or Share
-      Alert.alert(
-        'Save or Share Image',
-        'Do you want to save or share this image?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Save',
-            onPress: () => Alert.alert('Image Saved', 'The image has been saved to your device.'),
-          },
-          {
-            text: 'Share',
-            onPress: () => shareImage(fileUri),
-          },
-        ],
-        { cancelable: false }
-      );
-    } catch (error) {
-      // console.error('Error saving or sharing image:', error.message);
-    }
-  };
-
-  
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
@@ -159,31 +90,42 @@ const Bet = ({route, navigation}) => {
         // return;
       }
     })
-     return unsubscribe;
+    return unsubscribe;
   }, [])
+
+    const commissionget = async (id) => {
+      try {
+        const response = await HelperBillerCommission(id, authCtx.token)
+        console.log(response)
+        setcommissonvalue(response)
+      } catch (error) {
+        return;
+      }
+    }
+    
 
   useEffect(() => {
     const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
     const response = axios.get(url, {
-      headers:{
-        Accept:'application/json',
-        Authorization: `Bearer ${authCtx.token}`
-      }
+        headers:{
+          Accept:'application/json',
+          Authorization: `Bearer ${authCtx.token}`
+        }
     }).then((res) => {
-      // console.log(res.data)
-      var count = Object.keys(res.data).length;
-      let catarray = []
-      for (var i = 0; i < count; i++){
-          catarray.push({
-              label: res.data[i].name,
-              value: res.data[i].id,
-          })
-          // setCityCode(response.data.data[i].lga_code)
-      }
-      setcategory(catarray)
+        // console.log(res.data)
+        var count = Object.keys(res.data).length;
+        let catarray = []
+        for (var i = 0; i < count; i++){
+            catarray.push({
+                label: res.data[i].name,
+                value: res.data[i].id,
+            })
+            // setCityCode(response.data.data[i].lga_code)
+        }
+        setcategory(catarray)
     }).catch((error) => {
-      // console.log(error)
-      return;
+        // console.log(error)
+        return;
     })
   }, [])
 
@@ -207,7 +149,7 @@ const Bet = ({route, navigation}) => {
     try {
       setisloading(true)
       const response = await ValidateBet(authCtx.Id, id, betId, authCtx.token)
-      // console.log(response.data)
+      console.log(response.data)
       setRef(response.data.requestID)
       if(response.data.status === "Success"){
         Alert.alert(response.data.status, `Confirm funding to bet Id of ${betId}`, [
@@ -223,8 +165,8 @@ const Bet = ({route, navigation}) => {
       }else{
         Alert.alert("Error", response.data, [
           {
-            text:'Ok',
-            onPress: () => {}
+              text:'Ok',
+              onPress: () => {}
           }
         ])
       }
@@ -234,8 +176,8 @@ const Bet = ({route, navigation}) => {
         setisloading(true)
         Alert.alert("Error", `An Error occured while verifying account try again later`, [
           {
-            text:'Ok',
-            onPress: () => navigation.goBack()
+              text:'Ok',
+              onPress: () => navigation.goBack()
           }
         ])
         setisloading(false)
@@ -250,10 +192,12 @@ const Bet = ({route, navigation}) => {
       refT.current = refT.current + 1;
       // alert('You clicked ' + ref.current + ' times!');
     }
-  
-    const toggleModal1 = () => {
+
+    function toggleModal1(){
       setisSetpinModalVisible(!isSetpinModalVisible)
     }
+  
+
     
     const pinValidateCheck = async () => {
       if(refT.current > 3){
@@ -270,10 +214,11 @@ const Bet = ({route, navigation}) => {
           // console.log(response)
           setCode('')
           betPayment(ref)
+          setischecking(false)
         } catch (error) {
           setischecking(true)
           setCode('')
-          setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
+          setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + ` trial${3-refT.current > 1 ? 's' : ""} remaining`))
           // console.log(error.response)
           Alert.alert("Error", error.response.data.message+ " " + "Try again", [
             {
@@ -287,46 +232,106 @@ const Bet = ({route, navigation}) => {
       }
     }
   
+    const viewRef = useRef();
 
-    const commissionget = async (id) => {
+    const captureAndShare = async () => {
       try {
-        const response = await HelperBillerCommission(id, authCtx.token)
-        // console.log(response)
-        setcommissonvalue(response)
+        // Capture the screenshot
+        const uri = await captureRef(viewRef, {
+          format: 'png',
+          quality: 1,
+        });
+  
+        // Share the screenshot
+        await Sharing.shareAsync(uri);
       } catch (error) {
-        return;
+        console.error('Error capturing and sharing screenshot:', error);
       }
-    }
-    // console.log(ref)
+    };
+
+    const captureAndSaveScreen = async () => {
+      try {
+        // Capture the screen
+        const uri = await captureRef(viewRef, {
+          format: 'png',
+          quality: 1.0,
+        });
+  
+        // Get permission to access media library
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission to access media library is required!');
+          return;
+        }
+  
+        // Define the custom file name
+        const fileName = `receipt_${new Date().getTime()}.png`;
+        const downloadDir = FileSystem.documentDirectory + 'Download/';
+        const fileUri = downloadDir + fileName;
+  
+        // Ensure the download directory exists
+        await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
+  
+        // Move the captured image to the download directory with the custom name
+        await FileSystem.moveAsync({
+          from: uri,
+          to: fileUri,
+        });
+  
+        // Save the file to the device's download folder
+        const asset = await MediaLibrary.createAssetAsync(fileUri);
+        const album = await MediaLibrary.getAlbumAsync('Download');
+        if (album == null) {
+          await MediaLibrary.createAlbumAsync('Download', asset, false);
+        } else {
+          await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+        }
+  
+        Alert.alert('Receipt saved successfully!');
+      } catch (error) {
+        console.error('Failed to capture and save screen:', error);
+        Alert.alert('Failed to save receipt!');
+      }
+    };
+  
 
     const betPayment = async () => {
       toggleModal1()
       try {
         setisloading(true)
         const response = await BetPay(ref, amount, authCtx.token, commissonvalue)
-        // console.log(commissonvalue)
-        if(response.data.message === "failed" || "Failed" && response.data.description === "Insufficient wallet balance"){
-          Alert.alert("Failed", response.data.description, [
+        console.log(response)
+        if(response.message === "failed" || response.description === "Failed"  || response.message === "Insufficient Balance"){
+          Alert.alert('Failed', response.data.description, [
             {
               text:"Ok",
               onPress:() => navigation.goBack()
             }
           ])
+          return;
         }else{
-          // console.log(response.data)
-          schedulePushNotification()
+          // schedulePushNotification()
           toggleModal()
         }
         setisloading(false)
     } catch (error) {
+      console.log(error.response.data)
       setisloading(true)
-        // console.log(error.response.data)
-        Alert.alert("Sorry", "An error occured try again later", [
-          {  
+      if(error.response.data.message === "Insufficient Balance"){
+        Alert.alert("Sorry", error.response.data.message, [
+          {
             text:"Ok",
-            onPress: () => [navigation.goBack()]
+            onPress: () =>  navigation.navigate('BillPayment')
           }
-      ])
+        ])
+      }else{
+        Alert.alert("Sorry", "An error occured", [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+        ])
+      }
       setisloading(false)
       return;
     }
@@ -336,26 +341,26 @@ const Bet = ({route, navigation}) => {
       return <LoadingOverlay message={"..."}/>
     }
 
-    async function schedulePushNotification(response) {
-      await Notification.scheduleNotificationAsync({
-        content: {
-      //   title: "You've got mail! 📬",
-          title: `Bet Funding 🔔`,
-          body: `You successfully funded your betting account\nBet Id: ${betId}\nAmount: NGN${amount}\nRef: ${ref}\nDate: ${date} ${time}`,
-          data: { data: 'goes here' },
-        },
-        trigger: { seconds: 10 },
-      });
-    }
+  async function schedulePushNotification() {
+    await Notification.scheduleNotificationAsync({
+      content: {
+        title: `Bet Funding 🔔`,
+        body: `You successfully funded your betting account\nBet Id: ${betId}\nAmount: NGN${amount}\nRef: ${ref}\nDate: ${date} ${time}`,
+        data: { data: 'goes here' },
+      },
+      trigger: { seconds: 10 },
+    });
+  }
+
 
 
   return (
     <ScrollView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}} showsVerticalScrollIndicator={false}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <Text style={styles.bettxt}>{route.params.name === "Betting and/or Lottery" ? "Betting and Lottery" : null}</Text>
+      <Text style={styles.bettxt}>{route.params.name === "Betting and/or Lottery" ? "Betting and Lottery" : "Betting"}</Text>
 
       {
-        pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
+        pincheckifempty === "N" ?  Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
           {
             text: "Ok",
             onPress: () => navigation.navigate('TransactionPin')
@@ -399,9 +404,9 @@ const Bet = ({route, navigation}) => {
               onFocus={() => setisFocus(true)}
               onBlur={() => setisFocus(false)}
               onChange={item => {
-                setid(item.value);
-                setisFocus(false);
-                commissionget(item.value)
+                  setid(item.value);
+                  setisFocus(false);
+                  commissionget(item.value)
               }}
             />
             <View style={{ marginBottom:20}}/>
@@ -441,10 +446,10 @@ const Bet = ({route, navigation}) => {
           <Modal isVisible={ismodalvisible}>
             <SafeAreaView style={styles.centeredView}>
 
-            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), navigation.goBack()]}>
+            <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), schedulePushNotification(),navigation.goBack()]}>
               <MaterialIcons name="cancel" size={30} color="white" />
             </TouchableOpacity>
-            <View style={styles.modalView}>
+            <View style={styles.modalView}  ref={viewRef}>
             <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top:DIMENSION.HEIGHT * 0.1,justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
               <Text style={styles.modalText}>Reciept</Text>
                 {
@@ -478,11 +483,15 @@ const Bet = ({route, navigation}) => {
 
                       <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
                       
-                        <TouchableOpacity style={{}} onPress={() => handleShareClick()}>
-                          <Text><Entypo name="forward" size={24} color="black" /></Text>
+                        <TouchableOpacity style={{}} onPress={() =>  captureAndShare()}>
+                          <Text><Entypo name="forward" size={24} color={Color.new_color} /></Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={{}} onPress={() => [toggleModal(), navigation.goBack()]}>
+                        <TouchableOpacity onPress={() => captureAndSaveScreen()}>
+                          <AntDesign name="download" size={24} color={Color.new_color} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{}} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack(),]}>
                           <Text style={{}}>Close</Text>
                         </TouchableOpacity>
                       </View>
@@ -521,13 +530,13 @@ const Bet = ({route, navigation}) => {
             <StyledButton disabled={!pinReady} 
             onPress={() => [handleClick(), pinValidateCheck()]}
             style={{
-                backgroundColor: !pinReady ? Color.gray_100 : Color.new_color
+              backgroundColor: !pinReady ? Color.grey : Color.new_color
             }}>
-                <ButtonText
-                style={{
-                    color: !pinReady ? Color.black : Color.white
-                }}
-                >Submit</ButtonText>
+              <ButtonText
+              style={{
+                color: !pinReady ? Color.black : Color.white
+              }}
+              >Submit</ButtonText>
             </StyledButton>
             </>
             }
@@ -542,6 +551,14 @@ const Bet = ({route, navigation}) => {
 export default Bet
 
 const styles = StyleSheet.create({
+  receipt: {
+    width: 300,
+    height: 400,
+    backgroundColor: 'white',
+    borderColor: 'black',
+    borderWidth: 1,
+    padding: 10,
+  },
   bettxt:{
     fontSize: 18,
     color: Color.new_color,
@@ -550,14 +567,6 @@ const styles = StyleSheet.create({
     marginTop:10,
     marginBottom:15,
   }, 
-  modalView1: {
-    backgroundColor: 'white',
-    width: DIMENSION.WIDTH  * 0.9,
-    borderRadius: 20,
-    // flex:1,
-    alignItems:'center',
-    height: DIMENSION.HEIGHT * 0.4
-  },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
@@ -577,6 +586,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  modalView1: {
+    backgroundColor: 'white',
+    width: DIMENSION.WIDTH  * 0.9,
+    borderRadius: 20,
+    // flex:1,
+    alignItems:'center',
+    height: DIMENSION.HEIGHT * 0.4
   },
   modalText: {
     textAlign: 'center',

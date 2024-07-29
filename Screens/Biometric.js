@@ -3,11 +3,19 @@ import React, { useContext, useEffect, useId, useState } from 'react'
 import * as LocalAuthentication from 'expo-local-authentication'
 import {Ionicons, Octicons} from '@expo/vector-icons'
 import * as Device from 'expo-device';
-import { AuthContext } from '../utils/AuthContext'
 import { BiometricSetup, DisableBiometric, HelperUrl } from '../utils/AuthRoute'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import GoBack from '../Components/Ui/GoBack';
+import uuid from 'react-native-uuid';
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
+
 
 const Biometric = ({navigation}) => {
     const [biometric, setBiometric] = useState(true)
@@ -16,9 +24,10 @@ const Biometric = ({navigation}) => {
     const [isloading, setisloading] = useState(false)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [check, setCheck] = useState([])
-    const log = Device.osInternalBuildId
+    const log = uuid.v4();
     
 
+    // console.log(authCtx.uuid);
 
     useEffect(() => {
       const unsuscribe = navigation.addListener('focus', async () => {
@@ -59,6 +68,7 @@ const Biometric = ({navigation}) => {
     const Enabled = async () => {
       try {
         const response = await BiometricSetup(authCtx.Id, log, authCtx.token)
+        authCtx.helperuuid(log);
         setBiometric(previousState => !previousState)
         Alert.alert("Successful", "Bimoetric enabled sucessfully",[
           {
@@ -82,6 +92,7 @@ const Biometric = ({navigation}) => {
       try {
         const response = await DisableBiometric(authCtx.Id, authCtx.token)
         // console.log(response)
+        authCtx.helperuuid("null");
         setBiometric(previousState => !previousState)
         Alert.alert("Successful", "Bimoetric disabled sucessfully",[
           {
@@ -143,7 +154,12 @@ const Biometric = ({navigation}) => {
   return (
     <View style={{flex:1, marginTop: marginStyle.marginTp, marginHorizontal:10}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <Text style={styles.biometrictxt}>Biometric Setup</Text>
+      {
+        Platform.OS === 'ios' ? 
+        <Text style={styles.biometrictxt}>Face id  Setup</Text>
+        :
+        <Text style={styles.biometrictxt}>Biometric Setup</Text>
+      }
     
       <View style={{ flexDirection: 'row', marginTop: '5%', justifyContent:'space-between', marginHorizontal:10 }}>
         <View style={{flexDirection:'row'}}>

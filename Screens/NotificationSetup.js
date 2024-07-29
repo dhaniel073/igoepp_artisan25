@@ -1,11 +1,17 @@
 import { Alert, StyleSheet, Switch, Text, View } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
-import { AuthContext } from '../utils/AuthContext'
-import GoBack from '../Components/Ui/GoBack'
 import { EnableAlert, ViewAlertSetup } from '../utils/AuthRoute'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import * as Notification from 'expo-notifications'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
+
+
 
 const NotificationSetup = ({navigation}) => {
   const [isEmailEnabled, setIsEmailEnabled] = useState(true)
@@ -39,7 +45,7 @@ const NotificationSetup = ({navigation}) => {
       const response = await EnableAlert(authCtx.Id, eventy_type, alert_type, authCtx.token)
       // console.log(response)
     } catch (error) {
-      // console.log(error.response)
+      console.log(error.response)
       Alert.alert("Error", "An error occured try again later", [
         {
           text: "Ok",

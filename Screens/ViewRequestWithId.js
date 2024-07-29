@@ -1,12 +1,16 @@
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
-import { AuthContext } from '../utils/AuthContext'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { ViewSubCategory } from '../utils/AuthRoute'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import Input from '../Components/Ui/Input'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
+
+
 
 const ViewRequestWithId = ({navigation, route}) => {
     const authCtx = useContext(AuthContext)
@@ -84,7 +88,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Customer Name
             </Text>
-            <Input
+            <TextInput
                 style={[styles.input]}
                 value={customerName}
                 editable={false}
@@ -96,7 +100,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Help Category Name
             </Text>
-            <Input
+            <TextInput
                 style={[styles.input]}
                 value={name}
                 editable={false}
@@ -107,7 +111,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Customer address
             </Text>
-            <Input
+            <TextInput
                 style={[styles.input]}
                 value={address}
                 editable={false}
@@ -119,7 +123,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Date for Service
             </Text>
-            <Input
+            <TextInput
                 style={[styles.input]}
                 value={date}
                 editable={false}
@@ -130,11 +134,11 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Instruction To Helper 
             </Text>
-            <Input
+            <TextInput
 
                 style={[styles.input]}
                 value={instruction}
-                // editable={true}
+                editable={false}
                 multiline={true}
                 // numberofLines={10}
             />
@@ -145,11 +149,11 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                Size of Help
             </Text>
-            <Input
+            <TextInput
 
                 style={[styles.input]}
                 value={size}
-                // editable={true}
+                editable={false}
                 
             />
         </View>
@@ -158,11 +162,11 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Help Interverals
             </Text>
-            <Input
+            <TextInput
 
                 style={[styles.input]}
                 value={frequency}
-                // editable={true}
+                editable={false}
                 
             />
         </View>
@@ -170,7 +174,7 @@ const ViewRequestWithId = ({navigation, route}) => {
             <Text style={[styles.label]}>
                 Request Type
             </Text>
-            <Input
+            <TextInput
                 style={[styles.input]}
                 value={preassessment === "N" ? "Normal Request" : "Preassessment Request"}
                 editable={false}
@@ -178,15 +182,14 @@ const ViewRequestWithId = ({navigation, route}) => {
             />
         </View>
 
-
-       
-
       </View>
         {status === 'X' ? "" : 
-            <View style={{margin: 30}}>
+            <View style={{marginHorizontal:30, marginTop:10, marginBottom:10}}>
                 <SubmitButton onPress={confirmSetPrice} message={'Set Price'}/>
             </View>
         }
+
+        <View style={{margin:20}}/>
     </ScrollView>
 
   )
@@ -196,11 +199,13 @@ export default ViewRequestWithId
 
 const styles = StyleSheet.create({
   input: {
-    color: Color.gray_100,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
     borderBottomColor:  Color.gray_100,
     borderBottomWidth: 2,
     fontFamily: 'poppinsRegular',
-    fontSize: 15,
+    fontSize: 14,
+    color: Color.gray_100
   },
   viewrequestwithidtxt:{
     fontSize: 18,

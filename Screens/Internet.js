@@ -1,24 +1,33 @@
-import { Alert, Keyboard, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import axios from 'axios'
-import GoBack from '../Components/Ui/GoBack'
-import { Dropdown } from 'react-native-element-dropdown'
-import { AuthContext } from '../utils/AuthContext'
-import { Image, ImageBackground } from 'expo-image'
-import Input from '../Components/Ui/Input'
-import SubmitButton from '../Components/Ui/SubmitButton'
+import { Alert, Keyboard, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import React, { useContext, useState, useEffect, useRef } from 'react'
 import { HelperBillerCommission, HelperUrl, InternetPayment, ValidateInternet, ValidatePin } from '../utils/AuthRoute'
+import { Dropdown } from 'react-native-element-dropdown'
+import {MaterialIcons, Entypo, AntDesign} from '@expo/vector-icons'
 import Modal from 'react-native-modal'
-import {MaterialIcons, MaterialCommunityIcons, Ionicons, Entypo} from '@expo/vector-icons'
+import { Image, ImageBackground } from 'expo-image'
+import axios from 'axios'
 import * as Notifications from 'expo-notifications'
 import styled from 'styled-components'
-import OTPFieldInput from '../Components/Ui/OTPFieldInput'
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import {Platform} from 'react-native';
 
-export const StyledButton = styled.TouchableOpacity`
+
+
+
+const StyledButton = styled.TouchableOpacity`
   padding: 15px;
-  background-color: ${Color.darkolivegreen_100};
+  background-color: ${Color.new_color};
   justify-content: center;
   align-items: center;
   border-radius: 5px;
@@ -58,13 +67,79 @@ const Internet = ({route, navigation}) => {
   const [pinerrormessage, setPinerrorMessage] = useState('')
   const [ischecking, setischecking] = useState(false)
   const [commissonvalue, setcommissonvalue] = useState()
-  
+
+  const [responseToken, setresponseToken] = useState()
+
   const [code, setCode] = useState('')
   const [pinReady, setPinReady] = useState(false)
   const MAX_CODE_LENGTH = 4;
-  
+
+
   const authId = route?.params?.id
   let reqId;
+
+  const viewRef = useRef();
+
+  const captureAndShare = async () => {
+    try {
+      // Capture the screenshot
+      const uri = await captureRef(viewRef, {
+        format: 'png',
+        quality: 1,
+      });
+
+      // Share the screenshot
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error('Error capturing and sharing screenshot:', error);
+    }
+  };
+
+  const captureAndSaveScreen = async () => {
+    try {
+      // Capture the screen
+      const uri = await captureRef(viewRef, {
+        format: 'png',
+        quality: 1.0,
+      });
+
+      // Get permission to access media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access media library is required!');
+        return;
+      }
+
+      // Define the custom file name
+      const fileName = `receipt_${new Date().getTime()}.png`;
+      const downloadDir = FileSystem.documentDirectory + 'Download/';
+      const fileUri = downloadDir + fileName;
+
+      // Ensure the download directory exists
+      await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
+
+      // Move the captured image to the download directory with the custom name
+      await FileSystem.moveAsync({
+        from: uri,
+        to: fileUri,
+      });
+
+      // Save the file to the device's download folder
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      const album = await MediaLibrary.getAlbumAsync('Download');
+      if (album == null) {
+        await MediaLibrary.createAlbumAsync('Download', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      }
+
+      Alert.alert('Receipt saved successfully!');
+    } catch (error) {
+      console.error('Failed to capture and save screen:', error);
+      Alert.alert('Failed to save receipt!');
+    }
+  };
+  
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
@@ -88,32 +163,31 @@ const Internet = ({route, navigation}) => {
     return unsubscribe;
   }, [])
 
-
   useEffect(() => {
     setisLoading(true)
     const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBillersByCategory/${authId}`
     const response = axios.get(url, {
-        headers:{
-            Accept:'application/json',
-            Authorization: `Bearer ${authCtx.token}`
-        }
+      headers:{
+        Accept:'application/json',
+        Authorization: `Bearer ${authCtx.token}`
+      }
     }).then((res) => {
-        // console.log(res.data)
-        var count = Object.keys(res.data).length;
-        let catarray = []
-        for (var i = 0; i < count; i++){
-            catarray.push({
-                label: res.data[i].name,
-                value: res.data[i].id,
-            })
-            // setCityCode(response.data.data[i].lga_code)
-        }
-        setcategory(catarray)
+      // console.log(res.data)
+      var count = Object.keys(res.data).length;
+      let catarray = []
+      for (var i = 0; i < count; i++){
+        catarray.push({
+          label: res.data[i].name,
+          value: res.data[i].id,
+        })
+        // setCityCode(response.data.data[i].lga_code)
+      }
+      setcategory(catarray)
     }).catch((error) => {
-        // console.log(error)
-        return;
-      })
-      setisLoading(false)
+      // console.log(error)
+      return;
+    })
+    setisLoading(false)
   }, [])
 
   const toggleModal =  (value) => {
@@ -121,42 +195,42 @@ const Internet = ({route, navigation}) => {
     // console.log(id)
     reqId = value
   }
+
   const getBouquets = (value) => {
     // console.log(authId, id)
     
     const url = `https://igoeppms.com/igoepp/public/api/auth/billpayment/getAllBouquetByBillerID/${authId}/${value}`
     const response = axios.get(url, {
-        headers:{
-            Accept:'application/json',
-            Authorization: `Bearer ${authCtx.token}`
-        }
+      headers:{
+        Accept:'application/json',
+        Authorization: `Bearer ${authCtx.token}`
+      }
     }).then((res) => {
-        // console.log(res.data.data.bouquets)
-        var count = Object.keys(res.data.data.bouquets).length;
-        let catarray = []
-        for (var i = 0; i < count; i++){
-            catarray.push({
-                label: res.data.data.bouquets[i].name,
-                value: res.data.data.bouquets[i].code,
-                price: res.data.data.bouquets[i].price
-            })
-            // setCityCode(response.data.data[i].lga_code)
-        }
-        setBosquet(catarray)
+      // console.log(res.data.data.bouquets)
+      var count = Object.keys(res.data.data.bouquets).length;
+      let catarray = []
+      for (var i = 0; i < count; i++){
+        catarray.push({
+          label: res.data.data.bouquets[i].name,
+          value: res.data.data.bouquets[i].code,
+          price: res.data.data.bouquets[i].price
+        })
+        // setCityCode(response.data.data[i].lga_code)
+      }
+      setBosquet(catarray)
     }).catch((error) => {
-        // console.log(error.response.data)
-        Alert.alert(error.response.data.status, error.response.data.message+ " internet type not available",[
-          {
-            text:'Ok',
-            onPress: () => setBosquet([])
-          }
-        ])
-        return;
+      // console.log(error.response.data)
+      Alert.alert(error.response.data.status, error.response.data.message+ " internet type not available",[
+        {
+          text:'Ok',
+          onPress: () => setBosquet([])
+        }
+      ])
+      return;
     })
   }
 
   const validateNumber = async () => {
-
       try {
         setisLoading(true)
         const response = await ValidateInternet(authCtx.Id, id, smartcard, authCtx.token)
@@ -170,9 +244,16 @@ const Internet = ({route, navigation}) => {
             },
             {
                 text:'Confirm',
-                onPress: () => toggleModal1()
+                onPress: () => togglePinModal()
             }
         ])
+        }else{
+          Alert.alert("Error", response.data, [
+            {
+              text: "Ok",
+              onPress: () => {}
+            }
+         ])
         }
         setisLoading(false)
       } catch (error) {
@@ -189,15 +270,27 @@ const Internet = ({route, navigation}) => {
       }
   }
 
-  let refT = useRef(0);
+  
+    
+    let refT = useRef(0);
   
     function handleClick() {
       refT.current = refT.current + 1;
       // alert('You clicked ' + ref.current + ' times!');
     }
   
-    const toggleModal1 = () => {
+    const togglePinModal = () => {
       setisSetpinModalVisible(!isSetpinModalVisible)
+    }
+
+    const commissionget = async (id) => {
+      try {
+        const response = await HelperBillerCommission(id, authCtx.token)
+        console.log(response)
+        setcommissonvalue(response)
+      } catch (error) {
+        return;
+      }
     }
     
     const pinValidateCheck = async () => {
@@ -215,10 +308,11 @@ const Internet = ({route, navigation}) => {
           // console.log(response)
           setCode('')
           makePayment(ref)
+          setischecking(false)
         } catch (error) {
           setischecking(true)
           setCode('')
-          setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + " trials remaining"))
+          setPinerrorMessage(error.response.data.message + "\n" + (3 - refT.current + ` trial${3-refT.current > 1 ? 's' : ""} remaining`))
           // console.log(error.response)
           Alert.alert("Error", error.response.data.message+ " " + "Try again", [
             {
@@ -232,16 +326,6 @@ const Internet = ({route, navigation}) => {
       }
     }
 
-    const commissionget = async (id) => {
-       try {
-         const response = await HelperBillerCommission(id, authCtx.token)
-        //  console.log(response)
-         setcommissonvalue(response)
-       } catch (error) {
-         return;
-       }
-     }
-
   const updatevalue = (inputType, enteredValue) => {
     switch(inputType){
       case 'smartcard':
@@ -251,7 +335,7 @@ const Internet = ({route, navigation}) => {
   }
 
   const makePayment = async () => {
-    toggleModal1()
+    togglePinModal()
     try {
       setisLoading(true)
       const response = await InternetPayment(ref, price, bouquestData, authCtx.token, commissonvalue)
@@ -265,19 +349,28 @@ const Internet = ({route, navigation}) => {
         ])
       }else{
         setRef(response.data.requestID)
-        schedulePushNotification(response)
+        // schedulePushNotification(response)
         toggleModal()
       }
       setisLoading(false)
     } catch (error) {
-      // console.log(error.response)
+      console.log(error.response.data)
       setisLoading(true)
-      Alert.alert("Error", "An error occured please try again later", [
-        {
-          text:'Ok',
-          onPress: () => navigation.goBack()
-        }
-      ])
+      if(error.response.data.message === "Insufficient Balance"){
+        Alert.alert("Sorry", error.response.data.message, [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+        ])
+      }else{
+        Alert.alert("Sorry", "An error occured", [
+          {
+            text:"Ok",
+            onPress: () =>  navigation.navigate('BillPayment')
+          }
+        ])
+      }
       setisLoading(false)
       return;
     }
@@ -286,7 +379,7 @@ const Internet = ({route, navigation}) => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: `Internet Subscription 🔔`,
-        body: `Internet subscription payment was successful\nAmount: ${price}\nSmartCard Id: ${smartcard}\nRef: ${response.data.requestID}\nDate: ${date} ${time} `,
+        body: `Internet subscription payment was successful\nAmount: ${price}\nSmartCard Id: ${smartcard}\nRef: ${ref}\nDate: ${date} ${time} `,
         data: { data: 'goes here' },
       },
       trigger: { seconds: 10 },
@@ -298,17 +391,16 @@ const Internet = ({route, navigation}) => {
   }
 
   return (
-    <ScrollView style={{marginTop:marginStyle.marginTp, marginHorizontal:10}} showsVerticalScrollIndicator={false}>
+    <ScrollView style={{marginTop: marginStyle.marginTp, marginHorizontal:10}}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
       <Text style={styles.internettxt}>Internet</Text>
-        {/* <Text style={styles.label}>Select Distribution Company</Text> */}
-          
-          
+
+    
       {
-        pincheckifempty === "N" ? Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
+        pincheckifempty === "N" ?  Alert.alert("Message", "No transaction pin, set a transaction pin to be able to make transactions", [
           {
             text: "Ok",
-            onPress: () =>  navigation.navigate('TransactionPin')
+            onPress: () => navigation.navigate('TransactionPin')
           },
           {
             text: "Cancel",
@@ -317,99 +409,100 @@ const Internet = ({route, navigation}) => {
         ]) 
         :
         <>
-            <ImageBackground style={{flexDirection:'row', alignItems:'center', justifyContent:'space-evenly',}}>
-              <Image contentFit='contain' source={require("../assets/smile.png")} style={[styles.image]}/>
-              <Image contentFit='contain' source={require("../assets/spectranet.png")} style={[styles.image]}/>
-            </ImageBackground>
+      <ImageBackground style={{flexDirection:'row', alignItems:'center', justifyContent:'space-evenly',}}>
+        <Image contentFit='contain' source={require("../assets/smile.png")} style={[styles.image]}/>
+        <Image contentFit='contain' source={require("../assets/spectranet.png")} style={[styles.image]}/>
+      </ImageBackground>
 
-            <View style={{marginTop:10}}/>
+      <View style={{marginTop:10}}/>
 
-          <View style={{marginHorizontal:10}}>
+      <View style={{marginHorizontal:10}}>
 
-            <Dropdown
-            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
-            placeholderStyle={styles.placeholderStyle}
-            selectedTextStyle={styles.selectedTextStyle}
-            inputSearchStyle={styles.inputSearchStyle}
-            iconStyle={styles.iconStyle}
-            data={category}
-            search
-            maxHeight={300}
-            labelField="label"
-            valueField="value"
-            placeholder={!isFocus ? 'Select Data Network' : '...'}
-            searchPlaceholder="Search..."
-            value={id}
-            onFocus={() => setisFocus(true)}
-            onBlur={() => setisFocus(false)}
-            onChange={item => {
-              setid(item.value);
-              setisFocus(false);
-              getBouquets(item.value)
-              commissionget(item.value)
-            }}
-            />
+        <Dropdown
+        style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        inputSearchStyle={styles.inputSearchStyle}
+        iconStyle={styles.iconStyle}
+        data={category}
+        search
+        maxHeight={300}
+        labelField="label"
+        valueField="value"
+        placeholder={!isFocus ? 'Select Data Network' : '...'}
+        searchPlaceholder="Search..."
+        value={id}
+        onFocus={() => setisFocus(true)}
+        onBlur={() => setisFocus(false)}
+        onChange={item => {
+          setid(item.value);
+          setisFocus(false);
+          getBouquets(item.value)
+          commissionget(item.value)
+        }}
+        />
 
-            {id && 
-                <>
-                <View style={{ marginBottom:30}}/>
-                  {/* <Text style={styles.label}>Select Internet Plan </Text> */}
-
-                  <Dropdown
-                  style={[styles.dropdown, isbouquestfocus && { borderColor: 'blue' }]}
-                  placeholderStyle={styles.placeholderStyle}
-                  selectedTextStyle={styles.selectedTextStyle}
-                  inputSearchStyle={styles.inputSearchStyle}
-                  iconStyle={styles.iconStyle}
-                  data={bouquest}
-                  search
-                  maxHeight={300}
-                  labelField="label"
-                  valueField="value"
-                  placeholder={!isbouquestfocus ? 'Select Network Plan' : '...'}
-                  searchPlaceholder="Search..."
-                  value={bouquestData}
-                  onFocus={() => setIsBosquetFocus(true)}
-                  onBlur={() => setIsBosquetFocus(false)}
-                  onChange={item => {
-                      setBosquetData(item.value);
-                      setPrice(item.price)
-                      setIsBosquetFocus(false);
-                  }}
-                  />
-                <View style={{ marginBottom:20}}/>
-                </>
-            }
-
-            {bouquestData && 
-              <>
-                <Text style={styles.label}>Price</Text>
-                <Input editable={false} value={price} />              
-              </>
-            }
-
-            {bouquestData &&
+        {id && 
             <>
-            <Input placeholder={"Enter Smart Card Id"} maxLength={15} keyboardType={"numeric"} value={smartcard} onUpdateValue={updatevalue.bind(this, 'smartcard')}/>
-              
-              <View style={{marginHorizontal:20, marginTop:20}}>
-                  <SubmitButton message={"Submit"} onPress={() => smartcard === null || smartcard === undefined || smartcard === "" ? Alert.alert('No Smard Card Id', "Enter a smart card id to continue") :  validateNumber()}/>
-              </View>
-            </>
-            }
+            <View style={{ marginBottom:30}}/>
+              {/* <Text style={styles.label}>Select Internet Plan </Text> */}
 
+              <Dropdown
+              style={[styles.dropdown, isbouquestfocus && { borderColor: 'blue' }]}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              inputSearchStyle={styles.inputSearchStyle}
+              iconStyle={styles.iconStyle}
+              data={bouquest}
+              search
+              maxHeight={300}
+              labelField="label"
+              valueField="value"
+              placeholder={!isbouquestfocus ? 'Select Network Plan' : '...'}
+              searchPlaceholder="Search..."
+              value={bouquestData}
+              onFocus={() => setIsBosquetFocus(true)}
+              onBlur={() => setIsBosquetFocus(false)}
+              onChange={item => {
+                  setBosquetData(item.value);
+                  setPrice(item.price)
+                  setIsBosquetFocus(false);
+              }}
+              />
+            <View style={{ marginBottom:20}}/>
+            </>
+        }
+
+        {bouquestData && 
+          <>
+            <Text style={styles.label}>Price</Text>
+            <Input editable={false} value={price} />              
+          </>
+        }
+
+        {bouquestData &&
+        <>
+        <Input placeholder={"Enter Smart Card Id"} maxLength={15} keyboardType={"numeric"} value={smartcard} onUpdateValue={updatevalue.bind(this, 'smartcard')}/>
+          
+          <View style={{marginHorizontal:20, marginTop:20}}>
+              <SubmitButton message={"Submit"} onPress={() => smartcard === null || smartcard === undefined || smartcard === "" ? Alert.alert('No Smard Card Id', "Enter a smart card id to continue") :  validateNumber()}/>
           </View>
         </>
-      }
+        }
+
+      </View>
+
+      </>
+    }
 
       <Modal isVisible={isModalVisble}>
         <SafeAreaView style={styles.centeredView}>
 
-        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), navigation.goBack()]}>
+        <TouchableOpacity style={{justifyContent:'flex-end', alignSelf:'flex-end', marginBottom:5, }} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack()]}>
           <MaterialIcons name="cancel" size={30} color="white" />
         </TouchableOpacity>
 
-        <View style={styles.modalView}>
+        <View style={styles.modalView}  ref={viewRef}>
           <Text style={styles.modalText}>Reciept</Text>
         <Image source={require("../assets/igoepp_transparent2.png")} style={{height:130, width:130, position:'absolute', alignContent:'center', alignSelf:'center', top: DIMENSION.HEIGHT * 0.1, justifyContent:'center', opacity:0.3, }} contentFit='contain'/>
             {
@@ -423,37 +516,41 @@ const Internet = ({route, navigation}) => {
             
               <View style={{marginBottom:25, marginTop:25}}>
                   
-                <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                  <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>SmartCard Id :</Text>
-                  <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{smartcard}</Text>
-                </View>
+                  <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>SmartCard Id :</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{smartcard}</Text>
+                  </View>
+
+                    <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Amount Funded :</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{price}</Text>
+                  </View>
 
                   <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                  <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Amount Funded :</Text>
-                  <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{price}</Text>
-                </View>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Ref :</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{ref}</Text>
+                  </View> 
 
-                <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                  <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Ref :</Text>
-                  <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{ref}</Text>
-                </View> 
+                  <View style={{justifyContent:'space-between', flexDirection:'row'}}>
+                    <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Date :</Text>
+                    <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{date} {time}</Text>
+                  </View>
 
-                <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                  <Text style={{fontFamily:'poppinsRegular', fontSize:10}}>Date :</Text>
-                  <Text  style={{fontFamily:'poppinsRegular', fontSize:10}}>{date} {time}</Text>
-                </View>
+                    <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
+                    
+                      <TouchableOpacity style={{}} onPress={() => captureAndShare()}>
+                        <Entypo name="forward" size={24} color={Color.new_color}/>
+                      </TouchableOpacity>
 
-                <View style={{flexDirection:'row', justifyContent:'space-evenly', alignItems:'center', marginTop: 20,}}>
-                
-                  <TouchableOpacity style={{}} onPress={() => {}}>
-                    <Text><Entypo name="forward" size={24} color="black" /></Text>
-                  </TouchableOpacity>
+                      <TouchableOpacity onPress={() => captureAndSaveScreen()}>
+                          <AntDesign name="download" size={24} color={Color.new_color} />
+                        </TouchableOpacity>
 
-                  <TouchableOpacity style={{}} onPress={() => [toggleModal(), navigation.goBack()]}>
-                    <Text style={{}}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>              
+                      <TouchableOpacity style={{}} onPress={() => [toggleModal(), schedulePushNotification(), navigation.goBack()]}>
+                          <Text style={{}}>Close</Text>
+                      </TouchableOpacity>
+                    </View>
+                </View>              
         </View>
         </SafeAreaView>
       </Modal>
@@ -470,6 +567,7 @@ const Internet = ({route, navigation}) => {
                 <View style={{flex:1, marginTop: 30, marginBottom: 70}}>
                     <LoadingOverlay/>  
                 </View>
+
                 :
               <>
             <View style={{marginTop: '13%'}}/>
@@ -487,7 +585,7 @@ const Internet = ({route, navigation}) => {
             <StyledButton disabled={!pinReady} 
             onPress={() => [handleClick(), pinValidateCheck()]}
             style={{
-                backgroundColor: !pinReady ? Color.gray_100 : Color.new_color
+                backgroundColor: !pinReady ? Color.grey : Color.new_color
             }}>
                 <ButtonText
                 style={{
@@ -508,17 +606,15 @@ const Internet = ({route, navigation}) => {
 export default Internet
 
 const styles = StyleSheet.create({
-  selectedTextStyle:{
-    fontSize:12,
-  },
-  modalView1: {
+  receipt: {
+    width: 300,
+    height: 400,
     backgroundColor: 'white',
-    width: DIMENSION.WIDTH  * 0.9,
-    borderRadius: 20,
-    // flex:1,
-    alignItems:'center',
-    height: DIMENSION.HEIGHT * 0.4
+    borderColor: 'black',
+    borderWidth: 1,
+    padding: 10,
   },
+  
   internettxt:{
     fontSize: 18,
     color: Color.new_color,
@@ -527,6 +623,17 @@ const styles = StyleSheet.create({
     marginTop:10,
     marginBottom:15,
   }, 
+  modalView1: {
+    backgroundColor: 'white',
+    width: DIMENSION.WIDTH  * 0.9,
+    borderRadius: 20,
+    // flex:1,
+    alignItems:'center',
+    height: DIMENSION.HEIGHT * 0.4
+  },
+  selectedTextStyle:{
+    fontSize:12,
+  },
   dropdown: {
     maxHeight: 70,
     borderColor: 'gray',

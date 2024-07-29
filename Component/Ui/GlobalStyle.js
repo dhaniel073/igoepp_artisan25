@@ -1,4 +1,5 @@
-import { Dimensions, Platform, StatusBar } from "react-native";
+import { Dimensions, StatusBar } from "react-native";
+import {Platform} from "react-native"
 
 export const marginStyle = {
     marginTp: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50
@@ -44,6 +45,7 @@ export const Color = {
     saddlebrown_200: "#6f4801",
     grey2: "#97adb6",
     silver: "#bdbdbd",
+    grey: '#828282',
     firebrick_100: "#bb2222",
     firebrick_200: "#b22222",
 }

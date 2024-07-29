@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, TextInput, TouchableOpacity} from 'react-native'
+import {Platform} from 'react-native'
 import React, { useState } from 'react'
 import { Color } from './GlobalStyle'
 import {Entypo} from '@expo/vector-icons'
-
 
 
 const Input = ({   
@@ -49,10 +49,10 @@ const Input = ({
       />
 
     {secure &&
-      <TouchableOpacity style={{position:'absolute', justifyContent:'flex-end', alignSelf:'flex-end', right:10, top:15}} onPress={togglePassword}>
+      <TouchableOpacity style={[{position:'absolute', justifyContent:'flex-end', alignSelf:'flex-end', right:10, top:Platform.OS === 'ios' ? 5 : 15}]} onPress={togglePassword}>
         {
           showPassword ? (
-            <Entypo name="eye" size={24} color={Color.gray_100}/>
+            <Entypo name="eye" size={20} color={Color.gray_100}/>
             ): (
               <Entypo name="eye-with-line" size={20} color={Color.gray_100}/>
               )
@@ -66,6 +66,12 @@ const Input = ({
 export default Input
 
 const styles = StyleSheet.create({
+    ios:{
+      marginBottom: Platform.OS === 'ios' ? '15' : 0,
+      color: 'red',
+      borderBottomColor: 'red',
+      borderWidth:2
+    },
     inputContainer: {
         marginVertical: 7,
     },
@@ -83,7 +89,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 2,
         borderBottomColor:  Color.gray_100,
-        borderBottomWidth: 2,
+        borderBottomWidth: 1,
         fontFamily: 'poppinsRegular',
         fontSize: 14,
     },

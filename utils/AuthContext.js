@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React, { createContext, useState } from 'react'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import LoadingOverlay from '../Component/Ui/LoadingOverlay';
 
 
 export const  AuthContext = createContext({
@@ -19,6 +19,7 @@ export const  AuthContext = createContext({
   lastLoginTimestamp: "",
   userid: "",
   sumtot:"",
+  uuid: "",
 
 
   
@@ -36,6 +37,7 @@ export const  AuthContext = createContext({
   helperlastLoginTimestamp : (lastLoginTimestamp) => {},
   helperuserid: (userid) => {},
   helpersumtot: (sumtot) => {},
+  helperuuid: (uuid) => {},
 
   logout: () => {}
 
@@ -59,12 +61,17 @@ function AuthContextProvider({children}){
     const [authlogintime, setauthlogintime] = useState()
     const [authuserid, setauthuserid] = useState()
     const [authsumtot, setauthsumtot] = useState()
+    const [authuuid, setuuid] = useState()
 
 
     if(IsLogout){
         return <LoadingOverlay/>
     }
 
+    function helperuuid(id){
+        setuuid(id)
+        AsyncStorage.setItem('helperuuid', id)
+    }
 
     function authenticated(token){
         setauthToken(token)
@@ -108,7 +115,7 @@ function AuthContextProvider({children}){
 
     function helperuserid(userid){
         setauthuserid(userid)
-        AsyncStorage.setItem('helperuserid', userid)
+        AsyncStorage.setItem('helperuserid', userid.toString())
     }
 
 
@@ -216,6 +223,7 @@ function AuthContextProvider({children}){
         lastLoginTimestamp: authlogintime,
         userid: authuserid,
         sumtot: authsumtot,
+        uuid: authuuid,
 
         authenticated:authenticated,
         helperId:helperId,
@@ -231,6 +239,7 @@ function AuthContextProvider({children}){
         helperlastLoginTimestamp: helperlastLoginTimestamp,
         helperuserid:helperuserid,
         helpersumtot: helpersumtot,
+        helperuuid:helperuuid,
         logout: logout
         
     }

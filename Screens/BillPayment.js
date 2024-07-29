@@ -1,16 +1,21 @@
-import { Dimensions, SafeAreaView, StyleSheet, Pressable, Text, View, TouchableOpacity, FlatList, Platform,  Alert } from 'react-native'
+import { Dimensions, SafeAreaView, StyleSheet, Pressable, Text, View, TouchableOpacity, FlatList,  Alert } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Color, DIMENSION, TOKEN, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
 import {MaterialCommunityIcons, AntDesign, Entypo} from '@expo/vector-icons'
 import { Dropdown } from 'react-native-element-dropdown'
 import Modal from "react-native-modal";
 import axios from 'axios'
 import {Image} from 'expo-image'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { SubCategory, Walletbal } from '../utils/AuthRoute'
-import { AuthContext } from '../utils/AuthContext'
 import * as LocalAuthentication from 'expo-local-authentication'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
 
 
 
@@ -48,6 +53,7 @@ const BillPayment = ({navigation}) => {
        } catch (error) {
         setisLoading(true)      
         setisLoading(false)
+        // console.log(error.response)
         return;
        }
      });
@@ -63,13 +69,14 @@ const BillPayment = ({navigation}) => {
       return SubCatGet()
     })
   }, [subcatname])
+
   const SubCatGet = async () => {
     try {
       const response = await SubCategory(authCtx.subCatId, authCtx.token)
-      console.log(response)
+      // console.log(response)
       setSubCatName(response)
     } catch (error) {
-      console.log(error.response.data)
+      // console.log(error.response.data)
       return;
       
     }
@@ -86,10 +93,10 @@ const BillPayment = ({navigation}) => {
         }
       })
       setcategory(response.data)
-      // console.log(response.data)
+      // console.log(response)
       setisLoading(false)
     } catch (error) {
-      // console.log(error.response)
+      console.log(error.response)
       setisLoading(true)
       Alert.alert("Error", "An error occured try plaese again later", [
         {
@@ -153,7 +160,7 @@ const BillPayment = ({navigation}) => {
   return (
     <SafeAreaView style={styles.container}>
       <GoBack onPress={() => navigation.goBack()}>Back</GoBack>
-      <Text style={styles.billpaymentxt}>BillPayment</Text>
+      <Text style={styles.billpaymentxt}>Bill Payment</Text>
 
 
       <View style={styles.slide2}>
@@ -190,7 +197,6 @@ const BillPayment = ({navigation}) => {
       <FlatList
         showsVerticalScrollIndicator={false}
         data={category}
-        style={{width: '100%', marginBottom: '10%'}}
         numColumns={2}
         keyExtractor={(item) => item.id}
         renderItem={({item}) => (
@@ -343,9 +349,9 @@ const styles = StyleSheet.create({
     justifyContent:'center',
     alignItems:'center',
     borderRadius:10,
-    elevation: 4,
+    elevation: 2,
     shadowColor: 'black',
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.1,
     shadowOffset: {width: 0, height: 2},
     shadowRadius: 8,
     // backgroundColor: Color.mintcream,
@@ -368,16 +374,9 @@ const styles = StyleSheet.create({
     paddingTop:30,
     marginHorizontal:5,
     backgroundColor: Color.new_color,
-    borderRadius: 5,
+    borderRadius: 10,
     height: HEIGHT * 0.22,
-    shadowOpacity: 1,
     elevation: 4,
-    shadowRadius: 4,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowColor: "black",
   },
   billpaymentxt:{
     fontSize: 18,

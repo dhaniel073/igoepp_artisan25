@@ -1,13 +1,18 @@
-import { Alert, Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Alert, Dimensions, SafeAreaView, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useState } from 'react'
-import { Color, marginStyle } from '../Components/Ui/GlobalStyle'
 import {MaterialCommunityIcons} from '@expo/vector-icons'
-import SubmitButton from '../Components/Ui/SubmitButton'
-import GoBack from '../Components/Ui/GoBack'
 import Modal from 'react-native-modal'
-import { AuthContext } from '../utils/AuthContext'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
 import { BidRequest } from '../utils/AuthRoute'
+import {Border, Color, DIMENSION, FontSize, marginStyle} from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
+import { AuthContext } from '../utils/AuthContext'
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import {Platform} from 'react-native';
+
+
 
 const WIDTH = Dimensions.get('window').width
 const HEIGHT = Dimensions.get('window').height
@@ -201,6 +206,10 @@ const SetPrice = ({navigation, route}) => {
           toggleModal();
         }}>
         <SafeAreaView style={styles.centeredView}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.container}
+        >
 
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Reason</Text>
@@ -222,6 +231,7 @@ const SetPrice = ({navigation, route}) => {
             <View style={{marginBottom:'2%'}}/>
             
           </View>
+        </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
     </ScrollView>

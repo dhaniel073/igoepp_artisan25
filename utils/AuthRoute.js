@@ -28,6 +28,7 @@ async function login(email, password){
 
 //handdyman signup endpoint
 async function signup(lastname, firstname, email, dob, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude, identification_type,identification_num, referral_code){
+    console.log(lastname, firstname, email, dob, phone, category, subcategory, password, sex, country, state, lga, address, latitude, longitude, identification_type,identification_num, referral_code)
     const url = 'https://igoeppms.com/igoepp/public/api/helper/store'
     const response = await axios.post(url, {
         "last_name": lastname,
@@ -1126,31 +1127,95 @@ async function viewcustomerratingonrequest (id, token){
     return data
   }
   
-    async function getpaystackkey(){
+    async function getpaystackkey(token){
         const url = `https://igoeppms.com/igoepp/public/api/general/getPaystackKey`
-        const response = await axios.get(url,{
+        const response = await axios.get(url, {
+            headers:{
+                Accept: 'application/json',
+                Authorization: `Bearer ${token}`
+            }
         })
 
         const data = response.data
         return data
     }
 
-    async function getbanks(){
-        const url = `https://phixotech.com/igoepp/public/api/general/getBanks`
-        const response = await axios.get(url,{
-        })
+    async function getbanks(token){
+        const url = `https://igoeppms.com/igoepp/public/api/general/getBanks`
+        const response = await axios.get(url, 
+            {
+                headers:{
+                    Accept: 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        )
         
         const data = response.data
         return data
     }
 
-     
+    async function getpersonalrequest(id, token){
+        const url = `https://igoeppms.com/igoepp/public/api/auth/getPersonalRequest/${id}`
+        const response = await axios.get(url, 
+            {
+                headers:{
+                    Accept: 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        )
+        
+        const data = response.data
+        return data
+    }
 
-export const GetPayStackKey = () => {
-return getpaystackkey()
+    async function showacceptedrequestbyhelperid(id, token){
+        const url = `https://igoeppms.com/igoepp/public/api/auth/hrequest/showacceptedrequestbyhelperid/${id}`
+        const response = await axios.get(url, 
+            {
+                headers:{
+                    Accept: 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        )
+        
+        const data = response.data
+        return data
+    }
+
+    async function requestcompletedrequestbyhelperid(id, token){
+        
+        const url = `https://igoeppms.com/igoepp/public/api/auth/hrequest/showrequestcompletedbyhelperid/${id}`
+        const response = await axios.get(url, 
+            {
+                headers:{
+                    Accept: 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        )
+
+        const data = response.data
+        return data
+    }
+
+    
+   
+
+export const ShowAcceptedRequestByHelperid = (id, token) => {
+    return showacceptedrequestbyhelperid(id, token)
+}   
+export const GetPersonalRequest = (id, token) => {
+    return getpersonalrequest(id, token)
+}    
+
+export const GetPayStackKey = (token) => {
+    return getpaystackkey(token)
 }
 
-export const GetBanks = () => {
+export const GetBanks = (token) => {
     return getbanks()
     }
 
@@ -1232,6 +1297,10 @@ export const ViewSubCategory = (categoryId, token) => {
 
 export const RequestByHelperid = (id, token) => {
     return requestbyhelperid(id, token)
+}
+
+export const RequestCompletedRequestByHelperId = (id, token) => {
+    return requestcompletedrequestbyhelperid(id, token)
 }
 
 //Get Customer

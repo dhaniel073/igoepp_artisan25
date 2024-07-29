@@ -1,11 +1,17 @@
-import { Alert, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { Color, DIMENSION, marginStyle } from '../Components/Ui/GlobalStyle'
-import GoBack from '../Components/Ui/GoBack'
 import { AvailableStore, HelperUrl, UnavailableStore } from '../utils/AuthRoute'
+import { Border, Color, DIMENSION, FontSize, marginStyle } from '../Component/Ui/GlobalStyle'
+import Input from '../Component/Ui/Input'
+import SubmitButton from '../Component/Ui/SubmitButton'
 import { AuthContext } from '../utils/AuthContext'
-import LoadingOverlay from '../Components/Ui/LoadingOverlay'
-import SubmitButton from "../Components/Ui/SubmitButton"
+import LoadingOverlay from '../Component/Ui/LoadingOverlay'
+import OTPFieldInput from '../Component/Ui/OTPFieldInput'
+import GoBack from '../Component/Ui/GoBack'
+import Flat from '../Component/Ui/Flat'
+import {Platform} from 'react-native';
+
+
 
 const WIDTH = Dimensions.get('window').width
 const HEIGHT = Dimensions.get('window').height
